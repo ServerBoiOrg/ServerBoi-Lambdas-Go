@@ -1,0 +1,53 @@
+version: '3.8'
+services:
+  dynamo:
+    container_name: serverboi-dynamodb-local
+    image: amazon/dynamodb-local
+    env_file:
+      - ./test-env.txt
+    networks:
+      - backend
+    ports:
+      - '8000:8000'
+    volumes:
+      - "./.test-volumes/dynamo:/home/dynamodblocal"
+    working_dir: /home/dynamodblocal
+    command: '-jar DynamoDBLocal.jar -sharedDb -dbPath .'
+
+  step-functions:
+    container_name: serverboi-stepfunctions-local
+    image: amazon/aws-stepfunctions-local
+    env_file:
+      - ./test-env.txt
+    networks:
+      - backend
+    ports:
+      - '8083:8083'
+    volumes:
+      - "./.test-volumes/stepfunctions:/home/stepfunctionslocal"
+    working_dir: /home/stepfunctionslocal
+    command: '-jar DynamoDBLocal.jar -sharedDb -dbPath .'
+
+  localstack:
+    image: localstack/localstack
+    container_name: serverboi-localstack
+    ports:
+      - "127.0.0.1:53:53"
+      - "127.0.0.1:53:53/udp"
+      - "127.0.0.1:443:443"
+      - "127.0.0.1:4566:4566"
+      - "127.0.0.1:4571:4571"
+      - "8055:8080"
+    networks:
+      - backend
+    environment:
+      - SERVICES=ec2
+      - DEBUG=1
+      - DATA_DIR=.test-volumes/localstack
+    volumes:
+      - "./.test-volumes/localstack:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+networks:
+  backend:
+    name: serverboi-backend

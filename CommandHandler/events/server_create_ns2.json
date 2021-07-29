@@ -1,0 +1,61 @@
+{
+    "application_id": "713857439220367432",
+    "channel_id": "844786538695884810",
+    "data": {
+      "id": "840761904502669362",
+      "name": "sb",
+      "options": [
+        {
+          "name": "create",
+          "options": [
+            {
+              "name": "ns2",
+              "options": [
+                {
+                  "name": "service",
+                  "type": 3,
+                  "value": "aws"
+                },
+                {
+                  "name": "region",
+                  "type": 3,
+                  "value": "us-west-2"
+                },
+                {
+                  "name": "name",
+                  "type": 3,
+                  "value": "Test"
+                }
+              ],
+              "type": 1
+            }
+          ],
+          "type": 2
+        }
+      ]
+    },
+    "guild_id": "653100420687855616",
+    "id": "869083328882573394",
+    "member": {
+      "avatar": "None",
+      "deaf": false,
+      "is_pending": false,
+      "joined_at": "2019-12-08T05:07:54.314000+00:00",
+      "mute": false,
+      "nick": "None",
+      "pending": false,
+      "permissions": "274877906943",
+      "premium_since": "None",
+      "roles": [],
+      "user": {
+        "avatar": "a_539a3c047f6bedfe4283dae3ed3bb8c3",
+        "discriminator": "7032",
+        "id": "155875705417236480",
+        "public_flags": 128,
+        "username": "Awlsring"
+      }
+    },
+    "token": "aW50ZXJhY3Rpb246ODY5MDgzMzI4ODgyNTczMzk0OnNnWUdURm00WkxJbkgzVHJVYzduNzU4ODRuSVNHWTZVb2M2b3FyZzYxeVVQYU1OZ2JtYVRHNldrY24wZ0FNcHBmdUEzZDI3OFJqZUwxRUN4TTJManRnSVBySkZYR3FJSlVkUzNwNkY3OGlBN1RpaTh1SWRtbDh0alhpeWwzREJx",
+    "type": 2,
+    "version": 1
+  }

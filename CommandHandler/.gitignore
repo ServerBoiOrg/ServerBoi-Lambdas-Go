@@ -1,0 +1,6 @@
+.aws-sam
+*/main
+*/lambda.zip
+*/.test-volumes
+*/test-env.txt
+*/.DS_Store

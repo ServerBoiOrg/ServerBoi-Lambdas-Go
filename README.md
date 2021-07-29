@@ -1,1 +1,0 @@
-# ServerBoi-Discord-Slash-Commands-GO
