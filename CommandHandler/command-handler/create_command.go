@@ -7,6 +7,7 @@ import (
 )
 
 type CreateServerWorkflowInput struct {
+	ExecutionName    string
 	Application      string
 	Service          string
 	OwnerID          string
@@ -16,6 +17,7 @@ type CreateServerWorkflowInput struct {
 	ApplicationID    string
 	GuildID          string
 	Url              string
+	ServerName       string
 	CreationOptions  map[string]string
 }
 
@@ -30,9 +32,24 @@ func createServer(command DiscordInteractionApplicationCommand) (data *DiscordIn
 		creationOptions[option.Name] = option.Value
 	}
 
+	executionName := generateWorkflowUUID("Provision")
+
+	service := creationOptions["service"]
+	delete(creationOptions, service)
+
+	var name string
+	_, ok := creationOptions["name"]
+	if ok {
+		name = creationOptions["name"]
+		delete(creationOptions, name)
+	} else {
+		name = fmt.Sprintf("ServerBoi-%v", application)
+	}
+
 	executionInput := CreateServerWorkflowInput{
+		ExecutionName:    executionName,
 		Application:      application,
-		Service:          creationOptions["service"],
+		Service:          service,
 		OwnerID:          command.User.ID,
 		Owner:            command.User.Username,
 		InteractionID:    command.ID,
@@ -40,6 +57,7 @@ func createServer(command DiscordInteractionApplicationCommand) (data *DiscordIn
 		ApplicationID:    command.ApplicationID,
 		GuildID:          command.GuildID,
 		Url:              getEnvVar("URL"),
+		ServerName:       name,
 		CreationOptions:  creationOptions,
 	}
 
@@ -49,7 +67,6 @@ func createServer(command DiscordInteractionApplicationCommand) (data *DiscordIn
 	}
 	inputString := fmt.Sprintf(string(inputJson))
 
-	executionName := generateWorkflowUUID("Provision")
 	provisionArn := getEnvVar("PROVISION_ARN")
 
 	startSfnExecution(provisionArn, executionName, inputString)

@@ -3,9 +3,6 @@
 # Start local test environment
 docker-compose up -d
 
-# Start sam local api
-AWS_REGION=us-west-2 sam local start-api --docker-network lambda-local
-
 # Create need tables
 aws dynamodb create-table \
     --table-name ServerBoi-Server-List \
@@ -31,13 +28,7 @@ aws dynamodb create-table \
 aws dynamodb put-item \
     --table-name AWS-User-List \
     --item \
-        '{"UserID": {"S": "155875705417236480"}, "AWSAccountID": {"S": "742762521158"}}' \
+        '{"UserID": {"S": "0001"}, "AWSAccountID": {"S": "000000000000"}}' \
     --endpoint-url http://localhost:8000
-
-# aws dynamodb put-item \
-#     --table-name ServerBoi-Server-List \
-#     --item \
-#         '{"ServerID":{"S":"Test"},"Service":{"M":{"AccountID":{"S":"742762521158"},"InstanceID":{"S":"i-0933d3d5b3f92fc02"},"Name":{"S":"aws"},"Region":{"S":"us-west-2"}}}}' \
-#     --endpoint-url http://localhost:8000
 
 

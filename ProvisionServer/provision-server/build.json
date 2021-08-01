@@ -1,0 +1,70 @@
+{
+    "valheim": {
+        "x86": {
+            "container": "lloesche/valheim-server",
+            "instanceType": {
+                "aws": "c5a.large",
+                "azure": "Standard_DS1_v2",
+                "linode": "g6-standard-2"
+            }
+        },
+        "ports": [
+          2456,
+          2458
+        ]
+    },
+    "csgo": {
+        "x86": {
+            "container": "serverboi/csgo:dev",
+            "instanceType": {
+                "aws": "c5a.large",
+                "azure": "Standard_DS1_v2",
+                "linode": "g6-standard-2"
+            },
+            "driveSize": 35
+        },
+        "ports": [
+            27015,
+            27020,
+            27005
+        ]
+    },
+    "ns2": {
+        "x86": {
+            "container": "serverboi/ns2:dev",
+            "instanceType": {
+                "aws": "c5.large",
+                "azure": "Standard_DS1_v2",
+                "linode": "g6-standard-2"
+            }
+        },
+        "ports": [
+            27015,
+            27016
+        ]
+    },
+    "wireguard": {
+        "arm": {
+            "container": "serverboi/wireguard:arm-latest",
+            "instanceType": {
+                "aws": "t4g.nano"
+            }
+        },
+        "x86": {
+            "container": "serverboi/wireguard:x86-latest",
+            "instanceType": {
+                "aws": "t3a.nano"
+            }
+        },
+        "ports": [
+            51820
+        ],
+        "dockerCommands": [
+            "-v ~:/config ",
+            "-p 51820:51820/udp ",
+            "--restart unless-stopped ",
+            "--cap-add=NET_ADMIN ",
+            "--cap-add=SYS_MODULE "
+        ]
+    }
+}

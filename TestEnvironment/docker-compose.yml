@@ -8,25 +8,10 @@ services:
     networks:
       - backend
     ports:
-      - '8000:8000'
+      - 8000:8000
     volumes:
-      - "./.test-volumes/dynamo:/home/dynamodblocal"
-    working_dir: /home/dynamodblocal
-    command: '-jar DynamoDBLocal.jar -sharedDb -dbPath .'
-
-  step-functions:
-    container_name: serverboi-stepfunctions-local
-    image: amazon/aws-stepfunctions-local
-    env_file:
-      - ./test-env.txt
-    networks:
-      - backend
-    ports:
-      - '8083:8083'
-    volumes:
-      - "./.test-volumes/stepfunctions:/home/stepfunctionslocal"
-    working_dir: /home/stepfunctionslocal
-    command: '-jar DynamoDBLocal.jar -sharedDb -dbPath .'
+      - ./.test-volumes/dynamo:/database/dynamo
+    command: '-jar DynamoDBLocal.jar -sharedDb -dbPath /database/dynamo'
 
   localstack:
     image: localstack/localstack
@@ -41,7 +26,7 @@ services:
     networks:
       - backend
     environment:
-      - SERVICES=ec2
+      - SERVICES=ec2,sts
       - DEBUG=1
       - DATA_DIR=.test-volumes/localstack
     volumes:

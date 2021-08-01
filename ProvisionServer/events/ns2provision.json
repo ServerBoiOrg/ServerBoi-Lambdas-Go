@@ -1,0 +1,16 @@
+{
+    "ExecutionName": "Test",
+    "Application": "ns2",
+    "Service": "aws",
+    "OwnerID": "0001",
+    "Owner": "Tester",
+    "InteractionID": "xxxx",
+    "InteractionToken": "xxxx",
+    "ApplicationID": "xxxx",
+    "GuildID": "xxxx",
+    "Url": "api.serverboi.io",
+    "ServerName": "tst-ns2",
+    "CreationOptions": {
+        "Region": "us-west-2"
+    }
+}

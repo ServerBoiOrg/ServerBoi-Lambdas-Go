@@ -1,0 +1,17 @@
+{
+    "ExecutionName": "Test",
+    "Application": "wireguard",
+    "Service": "aws",
+    "OwnerID": "0001",
+    "Owner": "Tester",
+    "InteractionID": "xxxx",
+    "InteractionToken": "xxxx",
+    "ApplicationID": "xxxx",
+    "GuildID": "xxxx",
+    "Url": "api.serverboi.io",
+    "ServerName": "tst-wiregaurd",
+    "CreationOptions": {
+        "Region": "us-west-2",
+        "Architecture": "arm"
+    }
+}
