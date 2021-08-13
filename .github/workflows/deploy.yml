@@ -41,7 +41,5 @@ jobs:
           cd ..
       - name: Generate URI List
         run: python ./generate_uri_list.py
-      - uses: actions/upload-artifact@v2
-        with:
-          name: Uri-List
-          path: function_uris.json
+      - name: Upload function uri list to s3
+        run: aws s3 cp function_uris.json s3://serverboi-sam-packages/function_uri_list.json
