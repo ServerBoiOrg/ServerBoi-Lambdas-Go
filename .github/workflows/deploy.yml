@@ -18,7 +18,8 @@ jobs:
           aws-region: ${{ secrets.REGION }}
           
       - run: |
-        cd Packages \
+        mkdir -p Templates \
+        && cd Packages \
         && for dir in */; do echo $dir\
         && PACKAGE=$(echo "$dir" | sed s#/##) \
         && echo "Current Package: $PACKAGE" \
@@ -28,5 +29,10 @@ jobs:
         --s3-prefix $PACKAGE \
         --use-json \
         --output-template-file \
-        ../$PACKAGE-Template.json \
+        ../../Templates/$PACKAGE-Template.json \
         && cd .. ; done
+        cd ..
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Package-Templates
+          path: ./Templates/
