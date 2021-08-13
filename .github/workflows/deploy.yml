@@ -25,7 +25,7 @@ jobs:
           && PACKAGE=$(echo "$dir" | sed s#/##) \
           && echo "Current Package: $PACKAGE" \
           && cd $dir \
-          && sam build --use-container s\
+          && sam build --use-container\
           && sam package --s3-bucket serverboi-sam-packages \
           --s3-prefix $PACKAGE \
           --region us-west-2 \
