@@ -1,8 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: >
+Description:
   ProvisionServer
-  
   Sample SAM Template for ProvisionServer
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
@@ -22,7 +21,6 @@ Resources:
         Variables:
           SERVER_TABLE: ServerBoi-Server-List
           AWS_TABLE: AWS-User-List
-          PUBLIC_KEY: 381ab524ef752faf891f76bde76a5cbef77a0d126d132f1a4de72e51fe6d70e2
           AWS_REGION: us-west-2
           STAGE: Testing
           DYNAMO_CONTAINER: serverboi-dynamodb-local

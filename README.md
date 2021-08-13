@@ -1,0 +1,3 @@
+## SeverBoi Application Command Lambda Functions
+
+This package contains the execution code for some of the lambda function utilized by ServerBoi. Packages created here are built via a github action and deployed to a private bucket, `serverboi-sam-packages`. These package functions are built and deployed in [ServerBoi Discord Application Commands](https://github.com/ServerBoiOrg/ServerBoi-Discord-Application-Commands).

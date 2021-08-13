@@ -4,3 +4,5 @@
 */.test-volumes
 */test-env.txt
 .DS_Store
+**-output.json
+*-Template.json

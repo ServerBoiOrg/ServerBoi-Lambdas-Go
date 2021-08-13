@@ -1,0 +1,32 @@
+name: Deploy-Package
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+      - uses: aws-actions/setup-sam@v1
+        with:
+          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.REGION }}
+          
+      - run: |
+        cd Packages \
+        && for dir in */; do echo $dir\
+        && PACKAGE=$(echo "$dir" | sed s#/##) \
+        && echo "Current Package: $PACKAGE" \
+        && cd $dir \
+        && sam build \
+        && sam package --s3-bucket serverboi-sam-packages \
+        --s3-prefix $PACKAGE \
+        --use-json \
+        --output-template-file \
+        ../$PACKAGE-Template.json \
+        && cd .. ; done
