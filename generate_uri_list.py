@@ -13,7 +13,12 @@ for file in files:
 
     try:
         uri = data["Resources"][function_name]["Properties"]['CodeUri']
-        function_blob[function_name] = uri
+        split_uri = uri.split("/")[2:5]
+        bucket = split_uri[0]
+        function_blob[function_name] = {
+            "bucket": bucket,
+            "key": f"{split_uri[1]}/{split_uri[2]}",
+        }
     except Exception as e:
         pass
 
