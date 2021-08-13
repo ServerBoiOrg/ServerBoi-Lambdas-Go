@@ -27,6 +27,7 @@ jobs:
           && sam build \
           && sam package --s3-bucket serverboi-sam-packages \
           --s3-prefix $PACKAGE \
+          --region us-west-2 \
           --use-json \
           --output-template-file \
           ../../Templates/$PACKAGE-Template.json \
