@@ -11,6 +11,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
       - uses: aws-actions/setup-sam@v1
       - uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -18,10 +22,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.REGION }}
           
-      - run: |
+      - name: Build and package Functions
+        run: |
           mkdir -p Templates \
           && cd Packages \
-          && for dir in */; do echo $dir\
+          && for dir in */; do echo $dir \
           && PACKAGE=$(echo "$dir" | sed s#/##) \
           && echo "Current Package: $PACKAGE" \
           && cd $dir \
@@ -34,7 +39,9 @@ jobs:
           ../../Templates/$PACKAGE-Template.json \
           && cd .. ; done
           cd ..
+      - name: Generate URI List
+        run: python ./generate_uri_list.py
       - uses: actions/upload-artifact@v2
         with:
-          name: Package-Templates
-          path: ./Templates/
+          name: Uri-List
+          path: function_uris.json
