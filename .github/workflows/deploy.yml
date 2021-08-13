@@ -18,20 +18,20 @@ jobs:
           aws-region: ${{ secrets.REGION }}
           
       - run: |
-        mkdir -p Templates \
-        && cd Packages \
-        && for dir in */; do echo $dir\
-        && PACKAGE=$(echo "$dir" | sed s#/##) \
-        && echo "Current Package: $PACKAGE" \
-        && cd $dir \
-        && sam build \
-        && sam package --s3-bucket serverboi-sam-packages \
-        --s3-prefix $PACKAGE \
-        --use-json \
-        --output-template-file \
-        ../../Templates/$PACKAGE-Template.json \
-        && cd .. ; done
-        cd ..
+          mkdir -p Templates \
+          && cd Packages \
+          && for dir in */; do echo $dir\
+          && PACKAGE=$(echo "$dir" | sed s#/##) \
+          && echo "Current Package: $PACKAGE" \
+          && cd $dir \
+          && sam build \
+          && sam package --s3-bucket serverboi-sam-packages \
+          --s3-prefix $PACKAGE \
+          --use-json \
+          --output-template-file \
+          ../../Templates/$PACKAGE-Template.json \
+          && cd .. ; done
+          cd ..
       - uses: actions/upload-artifact@v2
         with:
           name: Package-Templates
