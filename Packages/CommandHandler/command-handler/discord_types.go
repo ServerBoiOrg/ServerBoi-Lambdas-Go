@@ -45,7 +45,6 @@ type DiscordInteractionApplicationCommand struct {
 	GuildID       string                        `json:"guild_id"`
 	ChannelID     string                        `json:"channel_id"`
 	Member        DiscordMember                 `json:"member"`
-	User          discordgo.User                `json:"user"`
 	Token         string                        `json:"token"`
 	Version       int                           `json:"version"`
 }
@@ -79,7 +78,6 @@ type DiscordInteractionComponentCommand struct {
 	GuildID       string               `json:"guild_id"`
 	ChannelID     string               `json:"channel_id"`
 	Member        DiscordMember        `json:"member"`
-	User          discordgo.User       `json:"user"`
 	Token         string               `json:"token"`
 	Version       int                  `json:"version"`
 }
