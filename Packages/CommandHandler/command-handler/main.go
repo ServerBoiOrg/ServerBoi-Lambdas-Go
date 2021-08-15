@@ -34,12 +34,22 @@ func init() {
 }
 
 func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaResponse events.APIGatewayProxyResponse, err error) {
-	log.Printf("Input: %v", event)
+
+	//Log raw event
+	rawEvent, marshalErr := json.Marshal(event)
+	if err != nil {
+		fmt.Println(marshalErr)
+		return
+	}
+	log.Printf(string(rawEvent))
+
+	//Proxy event to standard http request
 	request, err := ginLambda.ProxyEventToHTTPRequest(event)
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
+
 	log.Println("Verifying Public Key")
 	verifyPublicKey(request)
 
