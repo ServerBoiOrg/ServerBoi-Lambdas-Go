@@ -21,7 +21,7 @@ type CreateServerWorkflowInput struct {
 	CreationOptions  map[string]string
 }
 
-func createServer(command DiscordInteractionApplicationCommand) (data *DiscordInteractionResponseData, err error) {
+func createServer(command DiscordInteractionApplicationCommand) (response DiscordInteractionResponse, err error) {
 	application := command.Data.Options[0].Options[0].Name
 	log.Printf("Application to create: %v", application)
 
@@ -84,7 +84,13 @@ func createServer(command DiscordInteractionApplicationCommand) (data *DiscordIn
 		"Embeds": workflowEmbed,
 	}
 
-	data = formResponseData(formRespInput)
+	data := formResponseData(formRespInput)
 
-	return data, nil
+	log.Printf("Forming response for Discord")
+	response = DiscordInteractionResponse{
+		Type: 4,
+		Data: *data,
+	}
+
+	return response, nil
 }

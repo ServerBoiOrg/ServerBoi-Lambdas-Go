@@ -16,7 +16,7 @@ func sendTempResponse(interactionID string, interactionToken string) {
 	tempResponse := DiscordInteractionResponse{
 		Type: 5,
 		Data: DiscordInteractionResponseData{
-			Flags: 64,
+			Flags: 1 << 6,
 		},
 	}
 
@@ -52,7 +52,7 @@ type FormResponseInput map[string]interface{}
 func formResponseData(input FormResponseInput) (data *DiscordInteractionResponseData) {
 
 	data = &DiscordInteractionResponseData{
-		Flags: 64,
+		Flags: 1 << 6,
 	}
 
 	if content, ok := input["Content"]; ok {

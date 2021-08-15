@@ -34,6 +34,7 @@ func init() {
 }
 
 func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaResponse events.APIGatewayProxyResponse, err error) {
+	log.Printf("Input: %v", event)
 	request, err := ginLambda.ProxyEventToHTTPRequest(event)
 	if err != nil {
 		fmt.Println(err)
