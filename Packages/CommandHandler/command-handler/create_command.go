@@ -23,19 +23,21 @@ type CreateServerWorkflowInput struct {
 
 func createServer(command DiscordInteractionApplicationCommand) (response DiscordInteractionResponseData, err error) {
 	application := command.Data.Options[0].Options[0].Name
-	log.Printf("Application to create: %v", application)
-
 	optionsSlice := command.Data.Options[0].Options[0].Options
-
 	creationOptions := make(map[string]string)
 	for _, option := range optionsSlice {
 		creationOptions[option.Name] = option.Value
 	}
-
 	executionName := generateWorkflowUUID("Provision")
-
 	service := creationOptions["service"]
 	delete(creationOptions, service)
+
+	errors := verifyCreateServerParams(creationOptions)
+	if len(errors) > 0 {
+		return formInvalidParametersResponse(errors), nil
+	}
+
+	log.Printf("Application to create: %v", application)
 	log.Printf("Service provider: %v", service)
 
 	var name string
@@ -91,4 +93,17 @@ func createServer(command DiscordInteractionApplicationCommand) (response Discor
 	}
 
 	return formResponseData(formRespInput), nil
+}
+
+func verifyCreateServerParams(options map[string]string) []string {
+	errors := []string{}
+	serviceErr := verifyService(options["service"])
+	if serviceErr != nil {
+		errors = append(errors, serviceErr.Error())
+	}
+	regionErr := verifyRegion(options["service"], options["region"])
+	if regionErr != nil {
+		errors = append(errors, regionErr.Error())
+	}
+	return errors
 }
