@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	awsRegions       = []string{"us-east-1, us-east-2, us-west-1, us-west-2, eu-west-1, eu-west-2, eu-west-3, eu-north-1"}
+	awsRegions       = []string{"us-east-1", "us-east-2", "us-west-1", "us-west-2", "eu-west-1", "eu-west-2", "eu-west-3", "eu-north-1"}
 	serverboiRegions = []string{"us-west"}
 )
 
@@ -60,6 +60,8 @@ func verifyRegion(s string, r string) error {
 
 // Verifies the provided region is either an actual AWS region or a Serverboi Logical regions
 func verifyAWSRegion(region string) error {
+	log.Printf("Checking region %v", region)
+
 	for _, awsRegion := range awsRegions {
 		if region == awsRegion {
 			return nil
@@ -72,6 +74,7 @@ func verifyAWSRegion(region string) error {
 		}
 	}
 
+	log.Printf("Given regions is not valid")
 	return errors.New(fmt.Sprintf("* region: `%v` is not an AWS Region or ServerBoi Region", region))
 }
 
