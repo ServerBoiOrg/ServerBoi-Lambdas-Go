@@ -350,14 +350,13 @@ func getConfig() aws.Config {
 
 func getRemoteCreds(region string, accountID string) *aws.CredentialsCache {
 	log.Printf("Getting credentials for account: %s", accountID)
-
+	cfg := getConfig()
 	roleSession := "ServerBoiGo-Provision-Session"
 	roleArn := fmt.Sprintf("arn:aws:iam::%v:role/ServerBoi-Resource.Assumed-Role", accountID)
 
 	log.Printf("RoleARN: %v", roleArn)
 
-	options := sts.Options{}
-	stsClient := sts.New(options)
+	stsClient := sts.NewFromConfig(cfg)
 
 	input := &sts.AssumeRoleInput{
 		RoleArn:         &roleArn,
