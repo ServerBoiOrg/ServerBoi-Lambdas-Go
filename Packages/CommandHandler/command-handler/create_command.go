@@ -21,7 +21,7 @@ type CreateServerWorkflowInput struct {
 	CreationOptions  map[string]string
 }
 
-func createServer(command DiscordInteractionApplicationCommand) (response DiscordInteractionResponse, err error) {
+func createServer(command DiscordInteractionApplicationCommand) (response DiscordInteractionResponseData, err error) {
 	application := command.Data.Options[0].Options[0].Name
 	log.Printf("Application to create: %v", application)
 
@@ -36,6 +36,7 @@ func createServer(command DiscordInteractionApplicationCommand) (response Discor
 
 	service := creationOptions["service"]
 	delete(creationOptions, service)
+	log.Printf("Service provider: %v", service)
 
 	var name string
 	_, ok := creationOptions["name"]
@@ -60,7 +61,9 @@ func createServer(command DiscordInteractionApplicationCommand) (response Discor
 		ServerName:       name,
 		CreationOptions:  creationOptions,
 	}
+	log.Printf("Provision Workflow Input: %v", executionInput)
 
+	log.Printf("Converting input to string for submission.")
 	inputJson, err := json.Marshal(executionInput)
 	if err != nil {
 		log.Println(err)
@@ -69,8 +72,10 @@ func createServer(command DiscordInteractionApplicationCommand) (response Discor
 
 	provisionArn := getEnvVar("PROVISION_ARN")
 
+	log.Printf("Submitting workflow")
 	startSfnExecution(provisionArn, executionName, inputString)
 
+	log.Printf("Forming workflow embed")
 	embedInput := FormWorkflowEmbedInput{
 		Name:        "Provision-Server",
 		Description: fmt.Sprintf("WorkflowID: %s", executionName),
@@ -80,17 +85,10 @@ func createServer(command DiscordInteractionApplicationCommand) (response Discor
 	}
 	workflowEmbed := formWorkflowEmbed(embedInput)
 
+	log.Printf("Prepping response data")
 	formRespInput := FormResponseInput{
 		"Embeds": workflowEmbed,
 	}
 
-	data := formResponseData(formRespInput)
-
-	log.Printf("Forming response for Discord")
-	response = DiscordInteractionResponse{
-		Type: 4,
-		Data: *data,
-	}
-
-	return response, nil
+	return formResponseData(formRespInput), nil
 }

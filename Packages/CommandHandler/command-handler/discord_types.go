@@ -112,8 +112,8 @@ type DiscordComponentData struct {
 }
 
 type DiscordInteractionResponse struct {
-	Type int `json:"type"`
-	Data DiscordInteractionResponseData
+	Type int                            `json:"type"`
+	Data DiscordInteractionResponseData `json:"data"`
 }
 
 type DiscordInteractionResponseData struct {

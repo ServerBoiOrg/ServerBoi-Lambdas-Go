@@ -1,7 +1,6 @@
 package main
 
-func pong() DiscordInteractionResponse {
-	var pong DiscordInteractionResponse
+func pong() (pong DiscordInteractionResponse) {
 	pong.Type = 1
 	return pong
 }

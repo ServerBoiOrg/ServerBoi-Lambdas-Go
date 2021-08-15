@@ -22,15 +22,14 @@ var (
 
 func init() {
 	log.Printf("Gin cold start")
-	// gin.SetMode(gin.ReleaseMode)
-	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
+	router := gin.Default()
+	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
 		})
 	})
 
-	ginLambda = ginadapter.New(r)
+	ginLambda = ginadapter.New(router)
 }
 
 func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaResponse events.APIGatewayProxyResponse, err error) {
@@ -56,13 +55,12 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaRe
 	interactionType := getCommandType(event.Body)
 	log.Printf("Interaction Type: %v", interactionType)
 
-	var response DiscordInteractionResponse
+	var response DiscordInteractionResponseData
 	var applicationID string
 	var interactionToken string
 	switch {
 	case interactionType == 1:
-		response = pong()
-		data, _ := json.Marshal(response)
+		data, _ := json.Marshal(pong())
 		return events.APIGatewayProxyResponse{
 			StatusCode: 200,
 			Body:       fmt.Sprintf(string(data)),
@@ -72,13 +70,11 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaRe
 	case interactionType == 3:
 		applicationID, interactionToken, response = component(event.Body)
 	}
-
 	if err != nil {
 		log.Fatalf("Error performing command: %v", err)
 		return lambdaResponse, err
 	}
 
-	log.Printf("Sending Response to Discord. Response: %v", response.Data)
 	editResponse(applicationID, interactionToken, response)
 
 	//Probably not needed but eh

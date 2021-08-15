@@ -18,7 +18,7 @@ type ServerCommandResponse struct {
 	Result bool
 }
 
-func routeServerCommand(command DiscordInteractionApplicationCommand) (response DiscordInteractionResponse, err error) {
+func routeServerCommand(command DiscordInteractionApplicationCommand) (response DiscordInteractionResponseData, err error) {
 	serverCommand := command.Data.Options[0].Options[0].Name
 	log.Printf("Server Commmad Option: %v", serverCommand)
 
@@ -31,7 +31,7 @@ func routeServerCommand(command DiscordInteractionApplicationCommand) (response 
 	log.Printf("Server Object: %s", server)
 	log.Printf("Running %s on server %s", serverCommand, serverID)
 
-	var data *DiscordInteractionResponseData
+	var data DiscordInteractionResponseData
 	switch {
 	//Server Actions
 	case serverCommand == "status":
@@ -58,14 +58,7 @@ func routeServerCommand(command DiscordInteractionApplicationCommand) (response 
 		return response, err
 	}
 
-	log.Printf("Forming response for Discord")
-	response = DiscordInteractionResponse{
-		Type: 4,
-		Data: *data,
-	}
-
-	return response, nil
-
+	return data, nil
 }
 
 type ServerTerminateInput struct {
@@ -82,7 +75,7 @@ type TerminateWorkflow struct {
 	ExecutionName string
 }
 
-func serverTerminate(input ServerTerminateInput) (data *DiscordInteractionResponseData, err error) {
+func serverTerminate(input ServerTerminateInput) (data DiscordInteractionResponseData, err error) {
 	executionName := generateWorkflowUUID("Terminate")
 	terminateArn := getEnvVar("TERMINATE_ARN")
 
@@ -113,9 +106,7 @@ func serverTerminate(input ServerTerminateInput) (data *DiscordInteractionRespon
 		"Embeds": workflowEmbed,
 	}
 
-	data = formResponseData(formRespInput)
-	return data, nil
-
+	return formResponseData(formRespInput), nil
 }
 
 type ServerActionInput struct {
@@ -169,8 +160,8 @@ func getServerFromID(serverID string) (server Server, err error) {
 }
 
 type Server interface {
-	start() (data *DiscordInteractionResponseData, err error)
-	stop() (data *DiscordInteractionResponseData, err error)
-	restart() (data *DiscordInteractionResponseData, err error)
-	status() (data *DiscordInteractionResponseData, err error)
+	start() (data DiscordInteractionResponseData, err error)
+	stop() (data DiscordInteractionResponseData, err error)
+	restart() (data DiscordInteractionResponseData, err error)
+	status() (data DiscordInteractionResponseData, err error)
 }

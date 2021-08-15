@@ -2,8 +2,8 @@ package main
 
 import "encoding/json"
 
-func component(eventBody string) (string, string, DiscordInteractionResponse) {
-	var response DiscordInteractionResponse
+func component(eventBody string) (string, string, DiscordInteractionResponseData) {
+	var response DiscordInteractionResponseData
 
 	var command DiscordInteractionComponentCommand
 	json.Unmarshal([]byte(eventBody), &command)

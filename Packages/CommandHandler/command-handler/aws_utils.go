@@ -122,7 +122,7 @@ func getRemoteCreds(region string, accountID string) *aws.CredentialsCache {
 
 }
 
-func (server AWSServer) start() (data *DiscordInteractionResponseData, err error) {
+func (server AWSServer) start() (data DiscordInteractionResponseData, err error) {
 	client := createEC2Client(server.ServiceInfo)
 	input := &ec2.StartInstancesInput{
 		InstanceIds: []string{
@@ -139,11 +139,10 @@ func (server AWSServer) start() (data *DiscordInteractionResponseData, err error
 		"Content": "Starting server",
 	}
 
-	data = formResponseData(formRespInput)
-	return data, nil
+	return formResponseData(formRespInput), nil
 }
 
-func (server AWSServer) stop() (data *DiscordInteractionResponseData, err error) {
+func (server AWSServer) stop() (data DiscordInteractionResponseData, err error) {
 	client := createEC2Client(server.ServiceInfo)
 	input := &ec2.StopInstancesInput{
 		InstanceIds: []string{
@@ -161,11 +160,10 @@ func (server AWSServer) stop() (data *DiscordInteractionResponseData, err error)
 		"Content": "Stopping server",
 	}
 
-	data = formResponseData(formRespInput)
-	return data, nil
+	return formResponseData(formRespInput), nil
 }
 
-func (server AWSServer) restart() (data *DiscordInteractionResponseData, err error) {
+func (server AWSServer) restart() (data DiscordInteractionResponseData, err error) {
 	client := createEC2Client(server.ServiceInfo)
 	input := &ec2.RebootInstancesInput{
 		InstanceIds: []string{
@@ -182,11 +180,10 @@ func (server AWSServer) restart() (data *DiscordInteractionResponseData, err err
 		"Content": "Restarting server",
 	}
 
-	data = formResponseData(formRespInput)
-	return data, nil
+	return formResponseData(formRespInput), nil
 }
 
-func (server AWSServer) status() (data *DiscordInteractionResponseData, err error) {
+func (server AWSServer) status() (data DiscordInteractionResponseData, err error) {
 	client := createEC2Client(server.ServiceInfo)
 	log.Printf("Ec2 Client made in Target account")
 	input := &ec2.DescribeInstancesInput{
@@ -205,8 +202,8 @@ func (server AWSServer) status() (data *DiscordInteractionResponseData, err erro
 			formRespInput := FormResponseInput{
 				"Content": fmt.Sprintf("Server status: %s", i.State.Name),
 			}
-			data = formResponseData(formRespInput)
-			return data, nil
+
+			return formResponseData(formRespInput), nil
 		}
 	}
 	return

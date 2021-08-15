@@ -5,7 +5,7 @@ import (
 	"log"
 )
 
-func command(eventBody string) (applicationID string, interactionToken string, response DiscordInteractionResponse, err error) {
+func command(eventBody string) (applicationID string, interactionToken string, response DiscordInteractionResponseData, err error) {
 	log.Printf("Command: %v", eventBody)
 
 	//Unmarshal into Interaction Type
@@ -17,7 +17,6 @@ func command(eventBody string) (applicationID string, interactionToken string, r
 
 	commandOption := command.Data.Options[0].Name
 	log.Printf("Command Option: %v", commandOption)
-
 	switch {
 	case commandOption == "create":
 		response, err = createServer(command)
@@ -31,6 +30,7 @@ func command(eventBody string) (applicationID string, interactionToken string, r
 		log.Fatalf("Error performing server command: %v", err)
 		return "", "", response, err
 	}
+	log.Printf("Response from %v command: %v", commandOption, response)
 
 	return command.ApplicationID, command.Token, response, nil
 }
