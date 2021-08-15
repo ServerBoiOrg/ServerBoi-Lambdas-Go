@@ -64,13 +64,14 @@ func createEC2Client(serverInfo AWSService) ec2.Client {
 
 func createSfnClient() sfn.Client {
 	stage := getEnvVar("STAGE")
-	options := sfn.Options{
-		Region: "us-west-2",
-	}
-	if stage == "Testing" {
-		options.EndpointResolver = sfn.EndpointResolverFromURL("http://localhost:8083")
-	}
-	client := sfn.New(options)
+
+	cfg := getConfig()
+	client := sfn.NewFromConfig(cfg, func(options *sfn.Options) {
+		if stage == "Testing" {
+			options.EndpointResolver = sfn.EndpointResolverFromURL("http://localhost:8083")
+		}
+	})
+
 	return *client
 }
 
