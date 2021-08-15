@@ -82,7 +82,7 @@ func startSfnExecution(statemachineArn string, executionName string, input strin
 		Name:            &executionName,
 		Input:           &input,
 	}
-	_, err := client.StartExecution(context.Background(), &executionInput)
+	_, err := client.StartExecution(context.TODO(), &executionInput)
 	if err != nil {
 		log.Fatalf("Error starting execution: %v", err)
 	}
