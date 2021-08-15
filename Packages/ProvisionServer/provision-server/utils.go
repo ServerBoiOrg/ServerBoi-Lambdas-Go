@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	dynamotypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
@@ -42,6 +43,14 @@ func getCloudwatchClient() *cloudwatch.Client {
 	cw := cloudwatch.NewFromConfig(cfg, func(options *cloudwatch.Options) {})
 
 	return cw
+}
+
+func getS3Client() *s3.Client {
+	cfg := getConfig()
+	log.Printf("Getting cloudwatch client")
+	s3 := s3.NewFromConfig(cfg)
+
+	return s3
 }
 
 func getDynamo() *dynamodb.Client {

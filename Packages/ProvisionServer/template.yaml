@@ -25,4 +25,4 @@ Resources:
           STAGE: Testing
           DYNAMO_CONTAINER: serverboi-dynamodb-local
           LOCALSTACK_CONTAINER: serverboi-localstack
-          URL: https://api.serverboi.io
+          API_URL: https://api.serverboi.io

@@ -1,15 +1,47 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"strings"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 func getBuildInfo(game string) BuildInfo {
+	client := getS3Client()
+	requestInput := &s3.GetObjectInput{
+		Bucket: aws.String("serverboi-sam-packages"),
+		Key:    aws.String("build.json"),
+	}
+	var gamesData map[string]interface{}
+	result, err := client.GetObject(context.TODO(), requestInput)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer result.Body.Close()
+	body, err := ioutil.ReadAll(result.Body)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	log.Printf("BuildInfo: %s", body)
+
+	json.Unmarshal(body, &gamesData)
+	gameData := gamesData[game]
+	jsoned, _ := json.Marshal(gameData)
+	var buildInfo BuildInfo
+	json.Unmarshal(jsoned, &buildInfo)
+
+	return buildInfo
+}
+
+func getBuildInfoLocal(game string) BuildInfo {
 	var gamesData map[string]interface{}
 	jsonFile, err := os.Open("build.json")
 	if err != nil {

@@ -22,7 +22,7 @@ func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.Attrib
 	accountID := queryAWSAccountID(dynamo, params.OwnerID)
 	log.Printf("Account to provision server in: %v", accountID)
 
-	region := params.CreationOptions["Region"]
+	region := params.CreationOptions["region"]
 	architecture := getArchitecture(params.CreationOptions)
 
 	ec2Client := createEC2Client(region, accountID)
