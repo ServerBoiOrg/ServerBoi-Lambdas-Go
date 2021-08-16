@@ -172,6 +172,7 @@ func getImage(ec2Client *ec2.Client, architecture string) string {
 		return "0000000"
 	}
 
+	log.Printf("Searching for Debian 10 AMI on %v", architecture)
 	switch architecture {
 	case "x86":
 		architecture = "x86_64"
@@ -194,7 +195,7 @@ func getImage(ec2Client *ec2.Client, architecture string) string {
 		},
 		{
 			Name:   &virtualization,
-			Values: []string{"virtualization-type"},
+			Values: []string{"hvm"},
 		},
 	}
 	owners := []string{"136693071363"}
@@ -206,6 +207,8 @@ func getImage(ec2Client *ec2.Client, architecture string) string {
 			Owners:  owners,
 		},
 	)
+
+	log.Printf("Debian 10 AMI Search Response: %v", response.Images)
 
 	imageID = *response.Images[0].ImageId
 

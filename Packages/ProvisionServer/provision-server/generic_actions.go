@@ -30,8 +30,6 @@ func getBuildInfo(game string) BuildInfo {
 		fmt.Println(err)
 	}
 
-	log.Printf("BuildInfo: %s", body)
-
 	json.Unmarshal(body, &gamesData)
 	gameData := gamesData[game]
 	jsoned, _ := json.Marshal(gameData)
