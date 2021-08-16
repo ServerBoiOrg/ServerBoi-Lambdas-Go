@@ -9,6 +9,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/sts v1.6.0
+	github.com/bwmarrin/discordgo v0.23.2 // indirect
+	github.com/clinet/discordgo-embed v0.0.0-20190411043415-d754bc1a576c
 	github.com/google/uuid v1.3.0
 	github.com/joho/godotenv v1.3.0
 )

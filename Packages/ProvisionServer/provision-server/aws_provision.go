@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	b64 "encoding/base64"
 	"fmt"
 	"log"
 	"strings"
@@ -34,7 +33,7 @@ func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.Attrib
 	container := getContainer(buildInfo, architecture)
 
 	log.Printf("Generating bootscript")
-	bootScript := formBootscript(
+	bootscript := formBootscript(
 		FormDockerCommandInput{
 			Application:      params.Application,
 			Url:              params.Url,
@@ -48,7 +47,6 @@ func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.Attrib
 		},
 		buildInfo.DockerCommands,
 	)
-	b64Bootscript := b64.StdEncoding.EncodeToString([]byte(bootScript))
 
 	log.Printf("Getting/Creating Security Group")
 	groupID := getSecurityGroup(&ec2Client, params.Application, buildInfo.Ports)
@@ -63,17 +61,21 @@ func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.Attrib
 	instanceType := getAWSInstanceType(buildInfo, architecture)
 	oneInstance := int32(1)
 
+	//Temporary
+	testKey := "ServerBoiTestKey"
+
 	log.Printf("Creating instance")
 	response, creationErr := ec2Client.RunInstances(
 		context.Background(),
 		&ec2.RunInstancesInput{
 			MaxCount:            &oneInstance,
 			MinCount:            &oneInstance,
-			UserData:            &b64Bootscript,
+			UserData:            &bootscript,
 			SecurityGroupIds:    []string{groupID},
 			ImageId:             &imageID,
 			BlockDeviceMappings: ebsMapping,
 			InstanceType:        instanceType,
+			KeyName:             &testKey,
 		},
 	)
 	if creationErr != nil {
