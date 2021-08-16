@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	b64 "encoding/base64"
 	"fmt"
 	"log"
 	"strings"
@@ -47,6 +48,7 @@ func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.Attrib
 		},
 		buildInfo.DockerCommands,
 	)
+	b64Bootscript := b64.StdEncoding.EncodeToString([]byte(bootScript))
 
 	log.Printf("Getting/Creating Security Group")
 	groupID := getSecurityGroup(&ec2Client, params.Application, buildInfo.Ports)
@@ -62,18 +64,21 @@ func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.Attrib
 	oneInstance := int32(1)
 
 	log.Printf("Creating instance")
-	response, _ := ec2Client.RunInstances(
+	response, creationErr := ec2Client.RunInstances(
 		context.Background(),
 		&ec2.RunInstancesInput{
 			MaxCount:            &oneInstance,
 			MinCount:            &oneInstance,
-			UserData:            &bootScript,
+			UserData:            &b64Bootscript,
 			SecurityGroupIds:    []string{groupID},
 			ImageId:             &imageID,
 			BlockDeviceMappings: ebsMapping,
 			InstanceType:        instanceType,
 		},
 	)
+	if creationErr != nil {
+		log.Fatalf("Error creating instance: %v", creationErr)
+	}
 
 	instanceID := *response.Instances[0].InstanceId
 	log.Printf("Instance created. ID: %v", instanceID)
@@ -133,17 +138,19 @@ func getAWSInstanceType(buildInfo BuildInfo, architecture string) ec2types.Insta
 		instTypes := ec2types.InstanceType.Values("")
 		for _, inst := range instTypes {
 			if string(inst) == instanceType {
+				log.Printf("Instance Type: %v", inst)
 				return inst
 			}
 		}
 		panic("Unable to find instance type")
 	} else {
+		log.Printf("Instance Type: %v", defaultType)
 		return defaultType
 	}
 }
 
 func getEbsMapping(driveSize int) []ec2types.BlockDeviceMapping {
-	dev := "/dev/xda"
+	dev := "/dev/xvda"
 	vName := "ephemeral"
 	delete := true
 	vType := "standard"
@@ -172,7 +179,6 @@ func getImage(ec2Client *ec2.Client, architecture string) string {
 		return "0000000"
 	}
 
-	log.Printf("Searching for Debian 10 AMI on %v", architecture)
 	switch architecture {
 	case "x86":
 		architecture = "x86_64"

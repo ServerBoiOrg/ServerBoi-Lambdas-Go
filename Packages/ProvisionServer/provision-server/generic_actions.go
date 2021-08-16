@@ -36,6 +36,10 @@ func getBuildInfo(game string) BuildInfo {
 	var buildInfo BuildInfo
 	json.Unmarshal(jsoned, &buildInfo)
 
+	if buildInfo.DriveSize == 0 {
+		buildInfo.DriveSize = 8
+	}
+
 	return buildInfo
 }
 
