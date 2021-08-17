@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	gu "generalutils"
 	"log"
 	"strings"
 
@@ -18,7 +19,7 @@ type ServerCommandResponse struct {
 	Result bool
 }
 
-func routeServerCommand(command DiscordInteractionApplicationCommand) (response DiscordInteractionResponseData, err error) {
+func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData, err error) {
 	serverCommand := command.Data.Options[0].Options[0].Name
 	log.Printf("Server Commmad Option: %v", serverCommand)
 
@@ -31,17 +32,17 @@ func routeServerCommand(command DiscordInteractionApplicationCommand) (response 
 	log.Printf("Server Object: %s", server)
 	log.Printf("Running %s on server %s", serverCommand, serverID)
 
-	var data DiscordInteractionResponseData
+	var data gu.DiscordInteractionResponseData
 	switch {
 	//Server Actions
 	case serverCommand == "status":
-		data, err = server.status()
+		data, err = server.Status()
 	case serverCommand == "start":
-		data, err = server.start()
+		data, err = server.Start()
 	case serverCommand == "stop":
-		data, err = server.stop()
+		data, err = server.Stop()
 	case serverCommand == "restart":
-		data, err = server.restart()
+		data, err = server.Restart()
 	//Workflows
 	// case serverCommand == "add":
 	case serverCommand == "terminate":
@@ -75,9 +76,9 @@ type TerminateWorkflow struct {
 	ExecutionName string
 }
 
-func serverTerminate(input ServerTerminateInput) (data DiscordInteractionResponseData, err error) {
-	executionName := generateWorkflowUUID("Terminate")
-	terminateArn := getEnvVar("TERMINATE_ARN")
+func serverTerminate(input ServerTerminateInput) (data gu.DiscordInteractionResponseData, err error) {
+	executionName := gu.GenerateWorkflowUUID("Terminate")
+	terminateArn := gu.GetEnvVar("TERMINATE_ARN")
 
 	terminationWorkflowInput := TerminateWorkflow{
 		ServerID:      input.ServerID,
@@ -91,31 +92,31 @@ func serverTerminate(input ServerTerminateInput) (data DiscordInteractionRespons
 	}
 	inputString := fmt.Sprintf(string(inputJson))
 
-	startSfnExecution(terminateArn, executionName, inputString)
+	gu.StartSfnExecution(terminateArn, executionName, inputString)
 
-	embedInput := FormWorkflowEmbedInput{
+	embedInput := gu.FormWorkflowEmbedInput{
 		Name:        "Terminate-Workflow",
 		Description: fmt.Sprintf("WorkflowID: %s", executionName),
 		Status:      "⏳ Pending",
 		Stage:       "Starting...",
-		Color:       Greyple,
+		Color:       gu.Greyple,
 	}
-	workflowEmbed := formWorkflowEmbed(embedInput)
+	workflowEmbed := gu.FormWorkflowEmbed(embedInput)
 
-	formRespInput := FormResponseInput{
+	formRespInput := gu.FormResponseInput{
 		"Embeds": workflowEmbed,
 	}
 
-	return formResponseData(formRespInput), nil
+	return gu.FormResponseData(formRespInput), nil
 }
 
 type ServerActionInput struct {
 	ServerID string
 }
 
-func getServerFromID(serverID string) (server Server, err error) {
-	dynamo := getDynamo()
-	serverTable := getEnvVar("SERVER_TABLE")
+func getServerFromID(serverID string) (server gu.Server, err error) {
+	dynamo := gu.GetDynamo()
+	serverTable := gu.GetEnvVar("SERVER_TABLE")
 
 	log.Printf("Querying server %v item from Dynamo", serverID)
 	response, err := dynamo.GetItem(context.Background(), &dynamodb.GetItemInput{
@@ -129,7 +130,7 @@ func getServerFromID(serverID string) (server Server, err error) {
 		return server, err
 	}
 
-	var serverInfo ServerBoiServer
+	var serverInfo gu.ServerBoiServer
 	err = attributevalue.UnmarshalMap(response.Item, &serverInfo)
 
 	log.Printf("Server Item: %v", serverInfo)
@@ -139,29 +140,27 @@ func getServerFromID(serverID string) (server Server, err error) {
 	log.Printf("Service of server: %v", service)
 	switch {
 	case strings.ToLower(service) == "aws":
-		var awsService AWSService
+		var awsService gu.AWSService
 		jsonedService, _ := json.Marshal(serverInfo.Service)
 		json.Unmarshal(jsonedService, &awsService)
 		log.Printf("Service Item: %v", awsService)
 
-		server := AWSServer{
+		server := gu.AWSServer{
 			ServiceInfo: awsService,
 		}
 		return server, nil
 	case strings.ToLower(service) == "linode":
-		var service LinodeService
+		var service gu.LinodeService
 		jsonedService, _ := json.Marshal(serverInfo.Service)
 		json.Unmarshal(jsonedService, &service)
 		log.Printf("Service Item: %v", service)
+
+		server := gu.LinodeServer{
+			ServiceInfo: service,
+		}
+
 		return server, nil
 	}
 
 	return server, err
-}
-
-type Server interface {
-	start() (data DiscordInteractionResponseData, err error)
-	stop() (data DiscordInteractionResponseData, err error)
-	restart() (data DiscordInteractionResponseData, err error)
-	status() (data DiscordInteractionResponseData, err error)
 }

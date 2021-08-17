@@ -1,25 +1,49 @@
 package main
 
 import (
-	"errors"
-	"fmt"
-	"io/ioutil"
-	"net/http"
+	"context"
+	"encoding/json"
+	"log"
+	"strings"
 
-	"github.com/aws/aws-lambda-go/events"
+	gu "generalutils"
+
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-func handler(event map[string]interface{}) (map[string]interface{}, error) {
+var TOKEN_BUCKET = gu.GetEnvVar("TOKEN_BUCKET")
 
-	taskToken := event["TaskToken"]
+type PutTokenPayload struct {
+	TaskToken     string `json:"TaskToken"`
+	ExecutionName string `json:"ExecutionName"`
+}
 
-	return events.APIGatewayProxyResponse{
-		Body:       fmt.Sprintf("Hello, %v", string(ip)),
-		StatusCode: 200,
-	}, nil
+func handler(event map[string]interface{}) bool {
+	log.Printf("Event: %v", event)
+	params := convertEvent(event)
+
+	client := gu.GetS3Client()
+
+	client.PutObject(context.Background(), &s3.PutObjectInput{
+		Bucket: &TOKEN_BUCKET,
+		Body:   strings.NewReader(params.TaskToken),
+		Key:    &params.ExecutionName,
+	})
+
+	return true
 }
 
 func main() {
 	lambda.Start(handler)
+}
+
+func convertEvent(event map[string]interface{}) (params PutTokenPayload) {
+	jsoned, _ := json.Marshal(event)
+	params = PutTokenPayload{}
+	if marshalErr := json.Unmarshal(jsoned, &params); marshalErr != nil {
+		log.Fatal(marshalErr)
+		panic(marshalErr)
+	}
+	return params
 }

@@ -1,122 +1,23 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"strings"
-	"time"
+
+	gu "generalutils"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/bwmarrin/discordgo"
-	embed "github.com/clinet/discordgo-embed"
 )
 
-type FormWorkflowEmbedInput struct {
-	Name        string
-	Description string
-	Status      string
-	Stage       string
-	Error       string
-	Color       int
-}
-
-type DiscordSelectMenuOptions struct {
-	Label       string       `json:"label"`
-	Value       string       `json:"value"`
-	Description string       `json:"description,omitempty"`
-	Emoji       DiscordEmoji `json:"emoji,omitempty"`
-	Default     bool         `json:"default,omitempty"`
-}
-
-type DiscordEmoji struct {
-	// Component will have name, id, animated
-	ID            string           `json:"id"`
-	Name          string           `json:"name"`
-	Roles         []discordgo.Role `json:"roles,omitempty"`
-	User          discordgo.User   `json:"user,omitempty"`
-	RequireColons bool             `json:"require_colons,omitempty"`
-	Managed       bool             `json:"managed,omitempty"`
-	Animated      bool             `json:"animated,omitempty"`
-	Available     bool             `json:"available,omitempty"`
-}
-
-type DiscordComponentData struct {
-	Type        int                        `json:"type"`
-	CustomID    string                     `json:"custom_id,omitempty"`
-	Disabled    string                     `json:"disabled,omitempty"`
-	Style       int                        `json:"style,omitempty"`
-	Label       string                     `json:"label,omitempty"`
-	Emoji       DiscordEmoji               `json:"emoji,omitempty"`
-	Url         string                     `json:"url,omitempty"`
-	Options     []DiscordSelectMenuOptions `json:"options,omitempty"`
-	Placeholder string                     `json:"placeholder,omitempty"`
-	MinValues   int                        `json:"min_values,omitempty"`
-	MaxValues   int                        `json:"max_values,omitempty"`
-	Components  []DiscordComponentData     `json:"components,omitempty"`
-}
-
-type DiscordInteractionResponseData struct {
-	TTS             bool                         `json:"tts,omitempty"`
-	Content         string                       `json:"content,omitempty"`
-	Embeds          []embed.Embed                `json:"embeds,omitempty"`
-	AllowedMentions discordgo.AllowedMentionType `json:"allowed_mentions,omitempty"`
-	Flags           int                          `json:"flags,omitempty"`
-	Components      []DiscordComponentData       `json:"components,omitempty"`
-}
-
-func makeTimestamp() string {
-	t := time.Now().UTC()
-	return fmt.Sprintf("⏱️ Last updated: %02d:%02d:%02d UTC", t.Hour(), t.Minute(), t.Second())
-}
-
-func formWorkflowEmbed(input FormWorkflowEmbedInput) *embed.Embed {
-	timestamp := makeTimestamp()
-	workflowEmbed := embed.NewEmbed()
-	workflowEmbed.SetTitle(input.Name)
-	workflowEmbed.SetDescription(input.Description)
-	workflowEmbed.SetColor(1)
-	workflowEmbed.AddField("Status", input.Status)
-	workflowEmbed.AddField("Stage", input.Stage)
-	workflowEmbed.SetFooter(timestamp)
-
-	return workflowEmbed
-}
-
-func updateResponse(applicationID string, interactionToken string, data DiscordInteractionResponseData) {
-	responseUrl := fmt.Sprintf("https://discord.com/api/webhooks/%s/%s/messages/@original", applicationID, interactionToken)
-	log.Printf("URL to Patch: %v", responseUrl)
-
-	log.Printf("Editing response with: %v", data)
-	responseBody, _ := json.Marshal(data)
-	bytes := bytes.NewBuffer(responseBody)
-
-	request, err := http.NewRequest(http.MethodPatch, responseUrl, bytes)
-	if err != nil {
-		log.Fatal(err)
-	}
-	request.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(request)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("Response from discord: %v", resp)
-
-	defer resp.Body.Close()
-}
-
 func getBuildInfo(game string) BuildInfo {
-	client := getS3Client()
+	client := gu.GetS3Client()
 	requestInput := &s3.GetObjectInput{
 		Bucket: aws.String("serverboi-sam-packages"),
 		Key:    aws.String("build.json"),

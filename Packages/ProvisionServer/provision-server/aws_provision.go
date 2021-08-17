@@ -3,20 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
+	gu "generalutils"
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
 	dynamotypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
 
 func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.AttributeValue {
-	dynamo := getDynamo()
+	dynamo := gu.GetDynamo()
 
 	log.Printf("Querying aws account for %v item from Dynamo", params.Owner)
 	accountID := queryAWSAccountID(dynamo, params.OwnerID)
@@ -25,7 +22,7 @@ func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.Attrib
 	region := params.CreationOptions["region"]
 	architecture := getArchitecture(params.CreationOptions)
 
-	ec2Client := createEC2Client(region, accountID)
+	ec2Client := gu.CreateEC2Client(region, accountID)
 
 	log.Printf("Getting build info")
 	buildInfo := getBuildInfo(params.Application)
@@ -174,7 +171,7 @@ func getEbsMapping(driveSize int) []ec2types.BlockDeviceMapping {
 
 func getImage(ec2Client *ec2.Client, architecture string) string {
 	// Default Debian10. Skip on test
-	stage := getEnvVar("STAGE")
+	stage := gu.GetEnvVar("STAGE")
 
 	var imageID string
 	if stage == "Testing" {
@@ -342,75 +339,4 @@ func setIngress(ec2Client *ec2.Client, securityGroupID string, ports []int) {
 type AWSTableResponse struct {
 	UserID       string `json:"UserID"`
 	AWSAccountID string `json:"AWSAccountID"`
-}
-
-func getConfig() aws.Config {
-	log.Printf("Getting config")
-
-	config, err := config.LoadDefaultConfig(context.TODO(), func(options *config.LoadOptions) error {
-		options.Region = getEnvVar("AWS_REGION")
-
-		return nil
-	})
-	if err != nil {
-		log.Fatalf("Error: %v", err)
-	}
-
-	return config
-}
-
-func getRemoteCreds(region string, accountID string) *aws.CredentialsCache {
-	log.Printf("Getting credentials for account: %s", accountID)
-	cfg := getConfig()
-	roleSession := "ServerBoiGo-Provision-Session"
-	roleArn := fmt.Sprintf("arn:aws:iam::%v:role/ServerBoi-Resource.Assumed-Role", accountID)
-
-	log.Printf("RoleARN: %v", roleArn)
-
-	stsClient := sts.NewFromConfig(cfg)
-
-	input := &sts.AssumeRoleInput{
-		RoleArn:         &roleArn,
-		RoleSessionName: &roleSession,
-	}
-
-	newRole, err := stsClient.AssumeRole(context.Background(), input)
-	if err != nil {
-		fmt.Println("Got an error assuming the role:")
-		panic(err)
-	}
-
-	accessKey := newRole.Credentials.AccessKeyId
-	secretKey := newRole.Credentials.SecretAccessKey
-	sessionToken := newRole.Credentials.SessionToken
-
-	creds := aws.NewCredentialsCache(credentials.NewStaticCredentialsProvider(*accessKey, *secretKey, *sessionToken))
-
-	return creds
-}
-
-func createEC2Client(region string, accountID string) ec2.Client {
-	stage := getEnvVar("STAGE")
-	var options ec2.Options
-
-	if stage == "Testing" {
-		log.Printf("Testing environment. Setting ec2 endpoint to localhost container")
-		localstackHostname := getEnvVar("LOCALSTACK_CONTAINER")
-		endpoint := fmt.Sprintf("http://%v:4566/", localstackHostname)
-		options.EndpointResolver = ec2.EndpointResolverFromURL(endpoint)
-	} else {
-		log.Printf("Making EC2 client in account: %v", accountID)
-		creds := getRemoteCreds(region, accountID)
-		log.Printf("Got credentials for account.")
-
-		options = ec2.Options{
-			Region:      region,
-			Credentials: creds,
-		}
-	}
-
-	client := ec2.New(options)
-	log.Printf("EC2 Client created")
-
-	return *client
 }

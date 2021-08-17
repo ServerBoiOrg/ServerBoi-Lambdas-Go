@@ -1,4 +1,4 @@
-package main
+package generalutils
 
 import (
 	"context"
@@ -19,7 +19,7 @@ func createLinodeClient(apiKey string) linodego.Client {
 	return linodego.NewClient(oauth2Client)
 }
 
-func (server LinodeServer) start() (data DiscordInteractionResponseData, err error) {
+func (server LinodeServer) Start() (data DiscordInteractionResponseData, err error) {
 	client := createLinodeClient(server.ServiceInfo.ApiKey)
 
 	err = client.BootInstance(context.Background(), server.ServiceInfo.LinodeID, 0)
@@ -32,10 +32,10 @@ func (server LinodeServer) start() (data DiscordInteractionResponseData, err err
 		"Content": "Starting server",
 	}
 
-	return formResponseData(formRespInput), nil
+	return FormResponseData(formRespInput), nil
 }
 
-func (server LinodeServer) stop() (data DiscordInteractionResponseData, err error) {
+func (server LinodeServer) Stop() (data DiscordInteractionResponseData, err error) {
 	client := createLinodeClient(server.ServiceInfo.ApiKey)
 
 	err = client.ShutdownInstance(context.Background(), server.ServiceInfo.LinodeID)
@@ -48,10 +48,10 @@ func (server LinodeServer) stop() (data DiscordInteractionResponseData, err erro
 		"Content": "Stopping server",
 	}
 
-	return formResponseData(formRespInput), nil
+	return FormResponseData(formRespInput), nil
 }
 
-func (server LinodeServer) restart() (data DiscordInteractionResponseData, err error) {
+func (server LinodeServer) Restart() (data DiscordInteractionResponseData, err error) {
 	client := createLinodeClient(server.ServiceInfo.ApiKey)
 
 	err = client.RebootInstance(context.Background(), server.ServiceInfo.LinodeID, 0)
@@ -64,10 +64,10 @@ func (server LinodeServer) restart() (data DiscordInteractionResponseData, err e
 		"Content": "Restarting server",
 	}
 
-	return formResponseData(formRespInput), nil
+	return FormResponseData(formRespInput), nil
 }
 
-func (server LinodeServer) status() (data DiscordInteractionResponseData, err error) {
+func (server LinodeServer) Status() (data DiscordInteractionResponseData, err error) {
 	client := createLinodeClient(server.ServiceInfo.ApiKey)
 	instance, err := client.GetInstance(context.Background(), server.ServiceInfo.LinodeID)
 	if err != nil {
@@ -79,5 +79,5 @@ func (server LinodeServer) status() (data DiscordInteractionResponseData, err er
 		"Content": fmt.Sprintf("Server status: %v", instance.Status),
 	}
 
-	return formResponseData(formRespInput), nil
+	return FormResponseData(formRespInput), nil
 }

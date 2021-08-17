@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+
+	gu "generalutils"
 )
 
 type CreateServerWorkflowInput struct {
@@ -21,20 +23,20 @@ type CreateServerWorkflowInput struct {
 	CreationOptions  map[string]string
 }
 
-func createServer(command DiscordInteractionApplicationCommand) (response DiscordInteractionResponseData, err error) {
+func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData, err error) {
 	application := command.Data.Options[0].Options[0].Name
 	optionsSlice := command.Data.Options[0].Options[0].Options
 	creationOptions := make(map[string]string)
 	for _, option := range optionsSlice {
 		creationOptions[option.Name] = option.Value
 	}
-	executionName := generateWorkflowUUID("Provision")
+	executionName := gu.GenerateWorkflowUUID("Provision")
 	service := creationOptions["service"]
 	delete(creationOptions, service)
 
 	errors := verifyCreateServerParams(creationOptions)
 	if len(errors) > 0 {
-		return formInvalidParametersResponse(errors), nil
+		return gu.FormInvalidParametersResponse(errors), nil
 	}
 
 	log.Printf("Application to create: %v", application)
@@ -59,7 +61,7 @@ func createServer(command DiscordInteractionApplicationCommand) (response Discor
 		InteractionToken: command.Token,
 		ApplicationID:    command.ApplicationID,
 		GuildID:          command.GuildID,
-		Url:              getEnvVar("API_URL"),
+		Url:              gu.GetEnvVar("API_URL"),
 		ServerName:       name,
 		CreationOptions:  creationOptions,
 	}
@@ -72,27 +74,27 @@ func createServer(command DiscordInteractionApplicationCommand) (response Discor
 	}
 	inputString := fmt.Sprintf(string(inputJson))
 
-	provisionArn := getEnvVar("PROVISION_ARN")
+	provisionArn := gu.GetEnvVar("PROVISION_ARN")
 
 	log.Printf("Submitting workflow")
-	startSfnExecution(provisionArn, executionName, inputString)
+	gu.StartSfnExecution(provisionArn, executionName, inputString)
 
 	log.Printf("Forming workflow embed")
-	embedInput := FormWorkflowEmbedInput{
+	embedInput := gu.FormWorkflowEmbedInput{
 		Name:        "Provision-Server",
 		Description: fmt.Sprintf("WorkflowID: %s", executionName),
 		Status:      "⏳ Pending",
 		Stage:       "Starting...",
-		Color:       Greyple,
+		Color:       gu.Greyple,
 	}
-	workflowEmbed := formWorkflowEmbed(embedInput)
+	workflowEmbed := gu.FormWorkflowEmbed(embedInput)
 
 	log.Printf("Prepping response data")
-	formRespInput := FormResponseInput{
+	formRespInput := gu.FormResponseInput{
 		"Embeds": workflowEmbed,
 	}
 
-	return formResponseData(formRespInput), nil
+	return gu.FormResponseData(formRespInput), nil
 }
 
 func verifyCreateServerParams(options map[string]string) []string {

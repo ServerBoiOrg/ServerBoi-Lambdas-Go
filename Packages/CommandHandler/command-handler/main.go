@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 
+	gu "generalutils"
+
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	ginadapter "github.com/awslabs/aws-lambda-go-api-proxy/gin"
@@ -17,7 +19,7 @@ import (
 var ginLambda *ginadapter.GinLambda
 
 var (
-	SERVER_TABLE = getEnvVar("SERVER_TABLE")
+	SERVER_TABLE = gu.GetEnvVar("SERVER_TABLE")
 )
 
 func init() {
@@ -55,7 +57,7 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaRe
 	interactionType := getCommandType(event.Body)
 	log.Printf("Interaction Type: %v", interactionType)
 
-	var response DiscordInteractionResponseData
+	var response gu.DiscordInteractionResponseData
 	var applicationID string
 	var interactionToken string
 	switch {
@@ -75,7 +77,7 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaRe
 		return lambdaResponse, err
 	}
 
-	editResponse(applicationID, interactionToken, response)
+	gu.EditResponse(applicationID, interactionToken, response)
 
 	//Probably not needed but eh
 	return events.APIGatewayProxyResponse{
@@ -94,8 +96,8 @@ func getCommandType(eventBody string) float64 {
 }
 
 func verifyPublicKey(request *http.Request) {
-	publicKeyString := getEnvVar("PUBLIC_KEY")
-	publicKey := decodeToPublicKey(publicKeyString)
+	publicKeyString := gu.GetEnvVar("PUBLIC_KEY")
+	publicKey := gu.DecodeToPublicKey(publicKeyString)
 
 	if !discordgo.VerifyInteraction(request, publicKey) {
 		fmt.Println("Public Key Not Verified")

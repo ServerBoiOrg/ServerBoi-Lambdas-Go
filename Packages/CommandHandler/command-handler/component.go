@@ -1,11 +1,14 @@
 package main
 
-import "encoding/json"
+import (
+	"encoding/json"
+	gu "generalutils"
+)
 
-func component(eventBody string) (string, string, DiscordInteractionResponseData) {
-	var response DiscordInteractionResponseData
+func component(eventBody string) (string, string, gu.DiscordInteractionResponseData) {
+	var response gu.DiscordInteractionResponseData
 
-	var command DiscordInteractionComponentCommand
+	var command gu.DiscordInteractionComponentCommand
 	json.Unmarshal([]byte(eventBody), &command)
 
 	return command.ApplicationID, command.Token, response

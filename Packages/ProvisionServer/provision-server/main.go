@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"log"
 
+	gu "generalutils"
+
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	cwtypes "github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	dynamotypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	embed "github.com/clinet/discordgo-embed"
 )
 
 type ProvisonServerParameters struct {
@@ -30,52 +31,23 @@ type ProvisonServerParameters struct {
 	CreationOptions  map[string]string `json:"CreationOptions,omitempty"`
 }
 
-type FormResponseInput map[string]interface{}
-
-func formResponseData(input FormResponseInput) (data DiscordInteractionResponseData) {
-	log.Printf("Forming interaction response data")
-	data = DiscordInteractionResponseData{
-		Flags: 1 << 6,
-	}
-
-	if content, ok := input["Content"]; ok {
-		log.Printf("Adding content to data")
-		data.Content = content.(string)
-	}
-
-	if embeds, ok := input["Embeds"]; ok {
-		log.Printf("Adding embeds to data")
-
-		e := embeds.(*embed.Embed)
-		data.Embeds = []embed.Embed{*e}
-	}
-
-	if components, ok := input["Components"]; ok {
-		log.Printf("Adding components to data")
-		data.Components = components.([]DiscordComponentData)
-	}
-
-	log.Printf("Formed Response Data: %v", data)
-	return data
-}
-
-func handler(event map[string]interface{}) (map[string]interface{}, error) {
+func handler(event map[string]interface{}) string {
 	log.Printf("Event: %v", event)
 	params := convertEvent(event)
 	// logMetric(params.Service)
 	// logMetric(params.Application)
-	embedInput := FormWorkflowEmbedInput{
+	embedInput := gu.FormWorkflowEmbedInput{
 		Name:        "Provision-Server",
 		Description: fmt.Sprintf("WorkflowID: %s", params.ExecutionName),
 		Status:      "🟢 running",
 		Stage:       "Provisioning Server",
 		Color:       5763719,
 	}
-	embed := formWorkflowEmbed(embedInput)
-	formRespInput := FormResponseInput{
+	embed := gu.FormWorkflowEmbed(embedInput)
+	formRespInput := gu.FormResponseInput{
 		"Embeds": embed,
 	}
-	updateResponse(params.ApplicationID, params.InteractionToken, formResponseData(formRespInput))
+	gu.EditResponse(params.ApplicationID, params.InteractionToken, gu.FormResponseData(formRespInput))
 
 	var serverItem map[string]dynamotypes.AttributeValue
 
@@ -90,14 +62,13 @@ func handler(event map[string]interface{}) (map[string]interface{}, error) {
 	}
 
 	serverID := writeServerInfo(serverItem)
-	event["ServerID"] = serverID
 
-	return event, nil
+	return serverID
 }
 
 func writeServerInfo(serverItem map[string]dynamotypes.AttributeValue) string {
-	dynamo := getDynamo()
-	table := getEnvVar("SERVER_TABLE")
+	dynamo := gu.GetDynamo()
+	table := gu.GetEnvVar("SERVER_TABLE")
 	var serverID string
 
 	n := 0
@@ -124,7 +95,7 @@ func writeServerInfo(serverItem map[string]dynamotypes.AttributeValue) string {
 }
 
 func logMetric(metricName string) {
-	cw := getCloudwatchClient()
+	cw := gu.GetCloudwatchClient()
 	namespace := "ServerBoi"
 	value := float64(1)
 

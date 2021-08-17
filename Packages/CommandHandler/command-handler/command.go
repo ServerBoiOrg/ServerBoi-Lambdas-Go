@@ -3,17 +3,19 @@ package main
 import (
 	"encoding/json"
 	"log"
+
+	gu "generalutils"
 )
 
-func command(eventBody string) (applicationID string, interactionToken string, response DiscordInteractionResponseData, err error) {
+func command(eventBody string) (applicationID string, interactionToken string, response gu.DiscordInteractionResponseData, err error) {
 	log.Printf("Command: %v", eventBody)
 
 	//Unmarshal into Interaction Type
-	var command DiscordInteractionApplicationCommand
+	var command gu.DiscordInteractionApplicationCommand
 	json.Unmarshal([]byte(eventBody), &command)
 
 	log.Printf("Sending temporary response to Discord")
-	sendTempResponse(command.ID, command.Token)
+	gu.SendTempResponse(command.ID, command.Token)
 
 	commandOption := command.Data.Options[0].Name
 	log.Printf("Command Option: %v", commandOption)

@@ -1,4 +1,4 @@
-package main
+package generalutils
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	embed "github.com/clinet/discordgo-embed"
 )
 
-func sendTempResponse(interactionID string, interactionToken string) {
+func SendTempResponse(interactionID string, interactionToken string) {
 	responseUrl := fmt.Sprintf("https://discord.com/api/v8/interactions/%s/%s/callback", interactionID, interactionToken)
 
 	tempResponse := DiscordInteractionResponse{
@@ -27,7 +27,7 @@ func sendTempResponse(interactionID string, interactionToken string) {
 	http.Post(responseUrl, "application/json", bytes)
 }
 
-func editResponse(applicationID string, interactionToken string, data DiscordInteractionResponseData) {
+func EditResponse(applicationID string, interactionToken string, data DiscordInteractionResponseData) {
 	responseUrl := fmt.Sprintf("https://discord.com/api/webhooks/%s/%s/messages/@original", applicationID, interactionToken)
 	log.Printf("URL to Patch: %v", responseUrl)
 
@@ -54,7 +54,7 @@ func editResponse(applicationID string, interactionToken string, data DiscordInt
 
 type FormResponseInput map[string]interface{}
 
-func formResponseData(input FormResponseInput) (data DiscordInteractionResponseData) {
+func FormResponseData(input FormResponseInput) (data DiscordInteractionResponseData) {
 	log.Printf("Forming interaction response data")
 	data = DiscordInteractionResponseData{
 		Flags: 1 << 6,

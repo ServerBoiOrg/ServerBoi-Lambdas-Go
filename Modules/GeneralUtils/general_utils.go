@@ -1,4 +1,4 @@
-package main
+package generalutils
 
 import (
 	"crypto/ed25519"
@@ -14,11 +14,11 @@ import (
 )
 
 var (
-	awsRegions       = []string{"us-east-1", "us-east-2", "us-west-1", "us-west-2", "eu-west-1", "eu-west-2", "eu-west-3", "eu-north-1"}
-	serverboiRegions = []string{"us-west"}
+	AWSRegions       = []string{"us-east-1", "us-east-2", "us-west-1", "us-west-2", "eu-west-1", "eu-west-2", "eu-west-3", "eu-north-1"}
+	ServerboiRegions = []string{"us-west"}
 )
 
-func getEnvVar(key string) string {
+func GetEnvVar(key string) string {
 
 	env := godotenv.Load(".env")
 
@@ -30,7 +30,7 @@ func getEnvVar(key string) string {
 }
 
 // Function to check if given service is supported for Serverboi
-func verifyService(s string) error {
+func VerifyService(s string) error {
 	service := strings.ToLower(s)
 
 	switch service {
@@ -44,7 +44,7 @@ func verifyService(s string) error {
 }
 
 // Verifies region is a valid region for the service
-func verifyRegion(s string, r string) error {
+func VerifyRegion(s string, r string) error {
 	service := strings.ToLower(s)
 	region := strings.ToLower(r)
 
@@ -62,13 +62,13 @@ func verifyRegion(s string, r string) error {
 func verifyAWSRegion(region string) error {
 	log.Printf("Checking region %v", region)
 
-	for _, awsRegion := range awsRegions {
+	for _, awsRegion := range AWSRegions {
 		if region == awsRegion {
 			return nil
 		}
 	}
 
-	for _, serverboiRegion := range awsRegions {
+	for _, serverboiRegion := range AWSRegions {
 		if region == serverboiRegion {
 			return nil
 		}
@@ -78,7 +78,7 @@ func verifyAWSRegion(region string) error {
 	return errors.New(fmt.Sprintf("* region: `%v` is not an AWS Region or ServerBoi Region", region))
 }
 
-func formInvalidParametersResponse(errors []string) DiscordInteractionResponseData {
+func FormInvalidParametersResponse(errors []string) DiscordInteractionResponseData {
 	message := "Command parameters had the following errors:"
 	for _, errorMessage := range errors {
 		message = fmt.Sprintf("%v\n%v", message, errorMessage)
@@ -86,17 +86,17 @@ func formInvalidParametersResponse(errors []string) DiscordInteractionResponseDa
 	formRespInput := FormResponseInput{
 		"Content": message,
 	}
-	return formResponseData(formRespInput)
+	return FormResponseData(formRespInput)
 }
 
-func decodeToPublicKey(applicationPublicKey string) ed25519.PublicKey {
+func DecodeToPublicKey(applicationPublicKey string) ed25519.PublicKey {
 	rawKey := []byte(applicationPublicKey)
 	byteKey := make([]byte, hex.DecodedLen(len(rawKey)))
 	_, _ = hex.Decode(byteKey, rawKey)
 	return byteKey
 }
 
-func generateWorkflowUUID(workflowName string) string {
+func GenerateWorkflowUUID(workflowName string) string {
 	uuidWithHyphen := uuid.New()
 	uuidString := strings.Replace(uuidWithHyphen.String(), "-", "", -1)
 	subuuid := uuidString[0:8]

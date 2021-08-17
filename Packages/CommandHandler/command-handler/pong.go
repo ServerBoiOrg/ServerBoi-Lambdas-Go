@@ -1,6 +1,8 @@
 package main
 
-func pong() (pong DiscordInteractionResponse) {
+import gu "generalutils"
+
+func pong() (pong gu.DiscordInteractionResponse) {
 	pong.Type = 1
 	return pong
 }

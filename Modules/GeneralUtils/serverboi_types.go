@@ -1,4 +1,4 @@
-package main
+package generalutils
 
 type ServerBoiServer struct {
 	ServerID string            `json:"ServerID"`

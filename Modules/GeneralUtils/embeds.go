@@ -1,4 +1,4 @@
-package main
+package generalutils
 
 import (
 	"fmt"
@@ -30,7 +30,7 @@ type FormWorkflowEmbedInput struct {
 	Color       int
 }
 
-func formWorkflowEmbed(input FormWorkflowEmbedInput) *embed.Embed {
+func FormWorkflowEmbed(input FormWorkflowEmbedInput) *embed.Embed {
 	timestamp := makeTimestamp()
 	workflowEmbed := embed.NewEmbed()
 	workflowEmbed.SetTitle(input.Name)
@@ -56,7 +56,7 @@ type FormServerEmbedInput struct {
 	Service     string
 }
 
-func formServerEmbed(input FormServerEmbedInput) *embed.Embed {
+func FormServerEmbed(input FormServerEmbedInput) *embed.Embed {
 	var address string
 	var description string
 
