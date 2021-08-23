@@ -5,7 +5,7 @@ files = os.listdir("./Templates")
 
 function_blob = {}
 
-print(f"Files in dir. {files}")
+print(f"Templates in directory: {files}")
 
 for file in files:
     print(f"Working on {file}")
@@ -22,7 +22,9 @@ for file in files:
             "bucket": bucket,
             "key": f"{split_uri[1]}/{split_uri[2]}",
         }
+        print(f"Added {function_name} to uri list")
     except Exception as e:
+        print(f"Error adding {function_name} to uri list.")
         pass
 
 with open('function_uris.json', 'w', encoding='utf-8') as function_uris:
