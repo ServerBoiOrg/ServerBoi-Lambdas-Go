@@ -269,7 +269,7 @@ func GetWebhookFromGuildID(guildID string) WebhookTableResponse {
 	}
 
 	var responseItem WebhookTableResponse
-	attributevalue.Unmarshal(response.Item, &responseItem)
+	attributevalue.UnmarshalMap(response.Item, &responseItem)
 
 	return responseItem
 }

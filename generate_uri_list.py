@@ -5,7 +5,10 @@ files = os.listdir("./Templates")
 
 function_blob = {}
 
+print(f"Files in dir. {files}")
+
 for file in files:
+    print(f"Working on {file}")
     with open(f"./Templates/{file}") as template_file:
         data = json.load(template_file)
         

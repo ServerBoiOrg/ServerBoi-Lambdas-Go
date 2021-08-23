@@ -18,7 +18,7 @@ func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (respon
 
 	serverID := command.Data.Options[0].Options[0].Options[0].Value
 	log.Printf("Target Server: %v", serverID)
-	server, err := gu.GetServerFromID(serverID)
+	server := gu.GetServerFromID(serverID)
 	if err != nil {
 		log.Fatalf("Unable to get server object. Error: %s", err)
 	}
