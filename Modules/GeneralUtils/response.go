@@ -27,6 +27,16 @@ func SendTempResponse(interactionID string, interactionToken string) {
 	http.Post(responseUrl, "application/json", bytes)
 }
 
+func PostToEmbedChannel(webhookID string, webhookToken string, data DiscordInteractionResponseData) {
+	webhookUrl := "https://discord.com/api/webhooks/%s/%s"
+
+	responseBody, _ := json.Marshal(data)
+	log.Printf("Message to webhook: %v", string(responseBody))
+	bytes := bytes.NewBuffer(responseBody)
+
+	http.Post(webhookUrl, "application/json", bytes)
+}
+
 func EditResponse(applicationID string, interactionToken string, data DiscordInteractionResponseData) {
 	responseUrl := fmt.Sprintf("https://discord.com/api/webhooks/%s/%s/messages/@original", applicationID, interactionToken)
 	log.Printf("URL to Patch: %v", responseUrl)
@@ -53,6 +63,24 @@ func EditResponse(applicationID string, interactionToken string, data DiscordInt
 }
 
 type FormResponseInput map[string]interface{}
+
+func FormWorkflowResponseData(workflowEmbed *embed.Embed) (data DiscordInteractionResponseData) {
+	log.Printf("Forming workflow response data")
+	data = DiscordInteractionResponseData{
+		Flags: 1 << 6,
+	}
+	data.Embeds = []embed.Embed{*workflowEmbed}
+
+	return data
+}
+
+func FormServerEmbedResponseData(serverEmbed *embed.Embed, serverID string) (data DiscordInteractionResponseData) {
+	log.Printf("Forming workflow response data")
+	data.Embeds = []embed.Embed{*serverEmbed}
+	data.Components = ServerEmbedComponents(serverID)
+
+	return data
+}
 
 func FormResponseData(input FormResponseInput) (data DiscordInteractionResponseData) {
 	log.Printf("Forming interaction response data")

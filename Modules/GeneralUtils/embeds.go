@@ -45,7 +45,6 @@ func FormWorkflowEmbed(input FormWorkflowEmbedInput) *embed.Embed {
 
 type FormServerEmbedInput struct {
 	Name        string
-	Game        string
 	ID          string
 	IP          string
 	Port        int
@@ -102,7 +101,7 @@ func FormServerEmbed(input FormServerEmbedInput) *embed.Embed {
 		serverEmbed.AddField("\u200B", "\u200B")
 	}
 
-	serverEmbed.AddField("Game", input.Game)
+	serverEmbed.AddField("Application", input.Application)
 	serverEmbed.AddField("Players", players)
 
 	timestamp := makeTimestamp()

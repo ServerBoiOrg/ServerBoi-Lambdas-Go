@@ -84,37 +84,31 @@ func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.Attrib
 
 	log.Printf(fmt.Sprintf("Ports: %v", buildInfo.Ports))
 
-	return formAWSServerItem(
-		params.OwnerID,
-		params.Owner,
-		params.Application,
-		params.ServerName,
-		buildInfo.Ports[0],
-		region,
-		accountID,
-		instanceID,
-		string(instanceType),
-	)
+	server := gu.AWSServer{
+		OwnerID:      params.OwnerID,
+		Owner:        params.Owner,
+		Application:  params.Application,
+		ServerName:   params.ServerName,
+		Port:         buildInfo.Ports[0],
+		Region:       region,
+		AWSAccountID: accountID,
+		InstanceID:   instanceID,
+		InstanceType: string(instanceType),
+	}
+
+	return formAWSServerItem(server)
 
 }
 
-func formAWSServerItem(
-	ownerID string,
-	owner string,
-	application string,
-	serverName string,
-	port int,
-	region string,
-	accountID string,
-	instanceID string,
-	instanceType string,
-) map[string]dynamotypes.AttributeValue {
-	serverItem := formBaseServerItem(ownerID, owner, application, serverName, port)
+func formAWSServerItem(server gu.AWSServer) map[string]dynamotypes.AttributeValue {
+	serverItem := formBaseServerItem(
+		server.OwnerID, server.Owner, server.Application, server.ServerName, server.Port,
+	)
 
-	serverItem["Region"] = &dynamotypes.AttributeValueMemberS{Value: region}
-	serverItem["AccountID"] = &dynamotypes.AttributeValueMemberS{Value: accountID}
-	serverItem["InstanceID"] = &dynamotypes.AttributeValueMemberS{Value: instanceID}
-	serverItem["InstanceType"] = &dynamotypes.AttributeValueMemberS{Value: instanceType}
+	serverItem["Region"] = &dynamotypes.AttributeValueMemberS{Value: server.Region}
+	serverItem["AWSAccountID"] = &dynamotypes.AttributeValueMemberS{Value: server.AWSAccountID}
+	serverItem["InstanceID"] = &dynamotypes.AttributeValueMemberS{Value: server.InstanceID}
+	serverItem["InstanceType"] = &dynamotypes.AttributeValueMemberS{Value: server.InstanceType}
 
 	return serverItem
 }

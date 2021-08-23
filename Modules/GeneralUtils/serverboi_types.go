@@ -1,13 +1,13 @@
 package generalutils
 
-type ServerBoiServer struct {
-	ServerID string            `json:"ServerID"`
-	Game     string            `json:"Game"`
-	Name     string            `json:"Name"`
-	Owner    string            `json:"Owner"`
-	OwnerID  string            `json:"OwnerID"`
-	Service  map[string]string `json:"Service"`
-	Port     int               `json:"Port"`
+type BaseServer struct {
+	ServerID    string `json:"ServerID"`
+	Application string `json:"Application"`
+	ServerName  string `json:"ServerName"`
+	Service     string `json:"Service"`
+	Owner       string `json:"Owner"`
+	OwnerID     string `json:"OwnerID"`
+	Port        int    `json:"Port"`
 }
 
 type ServerBoiRegion struct {
@@ -19,27 +19,36 @@ type ServerBoiRegion struct {
 	Geolocation string
 }
 
-type AWSService struct {
-	Name       string `json:"Name"`
-	AccountID  string `json:"AccountID"`
-	Region     string `json:"Region"`
-	InstanceID string `json:"InstanceID"`
+type AWSServer struct {
+	ServerID     string `json:"ServerID"`
+	Application  string `json:"Application"`
+	ServerName   string `json:"ServerName"`
+	Owner        string `json:"Owner"`
+	OwnerID      string `json:"OwnerID"`
+	Service      string `json:"Service"`
+	AWSAccountID string `json:"AWSAccountID"`
+	InstanceID   string `json:"InstanceID"`
+	InstanceType string `json:"InstanceType"`
+	Region       string `json:"Region"`
+	Port         int    `json:"Port"`
 }
 
-type AWSServer struct {
-	ServiceInfo AWSService
-}
+// type LinodeServer struct {
+// 	ServiceInfo LinodeService
+// }
 
 type LinodeServer struct {
-	ServiceInfo LinodeService
-}
-
-type LinodeService struct {
-	Name       string
-	LinodeID   int
-	ApiKey     string
-	LinodeType string
-	Location   string
+	ServerID    string `json:"ServerID"`
+	Application string `json:"Application"`
+	ServerName  string `json:"ServerName"`
+	Owner       string `json:"Owner"`
+	OwnerID     string `json:"OwnerID"`
+	Service     string `json:"Service"`
+	Port        int    `json:"Port"`
+	LinodeID    int    `json:"LinodeID"`
+	ApiKey      string `json:"ApiKey"`
+	LinodeType  string `json:"LinodeType"`
+	Location    string `json:"Location"`
 }
 
 type ServerDescribeResponse struct {

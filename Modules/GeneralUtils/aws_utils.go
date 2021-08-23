@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
@@ -144,10 +147,10 @@ func getRemoteCreds(region string, accountID string) *aws.CredentialsCache {
 }
 
 func (server AWSServer) Start() (data DiscordInteractionResponseData, err error) {
-	client := CreateEC2Client(server.ServiceInfo.Region, server.ServiceInfo.AccountID)
+	client := CreateEC2Client(server.Region, server.AWSAccountID)
 	input := &ec2.StartInstancesInput{
 		InstanceIds: []string{
-			server.ServiceInfo.InstanceID,
+			server.InstanceID,
 		},
 	}
 	_, err = client.StartInstances(context.Background(), input)
@@ -164,10 +167,10 @@ func (server AWSServer) Start() (data DiscordInteractionResponseData, err error)
 }
 
 func (server AWSServer) Stop() (data DiscordInteractionResponseData, err error) {
-	client := CreateEC2Client(server.ServiceInfo.Region, server.ServiceInfo.AccountID)
+	client := CreateEC2Client(server.Region, server.AWSAccountID)
 	input := &ec2.StopInstancesInput{
 		InstanceIds: []string{
-			server.ServiceInfo.InstanceID,
+			server.InstanceID,
 		},
 	}
 	_, err = client.StopInstances(context.Background(), input)
@@ -184,11 +187,31 @@ func (server AWSServer) Stop() (data DiscordInteractionResponseData, err error) 
 	return FormResponseData(formRespInput), nil
 }
 
+func (server AWSServer) GetService() string {
+	return server.Service
+}
+
+func (server AWSServer) GetServerBoiRegion() ServerBoiRegion {
+	return FormServerBoiRegion(server.Service, server.Region)
+}
+
+func (server AWSServer) GetBaseService() BaseServer {
+	return BaseServer{
+		ServerID:    server.ServerID,
+		Application: server.Application,
+		ServerName:  server.ServerName,
+		Service:     server.Service,
+		Owner:       server.Owner,
+		OwnerID:     server.OwnerID,
+		Port:        server.Port,
+	}
+}
+
 func (server AWSServer) Restart() (data DiscordInteractionResponseData, err error) {
-	client := CreateEC2Client(server.ServiceInfo.Region, server.ServiceInfo.AccountID)
+	client := CreateEC2Client(server.Region, server.AWSAccountID)
 	input := &ec2.RebootInstancesInput{
 		InstanceIds: []string{
-			server.ServiceInfo.InstanceID,
+			server.InstanceID,
 		},
 	}
 	_, err = client.RebootInstances(context.Background(), input)
@@ -205,14 +228,14 @@ func (server AWSServer) Restart() (data DiscordInteractionResponseData, err erro
 }
 
 func (server AWSServer) Status() (data DiscordInteractionResponseData, err error) {
-	client := CreateEC2Client(server.ServiceInfo.Region, server.ServiceInfo.AccountID)
+	client := CreateEC2Client(server.Region, server.AWSAccountID)
 	log.Printf("Ec2 Client made in Target account")
 	input := &ec2.DescribeInstancesInput{
 		InstanceIds: []string{
-			server.ServiceInfo.InstanceID,
+			server.InstanceID,
 		},
 	}
-	log.Printf("Describing instance: %s", server.ServiceInfo.InstanceID)
+	log.Printf("Describing instance: %s", server.InstanceID)
 	response, err := client.DescribeInstances(context.Background(), input)
 	if err != nil {
 		fmt.Println(err)
@@ -228,4 +251,56 @@ func (server AWSServer) Status() (data DiscordInteractionResponseData, err error
 		}
 	}
 	return
+}
+
+func GetWebhookFromGuildID(guildID string) WebhookTableResponse {
+	dynamo := GetDynamo()
+	webhookTable := GetEnvVar("WEBHOOK_TABLE")
+
+	log.Printf("Querying webhook for guild %v from Dynamo", guildID)
+	response, err := dynamo.GetItem(context.Background(), &dynamodb.GetItemInput{
+		TableName: aws.String(webhookTable),
+		Key: map[string]types.AttributeValue{
+			"ServerID": &types.AttributeValueMemberS{Value: guildID},
+		},
+	})
+	if err != nil {
+		log.Fatalf("Error retrieving item from dynamo: %v", err)
+	}
+
+	var responseItem WebhookTableResponse
+	attributevalue.Unmarshal(response.Item, &responseItem)
+
+	return responseItem
+}
+
+func GetServerFromID(serverID string) (server Server) {
+	dynamo := GetDynamo()
+	serverTable := GetEnvVar("SERVER_TABLE")
+
+	log.Printf("Querying server %v item from Dynamo", serverID)
+	response, err := dynamo.GetItem(context.Background(), &dynamodb.GetItemInput{
+		TableName: aws.String(serverTable),
+		Key: map[string]types.AttributeValue{
+			"ServerID": &types.AttributeValueMemberS{Value: serverID},
+		},
+	})
+	if err != nil {
+		log.Fatalf("Error retrieving item from dynamo: %v", err)
+	}
+
+	serviceRaw := response.Item["Service"]
+	var service string
+	attributevalue.Unmarshal(serviceRaw, &service)
+
+	switch strings.ToLower(service) {
+	case "aws":
+		var server AWSServer
+		err = attributevalue.UnmarshalMap(response.Item, &server)
+	case "linode":
+		var server LinodeServer
+		err = attributevalue.UnmarshalMap(response.Item, &server)
+	}
+
+	return server
 }

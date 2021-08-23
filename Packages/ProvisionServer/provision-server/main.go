@@ -31,6 +31,12 @@ type ProvisonServerParameters struct {
 	CreationOptions  map[string]string `json:"CreationOptions,omitempty"`
 }
 
+type ProvisionServerResponse struct {
+	ServerID   string `json:"ServerID"`
+	InstanceID string `json:"InstanceID,omitempty"`
+	AccountID  string `json:"AccountID,omitempty"`
+}
+
 func handler(event map[string]interface{}) string {
 	log.Printf("Event: %v", event)
 	params := convertEvent(event)
@@ -50,7 +56,6 @@ func handler(event map[string]interface{}) string {
 	gu.EditResponse(params.ApplicationID, params.InteractionToken, gu.FormResponseData(formRespInput))
 
 	var serverItem map[string]dynamotypes.AttributeValue
-
 	log.Printf("Cloud Provider for server: %v", params.Service)
 	switch params.Service {
 	case "aws":
@@ -62,7 +67,6 @@ func handler(event map[string]interface{}) string {
 	}
 
 	serverID := writeServerInfo(serverItem)
-
 	return serverID
 }
 

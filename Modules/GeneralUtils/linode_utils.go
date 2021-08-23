@@ -20,9 +20,9 @@ func createLinodeClient(apiKey string) linodego.Client {
 }
 
 func (server LinodeServer) Start() (data DiscordInteractionResponseData, err error) {
-	client := createLinodeClient(server.ServiceInfo.ApiKey)
+	client := createLinodeClient(server.ApiKey)
 
-	err = client.BootInstance(context.Background(), server.ServiceInfo.LinodeID, 0)
+	err = client.BootInstance(context.Background(), server.LinodeID, 0)
 	if err != nil {
 		fmt.Println(err)
 		return data, err
@@ -36,9 +36,9 @@ func (server LinodeServer) Start() (data DiscordInteractionResponseData, err err
 }
 
 func (server LinodeServer) Stop() (data DiscordInteractionResponseData, err error) {
-	client := createLinodeClient(server.ServiceInfo.ApiKey)
+	client := createLinodeClient(server.ApiKey)
 
-	err = client.ShutdownInstance(context.Background(), server.ServiceInfo.LinodeID)
+	err = client.ShutdownInstance(context.Background(), server.LinodeID)
 	if err != nil {
 		fmt.Println(err)
 		return data, err
@@ -52,9 +52,9 @@ func (server LinodeServer) Stop() (data DiscordInteractionResponseData, err erro
 }
 
 func (server LinodeServer) Restart() (data DiscordInteractionResponseData, err error) {
-	client := createLinodeClient(server.ServiceInfo.ApiKey)
+	client := createLinodeClient(server.ApiKey)
 
-	err = client.RebootInstance(context.Background(), server.ServiceInfo.LinodeID, 0)
+	err = client.RebootInstance(context.Background(), server.LinodeID, 0)
 	if err != nil {
 		fmt.Println(err)
 		return data, err
@@ -68,8 +68,8 @@ func (server LinodeServer) Restart() (data DiscordInteractionResponseData, err e
 }
 
 func (server LinodeServer) Status() (data DiscordInteractionResponseData, err error) {
-	client := createLinodeClient(server.ServiceInfo.ApiKey)
-	instance, err := client.GetInstance(context.Background(), server.ServiceInfo.LinodeID)
+	client := createLinodeClient(server.ApiKey)
+	instance, err := client.GetInstance(context.Background(), server.LinodeID)
 	if err != nil {
 		fmt.Println(err)
 		return data, err
@@ -80,4 +80,24 @@ func (server LinodeServer) Status() (data DiscordInteractionResponseData, err er
 	}
 
 	return FormResponseData(formRespInput), nil
+}
+
+func (server LinodeServer) GetService() string {
+	return server.Service
+}
+
+func (server LinodeServer) GetBaseService() BaseServer {
+	return BaseServer{
+		ServerID:    server.ServerID,
+		Application: server.Application,
+		ServerName:  server.ServerName,
+		Service:     server.Service,
+		Owner:       server.Owner,
+		OwnerID:     server.OwnerID,
+		Port:        server.Port,
+	}
+}
+
+func (server LinodeServer) GetServerBoiRegion() ServerBoiRegion {
+	return FormServerBoiRegion(server.Service, server.Location)
 }

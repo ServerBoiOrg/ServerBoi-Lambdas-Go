@@ -1,17 +1,10 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	gu "generalutils"
 	"log"
-	"strings"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
 type ServerCommandResponse struct {
@@ -25,7 +18,7 @@ func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (respon
 
 	serverID := command.Data.Options[0].Options[0].Options[0].Value
 	log.Printf("Target Server: %v", serverID)
-	server, err := getServerFromID(serverID)
+	server, err := gu.GetServerFromID(serverID)
 	if err != nil {
 		log.Fatalf("Unable to get server object. Error: %s", err)
 	}
@@ -108,59 +101,4 @@ func serverTerminate(input ServerTerminateInput) (data gu.DiscordInteractionResp
 	}
 
 	return gu.FormResponseData(formRespInput), nil
-}
-
-type ServerActionInput struct {
-	ServerID string
-}
-
-func getServerFromID(serverID string) (server gu.Server, err error) {
-	dynamo := gu.GetDynamo()
-	serverTable := gu.GetEnvVar("SERVER_TABLE")
-
-	log.Printf("Querying server %v item from Dynamo", serverID)
-	response, err := dynamo.GetItem(context.Background(), &dynamodb.GetItemInput{
-		TableName: aws.String(serverTable),
-		Key: map[string]types.AttributeValue{
-			"ServerID": &types.AttributeValueMemberS{Value: serverID},
-		},
-	})
-	if err != nil {
-		log.Fatalf("Error retrieving item from dynamo: %v", err)
-		return server, err
-	}
-
-	var serverInfo gu.ServerBoiServer
-	err = attributevalue.UnmarshalMap(response.Item, &serverInfo)
-
-	log.Printf("Server Item: %v", serverInfo)
-
-	service := serverInfo.Service["Name"]
-
-	log.Printf("Service of server: %v", service)
-	switch {
-	case strings.ToLower(service) == "aws":
-		var awsService gu.AWSService
-		jsonedService, _ := json.Marshal(serverInfo.Service)
-		json.Unmarshal(jsonedService, &awsService)
-		log.Printf("Service Item: %v", awsService)
-
-		server := gu.AWSServer{
-			ServiceInfo: awsService,
-		}
-		return server, nil
-	case strings.ToLower(service) == "linode":
-		var service gu.LinodeService
-		jsonedService, _ := json.Marshal(serverInfo.Service)
-		json.Unmarshal(jsonedService, &service)
-		log.Printf("Service Item: %v", service)
-
-		server := gu.LinodeServer{
-			ServiceInfo: service,
-		}
-
-		return server, nil
-	}
-
-	return server, err
 }
