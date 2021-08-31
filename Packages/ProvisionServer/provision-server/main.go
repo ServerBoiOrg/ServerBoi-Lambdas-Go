@@ -37,7 +37,7 @@ type ProvisionServerResponse struct {
 	AccountID  string `json:"AccountID,omitempty"`
 }
 
-func handler(event map[string]interface{}) string {
+func handler(event map[string]interface{}) (string, error) {
 	log.Printf("Event: %v", event)
 	params := convertEvent(event)
 	// logMetric(params.Service)
@@ -67,7 +67,7 @@ func handler(event map[string]interface{}) string {
 	}
 
 	serverID := writeServerInfo(serverItem)
-	return serverID
+	return serverID, nil
 }
 
 func writeServerInfo(serverItem map[string]dynamotypes.AttributeValue) string {

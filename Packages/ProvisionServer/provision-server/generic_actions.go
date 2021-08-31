@@ -159,6 +159,8 @@ type FormDockerCommandInput struct {
 	ApplicationID    string
 	ExecutionName    string
 	ServerName       string
+	ServerID         string
+	GuildID          string
 	Container        string
 	EnvVar           map[string]string
 }

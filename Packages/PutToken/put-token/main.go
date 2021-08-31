@@ -19,7 +19,7 @@ type PutTokenPayload struct {
 	ExecutionName string `json:"ExecutionName"`
 }
 
-func handler(event map[string]interface{}) bool {
+func handler(event map[string]interface{}) (bool, error) {
 	log.Printf("Event: %v", event)
 	params := convertEvent(event)
 
@@ -31,7 +31,7 @@ func handler(event map[string]interface{}) bool {
 		Key:    &params.ExecutionName,
 	})
 
-	return true
+	return true, nil
 }
 
 func main() {
