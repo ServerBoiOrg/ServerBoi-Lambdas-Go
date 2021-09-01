@@ -9,7 +9,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func createLinodeClient(apiKey string) linodego.Client {
+func CreateLinodeClient(apiKey string) linodego.Client {
 	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: apiKey})
 	oauth2Client := &http.Client{
 		Transport: &oauth2.Transport{
@@ -20,7 +20,7 @@ func createLinodeClient(apiKey string) linodego.Client {
 }
 
 func (server LinodeServer) Start() (data DiscordInteractionResponseData, err error) {
-	client := createLinodeClient(server.ApiKey)
+	client := CreateLinodeClient(server.ApiKey)
 
 	err = client.BootInstance(context.Background(), server.LinodeID, 0)
 	if err != nil {
@@ -36,7 +36,7 @@ func (server LinodeServer) Start() (data DiscordInteractionResponseData, err err
 }
 
 func (server LinodeServer) Stop() (data DiscordInteractionResponseData, err error) {
-	client := createLinodeClient(server.ApiKey)
+	client := CreateLinodeClient(server.ApiKey)
 
 	err = client.ShutdownInstance(context.Background(), server.LinodeID)
 	if err != nil {
@@ -52,7 +52,7 @@ func (server LinodeServer) Stop() (data DiscordInteractionResponseData, err erro
 }
 
 func (server LinodeServer) Restart() (data DiscordInteractionResponseData, err error) {
-	client := createLinodeClient(server.ApiKey)
+	client := CreateLinodeClient(server.ApiKey)
 
 	err = client.RebootInstance(context.Background(), server.LinodeID, 0)
 	if err != nil {
@@ -68,7 +68,7 @@ func (server LinodeServer) Restart() (data DiscordInteractionResponseData, err e
 }
 
 func (server LinodeServer) Status() (data DiscordInteractionResponseData, err error) {
-	client := createLinodeClient(server.ApiKey)
+	client := CreateLinodeClient(server.ApiKey)
 	instance, err := client.GetInstance(context.Background(), server.LinodeID)
 	if err != nil {
 		fmt.Println(err)
