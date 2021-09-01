@@ -168,7 +168,7 @@ func getEbsMapping(driveSize int) []ec2types.BlockDeviceMapping {
 }
 
 func getImage(ec2Client *ec2.Client, architecture string) string {
-	// Default Debian10. Skip on test
+	// Default Debian11. Skip on test
 	stage := gu.GetEnvVar("STAGE")
 
 	var imageID string
@@ -211,7 +211,7 @@ func getImage(ec2Client *ec2.Client, architecture string) string {
 		},
 	)
 
-	log.Printf("Debian 10 AMI Search Response: %v", response.Images)
+	log.Printf("Debian 11 AMI Search Response: %v", response.Images[0].ImageId)
 
 	imageID = *response.Images[0].ImageId
 

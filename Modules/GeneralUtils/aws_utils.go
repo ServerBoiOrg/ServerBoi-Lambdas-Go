@@ -110,7 +110,7 @@ func StartSfnExecution(statemachineArn string, executionName string, input strin
 
 func GetS3Client() *s3.Client {
 	cfg := getConfig()
-	log.Printf("Getting cloudwatch client")
+	log.Printf("Getting S3 client")
 	s3 := s3.NewFromConfig(cfg)
 
 	return s3

@@ -67,6 +67,7 @@ func handler(event map[string]interface{}) (string, error) {
 	}
 
 	serverID := writeServerInfo(serverItem)
+
 	return serverID, nil
 }
 
