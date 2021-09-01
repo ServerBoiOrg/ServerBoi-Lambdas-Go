@@ -45,7 +45,7 @@ type LinodeServer struct {
 	OwnerID     string `json:"OwnerID"`
 	Service     string `json:"Service"`
 	Port        int    `json:"Port"`
-	LinodeID    string `json:"LinodeID"`
+	LinodeID    int    `json:"LinodeID"`
 	ApiKey      string `json:"ApiKey"`
 	LinodeType  string `json:"LinodeType"`
 	Location    string `json:"Location"`

@@ -13,10 +13,8 @@ import (
 )
 
 func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.AttributeValue {
-	dynamo := gu.GetDynamo()
-
 	log.Printf("Querying aws account for %v item from Dynamo", params.Owner)
-	accountID := queryAWSAccountID(dynamo, params.OwnerID)
+	accountID := queryAWSAccountID(params.OwnerID)
 	log.Printf("Account to provision server in: %v", accountID)
 
 	region := params.CreationOptions["region"]
@@ -108,7 +106,7 @@ func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.Attrib
 
 func formAWSServerItem(server gu.AWSServer) map[string]dynamotypes.AttributeValue {
 	serverItem := formBaseServerItem(
-		server.OwnerID, server.Owner, server.Application, server.ServerName, server.Port,
+		server.OwnerID, server.Owner, server.Application, server.ServerName, server.Port, server.ServerID,
 	)
 
 	serverItem["Region"] = &dynamotypes.AttributeValueMemberS{Value: server.Region}
@@ -192,7 +190,7 @@ func getImage(ec2Client *ec2.Client, architecture string) string {
 	filters := []ec2types.Filter{
 		{
 			Name:   &desc,
-			Values: []string{"Debian 10 (20210329-591)"},
+			Values: []string{"Debian 11 (20210814-734)"},
 		},
 		{
 			Name:   &arch,

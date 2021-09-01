@@ -76,7 +76,6 @@ func writeServerInfo(serverItem map[string]dynamotypes.AttributeValue) string {
 	var serverID string
 
 	log.Printf("Putting server item in table %v", table)
-	serverID = formServerID()
 
 	conditional := aws.String("attribute_not_exists(ServerID)")
 	_, err := dynamo.PutItem(context.Background(), &dynamodb.PutItemInput{

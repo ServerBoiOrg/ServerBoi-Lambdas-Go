@@ -20,7 +20,7 @@ type BootstrapCallPayload struct {
 	ApplicationID    string `json:"application_id"`
 	ExecutionName    string `json:"execution_name"`
 	InteractionToken string `json:"interaction_token"`
-	Port             string `json:"port"`
+	Port             int    `json:"port"`
 	ServerID         string `json:"server_id"`
 	GuildID          string `json:"guild_id"`
 }

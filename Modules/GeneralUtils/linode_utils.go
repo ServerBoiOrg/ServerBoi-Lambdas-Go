@@ -19,6 +19,10 @@ func CreateLinodeClient(apiKey string) linodego.Client {
 	return linodego.NewClient(oauth2Client)
 }
 
+func CreateAuthlessLinodeClient() linodego.Client {
+	return linodego.NewClient(&http.Client{})
+}
+
 func (server LinodeServer) Start() (data DiscordInteractionResponseData, err error) {
 	client := CreateLinodeClient(server.ApiKey)
 

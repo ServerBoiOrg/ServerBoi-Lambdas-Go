@@ -15,8 +15,8 @@ import (
 	"github.com/google/uuid"
 )
 
-func queryAWSAccountID(dynamo *dynamodb.Client, userID string) string {
-	table := gu.GetEnvVar("AWS_TABLE")
+func queryTable(userID string, table string) *dynamodb.GetItemOutput {
+	dynamo := gu.GetDynamo()
 
 	response, err := dynamo.GetItem(context.Background(), &dynamodb.GetItemInput{
 		TableName: aws.String(table),
@@ -28,10 +28,28 @@ func queryAWSAccountID(dynamo *dynamodb.Client, userID string) string {
 		log.Fatalf("Error retrieving item from dynamo: %v", err)
 		panic(err)
 	}
+
+	return response
+}
+
+func queryAWSAccountID(userID string) string {
+	table := gu.GetEnvVar("AWS_TABLE")
+
+	response := queryTable(userID, table)
 	var awsResponse AWSTableResponse
-	err = attributevalue.UnmarshalMap(response.Item, &awsResponse)
+	attributevalue.UnmarshalMap(response.Item, &awsResponse)
 
 	return awsResponse.AWSAccountID
+}
+
+func queryLinodeApiKey(userID string) string {
+	table := gu.GetEnvVar("LINODE_TABLE")
+
+	response := queryTable(userID, table)
+	var linodeResponse LinodeTableResponse
+	attributevalue.UnmarshalMap(response.Item, &linodeResponse)
+
+	return linodeResponse.ApiKey
 }
 
 func formBaseServerItem(
@@ -40,6 +58,7 @@ func formBaseServerItem(
 	application string,
 	serverName string,
 	port int,
+	serverID string,
 ) map[string]dynamotypes.AttributeValue {
 	portString := strconv.Itoa(port)
 	serverItem := map[string]dynamotypes.AttributeValue{
@@ -47,6 +66,7 @@ func formBaseServerItem(
 		"Owner":       &dynamotypes.AttributeValueMemberS{Value: owner},
 		"Application": &dynamotypes.AttributeValueMemberS{Value: application},
 		"ServerName":  &dynamotypes.AttributeValueMemberS{Value: serverName},
+		"ServerID":    &dynamotypes.AttributeValueMemberS{Value: serverID},
 		"Port":        &dynamotypes.AttributeValueMemberN{Value: portString},
 	}
 

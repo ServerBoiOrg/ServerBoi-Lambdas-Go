@@ -119,10 +119,6 @@ func formBootscript(input FormDockerCommandInput, dockerCommands []string) strin
 	return b64.StdEncoding.EncodeToString([]byte(bootscript))
 }
 
-func formEnvFile() {
-
-}
-
 func formDockerCommand(input FormDockerCommandInput, dockerCommands []string) string {
 	command := fmt.Sprintf(`sudo docker run -t -d \
     --net=host \
@@ -131,12 +127,16 @@ func formDockerCommand(input FormDockerCommandInput, dockerCommands []string) st
     -e APPLICATION_ID=%v \
     -e EXECUTION_NAME=%v \
     -e WORKFLOW_ENDPOINT=%v \
+	-e GUILD_ID=%v \
+	-e SERVER_ID=%v \
     -e SERVER_NAME='%v' `,
 		strings.ToLower(input.Application),
 		input.InteractionToken,
 		input.ApplicationID,
 		input.ExecutionName,
 		input.Url,
+		input.GuildID,
+		input.ServerID,
 		input.ServerName)
 
 	for k, v := range input.EnvVar {

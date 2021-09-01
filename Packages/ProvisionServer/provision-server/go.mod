@@ -8,6 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.12.0
 	github.com/google/uuid v1.3.0
+	github.com/linode/linodego v1.0.0
 )
 
 replace generalutils => ../../../Modules/GeneralUtils
