@@ -61,7 +61,7 @@ func handler(event map[string]interface{}) (string, error) {
 	case "aws":
 		serverItem = provisionAWS(params)
 	case "linode":
-		//
+		serverItem = provisionLinode(params)
 	case "vultr":
 
 	}
@@ -75,24 +75,17 @@ func writeServerInfo(serverItem map[string]dynamotypes.AttributeValue) string {
 	table := gu.GetEnvVar("SERVER_TABLE")
 	var serverID string
 
-	n := 0
-	for n < 10 {
-		log.Printf("Putting server item in table %v. Attempt: %v", table, (n + 1))
-		serverID = formServerID()
+	log.Printf("Putting server item in table %v", table)
+	serverID = formServerID()
 
-		conditional := aws.String("attribute_not_exists(ServerID)")
-		serverItem["ServerID"] = &dynamotypes.AttributeValueMemberS{Value: serverID}
-		_, err := dynamo.PutItem(context.Background(), &dynamodb.PutItemInput{
-			TableName:           aws.String(table),
-			Item:                serverItem,
-			ConditionExpression: conditional,
-		})
-		if err == nil {
-			break
-		} else {
-			log.Printf("Error putting item: %v", err)
-		}
-		n++
+	conditional := aws.String("attribute_not_exists(ServerID)")
+	_, err := dynamo.PutItem(context.Background(), &dynamodb.PutItemInput{
+		TableName:           aws.String(table),
+		Item:                serverItem,
+		ConditionExpression: conditional,
+	})
+	if err != nil {
+		log.Printf("Error putting item: %v", err)
 	}
 
 	return serverID

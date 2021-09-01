@@ -29,6 +29,8 @@ func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.Attrib
 
 	container := getContainer(buildInfo, architecture)
 
+	serverID := formServerID()
+
 	log.Printf("Generating bootscript")
 	bootscript := formBootscript(
 		FormDockerCommandInput{
@@ -39,6 +41,8 @@ func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.Attrib
 			ApplicationID:    params.ApplicationID,
 			ExecutionName:    params.ExecutionName,
 			ServerName:       params.ServerName,
+			ServerID:         serverID,
+			GuildID:          params.GuildID,
 			Container:        container,
 			EnvVar:           params.CreationOptions,
 		},
@@ -90,7 +94,9 @@ func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.Attrib
 		Application:  params.Application,
 		ServerName:   params.ServerName,
 		Port:         buildInfo.Ports[0],
+		Service:      "aws",
 		Region:       region,
+		ServerID:     serverID,
 		AWSAccountID: accountID,
 		InstanceID:   instanceID,
 		InstanceType: string(instanceType),
