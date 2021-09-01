@@ -23,7 +23,7 @@ func command(eventBody string) (applicationID string, interactionToken string, r
 	case commandOption == "create":
 		response, err = createServer(command)
 	case commandOption == "onboard":
-		//Onboard Commands
+		response, err = routeOnboardCommand(command)
 	case commandOption == "server":
 		response, err = routeServerCommand(command)
 	}
