@@ -55,26 +55,25 @@ func handler(event map[string]interface{}) (string, error) {
 	}
 	gu.EditResponse(params.ApplicationID, params.InteractionToken, gu.FormResponseData(formRespInput))
 
+	var serverID string
 	var serverItem map[string]dynamotypes.AttributeValue
 	log.Printf("Cloud Provider for server: %v", params.Service)
 	switch params.Service {
 	case "aws":
-		serverItem = provisionAWS(params)
+		serverID, serverItem = provisionAWS(params)
 	case "linode":
-		serverItem = provisionLinode(params)
+		serverID, serverItem = provisionLinode(params)
 	case "vultr":
 
 	}
 
-	serverID := writeServerInfo(serverItem)
-
+	writeServerInfo(serverItem)
 	return serverID, nil
 }
 
-func writeServerInfo(serverItem map[string]dynamotypes.AttributeValue) string {
+func writeServerInfo(serverItem map[string]dynamotypes.AttributeValue) {
 	dynamo := gu.GetDynamo()
 	table := gu.GetEnvVar("SERVER_TABLE")
-	var serverID string
 
 	log.Printf("Putting server item in table %v", table)
 
@@ -87,8 +86,6 @@ func writeServerInfo(serverItem map[string]dynamotypes.AttributeValue) string {
 	if err != nil {
 		log.Printf("Error putting item: %v", err)
 	}
-
-	return serverID
 }
 
 func logMetric(metricName string) {

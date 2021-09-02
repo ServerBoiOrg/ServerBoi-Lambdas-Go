@@ -2,17 +2,19 @@ package main
 
 import (
 	"context"
+	b64 "encoding/base64"
 	"fmt"
 	gu "generalutils"
 	"log"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	dynamotypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 )
 
-func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.AttributeValue {
+func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotypes.AttributeValue) {
 	log.Printf("Querying aws account for %v item from Dynamo", params.Owner)
 	accountID := queryAWSAccountID(params.OwnerID)
 	log.Printf("Account to provision server in: %v", accountID)
@@ -46,6 +48,8 @@ func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.Attrib
 		},
 		buildInfo.DockerCommands,
 	)
+	log.Printf("Converting bootscript to base64 encoding")
+	bootscript = b64.StdEncoding.EncodeToString([]byte(bootscript))
 
 	log.Printf("Getting/Creating Security Group")
 	groupID := getSecurityGroup(&ec2Client, params.Application, buildInfo.Ports)
@@ -100,7 +104,7 @@ func provisionAWS(params ProvisonServerParameters) map[string]dynamotypes.Attrib
 		InstanceType: string(instanceType),
 	}
 
-	return formAWSServerItem(server)
+	return serverID, formAWSServerItem(server)
 
 }
 
@@ -261,25 +265,19 @@ func setEgress(ec2Client *ec2.Client, securityGroupID string, ports []int) {
 		},
 	}
 
-	egressPermissions := []ec2types.IpPermission{}
-
-	tcpType := "tcp"
-	udpType := "udp"
-	for _, port := range ports {
-		p := int32(port)
-		tcp := &ec2types.IpPermission{
-			IpProtocol: &tcpType,
+	egressPermissions := []ec2types.IpPermission{
+		{
+			IpProtocol: aws.String("tcp"),
 			IpRanges:   ipRange,
-			FromPort:   &p,
-			ToPort:     &p,
-		}
-		udp := &ec2types.IpPermission{
-			IpProtocol: &udpType,
+			FromPort:   aws.Int32(0),
+			ToPort:     aws.Int32(65535),
+		},
+		{
+			IpProtocol: aws.String("udp"),
 			IpRanges:   ipRange,
-			FromPort:   &p,
-			ToPort:     &p,
-		}
-		egressPermissions = append(egressPermissions, *tcp, *udp)
+			FromPort:   aws.Int32(0),
+			ToPort:     aws.Int32(65535),
+		},
 	}
 
 	ec2Client.AuthorizeSecurityGroupEgress(
@@ -293,36 +291,47 @@ func setEgress(ec2Client *ec2.Client, securityGroupID string, ports []int) {
 
 func setIngress(ec2Client *ec2.Client, securityGroupID string, ports []int) {
 	openCidr := "0.0.0.0/0"
-	tcpType := "tcp"
 	ipRange := []ec2types.IpRange{
 		{
 			CidrIp: &openCidr,
 		},
 	}
-
-	ssh := int32(22)
-	http := int32(80)
-	https := int32(443)
-
 	ingressPermissions := []ec2types.IpPermission{
 		{
-			IpProtocol: &tcpType,
-			FromPort:   &ssh,
-			ToPort:     &ssh,
+			IpProtocol: aws.String("tcp"),
+			FromPort:   aws.Int32(22),
+			ToPort:     aws.Int32(22),
 			IpRanges:   ipRange,
 		},
 		{
-			IpProtocol: &tcpType,
-			FromPort:   &http,
-			ToPort:     &http,
+			IpProtocol: aws.String("tcp"),
+			FromPort:   aws.Int32(80),
+			ToPort:     aws.Int32(80),
 			IpRanges:   ipRange,
 		},
 		{
-			IpProtocol: &tcpType,
-			FromPort:   &https,
-			ToPort:     &https,
+			IpProtocol: aws.String("tcp"),
+			FromPort:   aws.Int32(443),
+			ToPort:     aws.Int32(443),
 			IpRanges:   ipRange,
 		},
+	}
+
+	for _, port := range ports {
+		p := int32(port)
+		tcp := &ec2types.IpPermission{
+			IpProtocol: aws.String("tcp"),
+			IpRanges:   ipRange,
+			FromPort:   &p,
+			ToPort:     &p,
+		}
+		udp := &ec2types.IpPermission{
+			IpProtocol: aws.String("udp"),
+			IpRanges:   ipRange,
+			FromPort:   &p,
+			ToPort:     &p,
+		}
+		ingressPermissions = append(ingressPermissions, *tcp, *udp)
 	}
 
 	ec2Client.AuthorizeSecurityGroupIngress(

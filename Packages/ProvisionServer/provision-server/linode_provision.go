@@ -5,12 +5,13 @@ import (
 	"fmt"
 	gu "generalutils"
 	"log"
+	"strconv"
 
 	dynamotypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/linode/linodego"
 )
 
-func provisionLinode(params ProvisonServerParameters) map[string]dynamotypes.AttributeValue {
+func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamotypes.AttributeValue) {
 	log.Printf("Querying aws account for %v item from Dynamo", params.Owner)
 	apiKey := queryLinodeApiKey(params.OwnerID)
 
@@ -41,36 +42,51 @@ func provisionLinode(params ProvisonServerParameters) map[string]dynamotypes.Att
 
 	linodeType := getLinodeType(buildInfo, architecture)
 	image := "linode/debian11"
-
 	client := gu.CreateLinodeClient(apiKey)
 
+	log.Printf("Creating Stackscript")
 	// This creates a lot over time, find a way to clean these up
-	response, _ := client.CreateStackscript(context.Background(), linodego.StackscriptCreateOptions{
+	response, stackErr := client.CreateStackscript(context.Background(), linodego.StackscriptCreateOptions{
 		Label:  fmt.Sprintf("ServerBoi-%v", params.Application),
 		Images: []string{image},
 		Script: bootscript,
 	})
+	if stackErr != nil {
+		log.Fatalf("Error creating Stackscript: %v", stackErr)
+	}
 	scriptID := response.ID
 
-	client.CreateInstance(context.Background(), linodego.InstanceCreateOptions{
+	createResp, createErr := client.CreateInstance(context.Background(), linodego.InstanceCreateOptions{
 		Region:        region,
 		Type:          linodeType,
 		Image:         image,
 		Label:         params.ServerName,
 		StackScriptID: scriptID,
+		RootPass:      "shnytgshnytgeashnytga1!123123",
 	})
+	if createErr != nil {
+		log.Fatalf("Error creating Linode: %v", createErr)
+	}
 
 	server := gu.LinodeServer{
 		OwnerID:     params.OwnerID,
 		Owner:       params.Owner,
 		Application: params.Application,
 		ServerName:  params.ServerName,
+		Port:        buildInfo.Ports[0],
+		Service:     "linode",
+		ServerID:    serverID,
+		LinodeID:    createResp.ID,
+		ApiKey:      apiKey,
+		LinodeType:  linodeType,
+		Location:    region,
 	}
 
-	return formLinodeServerItem(server)
+	return serverID, formLinodeServerItem(server)
 }
 
 func getLinodeType(buildInfo BuildInfo, architecture string) string {
+	log.Printf("Getting Linode Type")
 	var archInfo ArchitectureInfo
 	var defaultType string
 	switch architecture {
@@ -86,6 +102,7 @@ func getLinodeType(buildInfo BuildInfo, architecture string) string {
 		response, _ := client.ListTypes(context.Background(), &linodego.ListOptions{})
 		for _, linodeType := range response {
 			if linodeType.ID == buildLinodeType {
+				log.Printf("Linode Type: %v", buildLinodeType)
 				return buildLinodeType
 			}
 		}
@@ -100,10 +117,9 @@ func formLinodeServerItem(server gu.LinodeServer) map[string]dynamotypes.Attribu
 	serverItem := formBaseServerItem(
 		server.OwnerID, server.Owner, server.Application, server.ServerName, server.Port, server.ServerID,
 	)
-
 	serverItem["Location"] = &dynamotypes.AttributeValueMemberS{Value: server.Location}
 	serverItem["ApiKey"] = &dynamotypes.AttributeValueMemberS{Value: server.ApiKey}
-	serverItem["LinodeID"] = &dynamotypes.AttributeValueMemberN{Value: string(server.LinodeID)}
+	serverItem["LinodeID"] = &dynamotypes.AttributeValueMemberN{Value: strconv.Itoa(server.LinodeID)}
 	serverItem["LinodeType"] = &dynamotypes.AttributeValueMemberS{Value: server.LinodeType}
 
 	return serverItem

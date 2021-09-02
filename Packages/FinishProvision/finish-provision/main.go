@@ -67,6 +67,20 @@ func handler(event map[string]interface{}) (bool, error) {
 
 		ip = *response.Reservations[0].Instances[0].PublicIpAddress
 		state = string(response.Reservations[0].Instances[0].State.Name)
+	case "linode":
+		linode, _ := server.(*gu.LinodeServer)
+		client := gu.CreateEC2Client(awsServer.Region, awsServer.AWSAccountID)
+		response, err := client.DescribeInstances(context.Background(), &ec2.DescribeInstancesInput{
+			InstanceIds: []string{
+				awsServer.InstanceID,
+			},
+		})
+		if err != nil {
+			log.Fatalf("Error describing instance: %v", err)
+		}
+
+		ip = *response.Reservations[0].Instances[0].PublicIpAddress
+		state = string(response.Reservations[0].Instances[0].State.Name)
 	}
 
 	serverInfo := server.GetBaseService()

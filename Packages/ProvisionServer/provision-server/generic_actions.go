@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -116,7 +115,7 @@ func formBootscript(input FormDockerCommandInput, dockerCommands []string) strin
     sudo apt-get install docker-ce docker-ce-cli containerd.io -y
     %v`, dockerCommand)
 	log.Printf("Bootscript: %v", bootscript)
-	return b64.StdEncoding.EncodeToString([]byte(bootscript))
+	return bootscript
 }
 
 func formDockerCommand(input FormDockerCommandInput, dockerCommands []string) string {
