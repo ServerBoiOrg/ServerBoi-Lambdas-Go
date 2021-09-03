@@ -68,6 +68,7 @@ func handler(event map[string]interface{}) (string, error) {
 	}
 
 	writeServerInfo(serverItem)
+	log.Printf("ServerID: %v", serverID)
 	return serverID, nil
 }
 
