@@ -28,8 +28,7 @@ func SendTempResponse(interactionID string, interactionToken string) {
 }
 
 func PostToEmbedChannel(webhookID string, webhookToken string, data DiscordInteractionResponseData) {
-	// webhookUrl := fmt.Sprintf("https://discord.com/api/webhooks/%s/%s", webhookID, webhookToken)
-	webhookUrl := "https://discord.com/api/webhooks/879176314861535242/ZaOHATgakFcPojEQbGflmzZK6Rub3lzRJ8xzjTxU42UQJJr4_RdkhOL0bsdaqTZq4mOI"
+	webhookUrl := fmt.Sprintf("https://discord.com/api/webhooks/%s/%s", webhookID, webhookToken)
 	responseBody, _ := json.Marshal(data)
 	log.Printf("Message to webhook: %v", string(responseBody))
 	bytes := bytes.NewBuffer(responseBody)
