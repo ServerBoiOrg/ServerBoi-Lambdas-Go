@@ -43,6 +43,7 @@ func FormWorkflowEmbed(input FormWorkflowEmbedInput) *embed.Embed {
 	workflowEmbed.AddField("Status", input.Status)
 	workflowEmbed.AddField("Stage", input.Stage)
 	workflowEmbed.SetFooter(timestamp)
+	workflowEmbed.InlineAllFields()
 
 	return workflowEmbed
 }

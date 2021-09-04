@@ -298,7 +298,7 @@ func GetServerFromID(serverID string) (server Server) {
 	switch strings.ToLower(service) {
 	case "aws":
 		awsServer := AWSServer{}
-		attributevalue.UnmarshalMap(response.Item, &server)
+		attributevalue.UnmarshalMap(response.Item, &awsServer)
 		return awsServer
 	case "linode":
 		linodeServer := LinodeServer{}
