@@ -261,7 +261,7 @@ func GetWebhookFromGuildID(guildID string) WebhookTableResponse {
 	response, err := dynamo.GetItem(context.Background(), &dynamodb.GetItemInput{
 		TableName: aws.String(webhookTable),
 		Key: map[string]types.AttributeValue{
-			"ServerID": &types.AttributeValueMemberS{Value: guildID},
+			"GuildID": &types.AttributeValueMemberS{Value: guildID},
 		},
 	})
 	if err != nil {
@@ -291,16 +291,20 @@ func GetServerFromID(serverID string) (server Server) {
 
 	serviceRaw := response.Item["Service"]
 	var service string
+	log.Printf("Unmarshaling service attribute value.")
 	attributevalue.Unmarshal(serviceRaw, &service)
 
+	log.Printf("Service is %v", service)
 	switch strings.ToLower(service) {
 	case "aws":
-		var server AWSServer
-		err = attributevalue.UnmarshalMap(response.Item, &server)
+		awsServer := AWSServer{}
+		attributevalue.UnmarshalMap(response.Item, &server)
+		return awsServer
 	case "linode":
-		var server LinodeServer
-		err = attributevalue.UnmarshalMap(response.Item, &server)
+		linodeServer := LinodeServer{}
+		err = attributevalue.UnmarshalMap(response.Item, &linodeServer)
+		return linodeServer
+	default:
+		panic("Unknown service")
 	}
-
-	return server
 }

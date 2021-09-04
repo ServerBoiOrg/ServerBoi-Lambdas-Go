@@ -60,7 +60,7 @@ func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamo
 		Region:        region,
 		Type:          linodeType,
 		Image:         image,
-		Label:         params.ServerName,
+		Label:         serverID,
 		StackScriptID: scriptID,
 		RootPass:      "shnytgshnytgeashnytga1!123123",
 	})
@@ -115,7 +115,13 @@ func getLinodeType(buildInfo BuildInfo, architecture string) string {
 
 func formLinodeServerItem(server gu.LinodeServer) map[string]dynamotypes.AttributeValue {
 	serverItem := formBaseServerItem(
-		server.OwnerID, server.Owner, server.Application, server.ServerName, server.Port, server.ServerID,
+		server.OwnerID,
+		server.Owner,
+		server.Application,
+		server.ServerName,
+		server.Service,
+		server.Port,
+		server.ServerID,
 	)
 	serverItem["Location"] = &dynamotypes.AttributeValueMemberS{Value: server.Location}
 	serverItem["ApiKey"] = &dynamotypes.AttributeValueMemberS{Value: server.ApiKey}

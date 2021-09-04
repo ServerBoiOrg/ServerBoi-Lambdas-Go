@@ -35,7 +35,7 @@ func handler(event map[string]interface{}) (bool, error) {
 		Description: fmt.Sprintf("WorkflowID: %s", params.ExecutionName),
 		Status:      "✔️ finished",
 		Stage:       "Complete",
-		Color:       5763719,
+		Color:       gu.DiscordGreen,
 	})
 	workflowEmbed.AddField("ServerID", params.ServerID)
 
@@ -47,14 +47,16 @@ func handler(event map[string]interface{}) (bool, error) {
 
 	server := gu.GetServerFromID(params.ServerID)
 
+	log.Printf("Getting service")
 	service := server.GetService()
 	var (
 		ip    string
 		state string
 	)
+	log.Printf("Service of server: %v", service)
 	switch service {
 	case "aws":
-		awsServer, _ := server.(*gu.AWSServer)
+		awsServer, _ := server.(gu.AWSServer)
 		client := gu.CreateEC2Client(awsServer.Region, awsServer.AWSAccountID)
 		response, err := client.DescribeInstances(context.Background(), &ec2.DescribeInstancesInput{
 			InstanceIds: []string{
@@ -68,7 +70,7 @@ func handler(event map[string]interface{}) (bool, error) {
 		ip = *response.Reservations[0].Instances[0].PublicIpAddress
 		state = string(response.Reservations[0].Instances[0].State.Name)
 	case "linode":
-		linodeServer, _ := server.(*gu.LinodeServer)
+		linodeServer, _ := server.(gu.LinodeServer)
 		client := gu.CreateLinodeClient(linodeServer.ApiKey)
 
 		linode, err := client.GetInstance(context.Background(), linodeServer.LinodeID)
@@ -76,9 +78,11 @@ func handler(event map[string]interface{}) (bool, error) {
 			log.Fatalf("Error describing linode: %v", err)
 		}
 
-		ip = string(*linode.IPv4[0])
+		ip = fmt.Sprintf("%v", linode.IPv4[0])
 		state = string(linode.Status)
 	}
+	log.Printf("IP of server: %v", ip)
+	log.Printf("State of server: %v", state)
 
 	serverInfo := server.GetBaseService()
 	sbRegion := server.GetServerBoiRegion()
@@ -89,6 +93,7 @@ func handler(event map[string]interface{}) (bool, error) {
 		IP:          ip,
 		Status:      state,
 		Region:      sbRegion,
+		Port:        serverInfo.Port,
 		Application: serverInfo.Application,
 		Owner:       serverInfo.Owner,
 		Service:     serverInfo.Service,

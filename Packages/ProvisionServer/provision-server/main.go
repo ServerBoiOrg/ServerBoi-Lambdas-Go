@@ -47,7 +47,7 @@ func handler(event map[string]interface{}) (string, error) {
 		Description: fmt.Sprintf("WorkflowID: %s", params.ExecutionName),
 		Status:      "🟢 running",
 		Stage:       "Provisioning Server",
-		Color:       5763719,
+		Color:       gu.DiscordGreen,
 	}
 	embed := gu.FormWorkflowEmbed(embedInput)
 	formRespInput := gu.FormResponseInput{

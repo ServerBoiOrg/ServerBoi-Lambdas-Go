@@ -29,6 +29,12 @@ func routeOnboardCommand(command gu.DiscordInteractionApplicationCommand) (respo
 			ApiKey: command.Data.Options[0].Options[0].Options[0].Value,
 			UserID: command.Member.User.ID,
 		})
+	default:
+		formRespInput := gu.FormResponseInput{
+			"Content": fmt.Sprintf("Onboard command `%v` is unknown.", onboardCommand),
+		}
+
+		data = gu.FormResponseData(formRespInput)
 	}
 	return data, nil
 

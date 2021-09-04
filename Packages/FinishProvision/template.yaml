@@ -5,7 +5,7 @@ Description: >
 
 Globals:
   Function:
-    Timeout: 5
+    Timeout: 500
 
 Resources:
   FinishProvision:
@@ -17,4 +17,5 @@ Resources:
       Tracing: Active
       Environment:
         Variables:
-          PARAM1: VALUE
+          SERVER_TABLE: ServerBoi-Server-List
+          WEBHOOK_TABLE: ServerBoi-Webhook-List

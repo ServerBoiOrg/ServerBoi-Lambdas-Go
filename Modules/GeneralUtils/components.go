@@ -30,6 +30,7 @@ func ServerEmbedComponents(serverID string) []DiscordComponentData {
 		Style:    1,
 		CustomID: fmt.Sprintf("%v.reboot", serverID),
 		Emoji: DiscordEmoji{
+			ID:   "",
 			Name: "🔁",
 		},
 	}

@@ -57,6 +57,7 @@ func formBaseServerItem(
 	owner string,
 	application string,
 	serverName string,
+	service string,
 	port int,
 	serverID string,
 ) map[string]dynamotypes.AttributeValue {
@@ -66,6 +67,7 @@ func formBaseServerItem(
 		"Owner":       &dynamotypes.AttributeValueMemberS{Value: owner},
 		"Application": &dynamotypes.AttributeValueMemberS{Value: application},
 		"ServerName":  &dynamotypes.AttributeValueMemberS{Value: serverName},
+		"Service":     &dynamotypes.AttributeValueMemberS{Value: service},
 		"ServerID":    &dynamotypes.AttributeValueMemberS{Value: serverID},
 		"Port":        &dynamotypes.AttributeValueMemberN{Value: portString},
 	}

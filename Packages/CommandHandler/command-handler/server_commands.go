@@ -46,6 +46,12 @@ func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (respon
 			ServerID:      command.Data.Options[0].Options[0].Name,
 		}
 		data, err = serverTerminate(input)
+	default:
+		formRespInput := gu.FormResponseInput{
+			"Content": fmt.Sprintf("Server command `%v` is unknown.", serverCommand),
+		}
+
+		data = gu.FormResponseData(formRespInput)
 	}
 	if err != nil {
 		log.Fatalf("Error performing command: %v", err)
