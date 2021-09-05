@@ -37,6 +37,17 @@ func (u *Unpacker) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
+type DiscordMessageRequestData struct {
+	Content         string                        `json:"content,omitempty"`
+	Embeds          []embed.Embed                 `json:"embeds,omitempty"`
+	Flags           int                           `json:"flags,omitempty"`
+	File            []byte                        `json:"file,omitempty"`
+	PayloadJSON     string                        `json:"payload_json,omitempty"`
+	AllowedMentions discordgo.AllowedMentionType  `json:"allowed_mentions,omitempty"`
+	Attachments     []discordgo.MessageAttachment `json:"attachments,omitempty`
+	Components      []DiscordComponentData        `json:"components,omitempty"`
+}
+
 type DiscordInteractionApplicationCommand struct {
 	ID            string                        `json:"id"`
 	ApplicationID string                        `json:"application_id"`

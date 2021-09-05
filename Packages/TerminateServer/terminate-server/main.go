@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 
 	gu "generalutils"
 
@@ -37,7 +39,10 @@ func handler(event map[string]interface{}) (bool, error) {
 		gu.DiscordGreen,
 	})
 
-	server := gu.GetServerFromID(params.ServerID)
+	server, err := gu.GetServerFromID(params.ServerID)
+	if err != nil {
+		log.Fatalf("Error getting service object: %v", err)
+	}
 	log.Printf("Getting service")
 	service := server.GetService()
 	log.Printf("Service: %v", service)
@@ -65,6 +70,7 @@ func handler(event map[string]interface{}) (bool, error) {
 		}
 	}
 
+	// Delete server item
 	deleteServerItem(server.GetBaseService().ServerID)
 
 	updateEmbed(UpdateEmbedInput{
@@ -81,6 +87,28 @@ func handler(event map[string]interface{}) (bool, error) {
 
 func main() {
 	lambda.Start(handler)
+}
+
+func deleteServerEmbed(channelID string, messageID string) {
+	url := fmt.Sprintf(
+		"https://discord.com/api/v9/channels/%s/messages/%s", channelID, messageID,
+	)
+	bytes := bytes.NewBuffer([]byte(""))
+	request, err := http.NewRequest(http.MethodDelete, url, bytes)
+	if err != nil {
+		log.Fatal(err)
+	}
+	request.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(request)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("Response from discord: %v", resp)
+
+	defer resp.Body.Close()
 }
 
 func deleteServerItem(serverID string) {

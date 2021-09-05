@@ -71,23 +71,29 @@ func (server LinodeServer) Restart() (data DiscordInteractionResponseData, err e
 	return FormResponseData(formRespInput), nil
 }
 
-func (server LinodeServer) Status() (data DiscordInteractionResponseData, err error) {
+func (server LinodeServer) Status() (status string, err error) {
 	client := CreateLinodeClient(server.ApiKey)
-	instance, err := client.GetInstance(context.Background(), server.LinodeID)
+	linode, err := client.GetInstance(context.Background(), server.LinodeID)
 	if err != nil {
 		fmt.Println(err)
-		return data, err
+		return status, err
 	}
 
-	formRespInput := FormResponseInput{
-		"Content": fmt.Sprintf("Server status: %v", instance.Status),
-	}
-
-	return FormResponseData(formRespInput), nil
+	return fmt.Sprintf("%v", linode.Status), nil
 }
 
 func (server LinodeServer) GetService() string {
 	return server.Service
+}
+
+func (server LinodeServer) GetIPv4() (string, error) {
+	client := CreateLinodeClient(server.ApiKey)
+	linode, err := client.GetInstance(context.Background(), server.LinodeID)
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+	return fmt.Sprintf("%v", linode.IPv4[0]), nil
 }
 
 func (server LinodeServer) GetBaseService() BaseServer {

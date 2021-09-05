@@ -77,7 +77,7 @@ func FormWorkflowResponseData(workflowEmbed *embed.Embed) (data DiscordInteracti
 	return data
 }
 
-func FormServerEmbedResponseData(serverEmbed *embed.Embed, serverID string) (data DiscordInteractionResponseData) {
+func FormServerEmbedResponseData(serverEmbed *embed.Embed) (data DiscordInteractionResponseData) {
 	log.Printf("Forming workflow response data")
 	data.Embeds = []embed.Embed{*serverEmbed}
 	// data.Components = ServerEmbedComponents(serverID)

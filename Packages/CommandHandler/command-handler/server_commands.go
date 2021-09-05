@@ -18,7 +18,7 @@ func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (respon
 
 	serverID := command.Data.Options[0].Options[0].Options[0].Value
 	log.Printf("Target Server: %v", serverID)
-	server := gu.GetServerFromID(serverID)
+	server, err := gu.GetServerFromID(serverID)
 	if err != nil {
 		log.Fatalf("Unable to get server object. Error: %s", err)
 	}
@@ -29,21 +29,23 @@ func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (respon
 	switch {
 	//Server Actions
 	case serverCommand == "status":
-		data, err = server.Status()
+		var status string
+		status, err = server.Status()
+		data = gu.FormResponseData(gu.FormResponseInput{
+			"Content": fmt.Sprintf("Server status: %v", status),
+		})
 	case serverCommand == "start":
 		data, err = server.Start()
 	case serverCommand == "stop":
 		data, err = server.Stop()
 	case serverCommand == "restart":
 		data, err = server.Restart()
-	//Workflows
-	// case serverCommand == "add":
 	case serverCommand == "terminate":
 		input := ServerTerminateInput{
 			Token:         command.Token,
 			InteractionID: command.ID,
 			ApplicationID: command.ApplicationID,
-			ServerID:      command.Data.Options[0].Options[0].Name,
+			ServerID:      serverID,
 		}
 		data, err = serverTerminate(input)
 	default:
@@ -57,7 +59,6 @@ func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (respon
 		log.Fatalf("Error performing command: %v", err)
 		return response, err
 	}
-
 	return data, nil
 }
 

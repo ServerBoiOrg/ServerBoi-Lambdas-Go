@@ -48,7 +48,7 @@ func FormWorkflowEmbed(input FormWorkflowEmbedInput) *embed.Embed {
 	return workflowEmbed
 }
 
-type FormServerEmbedInput struct {
+type GetServerEmbedDataInput struct {
 	Name        string
 	ID          string
 	IP          string
@@ -60,10 +60,21 @@ type FormServerEmbedInput struct {
 	Service     string
 }
 
-func FormServerEmbed(input FormServerEmbedInput) *embed.Embed {
+type ServerData struct {
+	Name        string
+	Description string
+	Status      string
+	Address     string
+	Location    string
+	Application string
+	Players     string
+	Footer      string
+	Thumbnail   string
+	Color       int
+}
 
+func GetServerEmbedData(input GetServerEmbedDataInput) ServerData {
 	log.Printf("Input %v", input)
-
 	var address string
 	var description string
 
@@ -74,8 +85,7 @@ func FormServerEmbed(input FormServerEmbedInput) *embed.Embed {
 		address = fmt.Sprintf("%s:%v", input.IP, input.Port)
 		description = fmt.Sprintf("Connect: steam://connect/%s", address)
 	}
-
-	state, stateEmoji, stateErr := translateState(input.Service, input.Status)
+	state, stateEmoji, stateErr := TranslateState(input.Service, input.Status)
 	if stateErr != nil {
 		fmt.Println(stateErr)
 	}
@@ -83,7 +93,7 @@ func FormServerEmbed(input FormServerEmbedInput) *embed.Embed {
 	var players string
 	var color int
 	if state == "Running" {
-		a2sInfo, err := callServer(input.IP, input.Port)
+		a2sInfo, err := CallServer(input.IP, input.Port)
 		if err != nil {
 			log.Printf("Error contacting server: %v", err)
 			players = "Error contacting server"
@@ -99,34 +109,12 @@ func FormServerEmbed(input FormServerEmbedInput) *embed.Embed {
 		color = Plurple
 	}
 
-	serverEmbed := embed.NewEmbed()
-	serverEmbed.SetTitle(fmt.Sprintf("%v (%v)", input.Name, input.ID))
-	serverEmbed.SetDescription(description)
-	serverEmbed.SetColor(color)
-
 	var thumbnail string
 	if url, ok := thumbnails[input.Application]; ok {
 		thumbnail = url
 	} else {
 		thumbnail = "https://cdn.dribbble.com/users/662779/screenshots/5122311/server.gif"
 	}
-	serverEmbed.SetThumbnail(thumbnail)
-
-	serverEmbed.AddField("Status", fmt.Sprintf("%v %v", stateEmoji, "Running"))
-	serverEmbed.AddField("\u200B", "\u200B")
-	serverEmbed.AddField("Address", fmt.Sprintf("`%v`", address))
-	serverEmbed.AddField("Location", fmt.Sprintf("%v %v (%v)", input.Region.Emoji, input.Region.Name, input.Region.Geolocation))
-
-	if state != "Running" {
-		serverEmbed.AddField("\u200B", "\u200B")
-	}
-
-	serverEmbed.AddField("Application", input.Application)
-
-	if state == "Running" {
-		serverEmbed.AddField("Players", players)
-	}
-
 	timestamp := makeTimestamp()
 	footer := fmt.Sprintf(
 		"Owner: %v | 🌎 Hosted on %v in region %v | %v",
@@ -135,13 +123,59 @@ func FormServerEmbed(input FormServerEmbedInput) *embed.Embed {
 		input.Region.ServiceName,
 		timestamp,
 	)
-	serverEmbed.SetFooter(footer)
+
+	return ServerData{
+		Name:        fmt.Sprintf("%v (%v)", input.Name, input.ID),
+		Description: description,
+		Status:      fmt.Sprintf("%v %v", stateEmoji, state),
+		Address:     address,
+		Location:    fmt.Sprintf("%v %v (%v)", input.Region.Emoji, input.Region.Name, input.Region.Geolocation),
+		Application: input.Application,
+		Players:     players,
+		Footer:      footer,
+		Thumbnail:   thumbnail,
+		Color:       color,
+	}
+}
+
+type FormServerEmbedInput struct {
+	Name        string
+	ID          string
+	IP          string
+	Port        int
+	Status      string
+	Region      ServerBoiRegion
+	Application string
+	Owner       string
+	Service     string
+}
+
+func FormServerEmbed(input ServerData) *embed.Embed {
+	log.Printf("Input %v", input)
+	serverEmbed := embed.NewEmbed()
+	serverEmbed.SetTitle(input.Name)
+	serverEmbed.SetDescription(input.Description)
+	serverEmbed.SetColor(input.Color)
+	serverEmbed.SetThumbnail(input.Thumbnail)
+	if input.Status != "🟢 Running" {
+		serverEmbed.AddField("Status", input.Status)
+		serverEmbed.AddField("Location", input.Location)
+		serverEmbed.AddField("Application", input.Application)
+	} else {
+		serverEmbed.AddField("Status", input.Status)
+		serverEmbed.AddField("\u200B", "\u200B")
+		serverEmbed.AddField("Address", input.Address)
+		serverEmbed.AddField("Location", input.Location)
+		serverEmbed.AddField("Application", input.Application)
+		serverEmbed.AddField("Players", input.Players)
+	}
+	serverEmbed.SetFooter(input.Footer)
 	serverEmbed.InlineAllFields()
 
 	return serverEmbed
 }
 
-func callServer(ip string, port int) (a2s *a2s.ServerInfo, err error) {
+func CallServer(ip string, port int) (a2s *a2s.ServerInfo, err error) {
 	for i := 0; ; i++ {
 		a2sResponse, err := queryServer(ip, (port + i))
 		if err == nil {
@@ -158,7 +192,7 @@ func makeTimestamp() string {
 	return fmt.Sprintf("⏱️ Last updated: %02d:%02d:%02d UTC", t.Hour(), t.Minute(), t.Second())
 }
 
-func translateState(service string, status string) (state string, stateEmoji string, err error) {
+func TranslateState(service string, status string) (state string, stateEmoji string, err error) {
 	switch service {
 	case "aws":
 		switch status {

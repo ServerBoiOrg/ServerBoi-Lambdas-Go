@@ -45,7 +45,10 @@ func handler(event map[string]interface{}) (bool, error) {
 		gu.FormWorkflowResponseData(workflowEmbed),
 	)
 
-	server := gu.GetServerFromID(params.ServerID)
+	server, err := gu.GetServerFromID(params.ServerID)
+	if err != nil {
+		log.Fatalf("Error getting service object: %v", err)
+	}
 
 	log.Printf("Getting service")
 	service := server.GetService()
@@ -87,7 +90,7 @@ func handler(event map[string]interface{}) (bool, error) {
 	serverInfo := server.GetBaseService()
 	sbRegion := server.GetServerBoiRegion()
 
-	embed := gu.FormServerEmbed(gu.FormServerEmbedInput{
+	serverData := gu.GetServerEmbedData(gu.GetServerEmbedDataInput{
 		Name:        serverInfo.ServerName,
 		ID:          serverInfo.ServerID,
 		IP:          ip,
@@ -98,13 +101,14 @@ func handler(event map[string]interface{}) (bool, error) {
 		Owner:       serverInfo.Owner,
 		Service:     serverInfo.Service,
 	})
+	embed := gu.FormServerEmbed(serverData)
 
 	webookItem := gu.GetWebhookFromGuildID(params.GuildID)
 
 	gu.PostToEmbedChannel(
 		webookItem.WebhookID,
 		webookItem.WebhookToken,
-		gu.FormServerEmbedResponseData(embed, params.ServerID),
+		gu.FormServerEmbedResponseData(embed),
 	)
 
 	return true, nil

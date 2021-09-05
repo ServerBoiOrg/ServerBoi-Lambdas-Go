@@ -191,6 +191,21 @@ func (server AWSServer) GetService() string {
 	return server.Service
 }
 
+func (server AWSServer) GetIPv4() (string, error) {
+	client := CreateEC2Client(server.Region, server.AWSAccountID)
+	log.Printf("Describing instance: %s", server.InstanceID)
+	response, err := client.DescribeInstances(context.Background(), &ec2.DescribeInstancesInput{
+		InstanceIds: []string{
+			server.InstanceID,
+		},
+	})
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+	return fmt.Sprintf("%v", response.Reservations[0].Instances[0].PublicIpAddress), nil
+}
+
 func (server AWSServer) GetServerBoiRegion() ServerBoiRegion {
 	return FormServerBoiRegion(server.Service, server.Region)
 }
@@ -227,7 +242,7 @@ func (server AWSServer) Restart() (data DiscordInteractionResponseData, err erro
 	return FormResponseData(formRespInput), nil
 }
 
-func (server AWSServer) Status() (data DiscordInteractionResponseData, err error) {
+func (server AWSServer) Status() (status string, err error) {
 	client := CreateEC2Client(server.Region, server.AWSAccountID)
 	log.Printf("Ec2 Client made in Target account")
 	input := &ec2.DescribeInstancesInput{
@@ -239,18 +254,10 @@ func (server AWSServer) Status() (data DiscordInteractionResponseData, err error
 	response, err := client.DescribeInstances(context.Background(), input)
 	if err != nil {
 		fmt.Println(err)
-		return data, err
+		return status, err
 	}
-	for _, r := range response.Reservations {
-		for _, i := range r.Instances {
-			formRespInput := FormResponseInput{
-				"Content": fmt.Sprintf("Server status: %s", i.State.Name),
-			}
 
-			return FormResponseData(formRespInput), nil
-		}
-	}
-	return
+	return fmt.Sprintf("%v", response.Reservations[0].Instances[0].State.Name), nil
 }
 
 func GetWebhookFromGuildID(guildID string) WebhookTableResponse {
@@ -274,7 +281,7 @@ func GetWebhookFromGuildID(guildID string) WebhookTableResponse {
 	return responseItem
 }
 
-func GetServerFromID(serverID string) (server Server) {
+func GetServerFromID(serverID string) (server Server, err error) {
 	dynamo := GetDynamo()
 	serverTable := GetEnvVar("SERVER_TABLE")
 
@@ -286,7 +293,8 @@ func GetServerFromID(serverID string) (server Server) {
 		},
 	})
 	if err != nil {
-		log.Fatalf("Error retrieving item from dynamo: %v", err)
+		log.Printf("Error retrieving item from dynamo: %v", err)
+		return server, nil
 	}
 
 	serviceRaw := response.Item["Service"]
@@ -299,11 +307,11 @@ func GetServerFromID(serverID string) (server Server) {
 	case "aws":
 		awsServer := AWSServer{}
 		attributevalue.UnmarshalMap(response.Item, &awsServer)
-		return awsServer
+		return awsServer, nil
 	case "linode":
 		linodeServer := LinodeServer{}
 		err = attributevalue.UnmarshalMap(response.Item, &linodeServer)
-		return linodeServer
+		return linodeServer, nil
 	default:
 		panic("Unknown service")
 	}
