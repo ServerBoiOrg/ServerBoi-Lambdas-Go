@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	TOKEN        = gu.GetEnvVar("DISCORD_TOKEN")
-	AWS_TABLE    = gu.GetEnvVar("AWS_TABLE")
-	SERVER_TABLE = gu.GetEnvVar("SERVER_TABLE")
+	TOKEN         = gu.GetEnvVar("DISCORD_TOKEN")
+	SERVER_TABLE  = gu.GetEnvVar("SERVER_TABLE")
+	CHANNEL_TABLE = gu.GetEnvVar("CHANNEL_TABLE")
 )
 
 type FinishProvisonParameters struct {
@@ -103,13 +103,22 @@ func handler(event map[string]interface{}) (bool, error) {
 	})
 	embed := gu.FormServerEmbed(serverData)
 
-	webookItem := gu.GetWebhookFromGuildID(params.GuildID)
+	log.Printf("Getting Channel for Guild")
+	channelID, err := gu.GetChannelIDFromGuildID(params.GuildID)
+	if err != nil {
+		log.Fatalf("Error getting channelID from dynamo: %v", err)
+	}
 
-	gu.PostToEmbedChannel(
-		webookItem.WebhookID,
-		webookItem.WebhookToken,
-		gu.FormServerEmbedResponseData(embed),
-	)
+	log.Printf("Posting message")
+	client := gu.CreateDiscordClient(gu.CreateDiscordClientInput{
+		BotToken:   TOKEN,
+		ApiVersion: "v9",
+	})
+	resp, err := client.CreateMessage(channelID, gu.FormServerEmbedResponseData(embed))
+	if err != nil {
+		log.Fatalf("Error getting creating message in Channel: %v", err)
+	}
+	log.Printf("%v", resp)
 
 	return true, nil
 }

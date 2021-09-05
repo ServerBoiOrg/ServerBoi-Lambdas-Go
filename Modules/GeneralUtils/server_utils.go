@@ -31,6 +31,11 @@ type WebhookTableResponse struct {
 	WebhookToken string `json:"WebhookToken"`
 }
 
+type ChannelTableResponse struct {
+	GuildID   string `json:"GuildID"`
+	ChannelID string `json:"ChannelID"`
+}
+
 type Server interface {
 	Start() (data DiscordInteractionResponseData, err error)
 	Stop() (data DiscordInteractionResponseData, err error)

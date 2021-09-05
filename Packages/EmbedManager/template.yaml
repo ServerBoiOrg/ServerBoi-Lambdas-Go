@@ -5,7 +5,7 @@ Description: >
 
 Globals:
   Function:
-    Timeout: 5
+    Timeout: 100
 
 Resources:
   EmbedManager:
@@ -17,5 +17,4 @@ Resources:
       Tracing: Active
       Environment:
         Variables:
-          USER_TABLE: ServerBoi-User-List
           SERVER_TABLE: ServerBoi-Server-List

@@ -79,6 +79,7 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 			BlockDeviceMappings: ebsMapping,
 			InstanceType:        instanceType,
 			KeyName:             &testKey,
+			TagSpecifications:   formNameTag(serverID),
 		},
 	)
 	if creationErr != nil {
@@ -125,6 +126,15 @@ func formAWSServerItem(server gu.AWSServer) map[string]dynamotypes.AttributeValu
 	serverItem["InstanceType"] = &dynamotypes.AttributeValueMemberS{Value: server.InstanceType}
 
 	return serverItem
+}
+
+func formNameTag(serverID string) []ec2types.TagSpecification {
+	return []ec2types.TagSpecification{{
+		Tags: []ec2types.Tag{{
+			Key:   aws.String("Name"),
+			Value: aws.String(serverID),
+		}},
+	}}
 }
 
 func getAWSInstanceType(buildInfo BuildInfo, architecture string) ec2types.InstanceType {

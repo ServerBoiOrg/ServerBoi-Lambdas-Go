@@ -35,11 +35,11 @@ func (client DiscordClient) EditMessage(
 	messageID string,
 	data DiscordInteractionResponseData,
 ) (message discordgo.Message, err error) {
-	messageUrl := fmt.Sprintf("%s/channels/%s/messages", client.baseUrl, channeldID)
+	messageUrl := fmt.Sprintf("%s/channels/%s/messages/%s", client.baseUrl, channeldID, messageID)
 
-	log.Printf("Editing response with: %v", data)
 	responseBody, _ := json.Marshal(data)
 	bytes := bytes.NewBuffer(responseBody)
+	log.Printf("Editing response with: %v", bytes)
 
 	req, err := http.NewRequest("PATCH", messageUrl, bytes)
 	if err != nil {
@@ -52,6 +52,7 @@ func (client DiscordClient) EditMessage(
 	if err != nil {
 		fmt.Println(err)
 	}
+	log.Printf("Request made: %v", resp)
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
 		err = json.NewDecoder(resp.Body).Decode(&message)
@@ -59,6 +60,30 @@ func (client DiscordClient) EditMessage(
 	}
 	return message, err
 
+}
+
+func (client DiscordClient) CreateMessage(channelID string, data DiscordInteractionResponseData) (message discordgo.Message, err error) {
+	url := fmt.Sprintf("%s/channels/%s/messages", client.baseUrl, channelID)
+	responseBody, _ := json.Marshal(data)
+	log.Printf(string(responseBody))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(responseBody))
+	if err != nil {
+		fmt.Println(err)
+	}
+	req.Header.Set("Authorization", fmt.Sprintf("Bot %s", client.BotToken))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer resp.Body.Close()
+	fmt.Printf("Bad rqeuest: %v", resp.StatusCode)
+	if resp.StatusCode == http.StatusOK {
+		err = json.NewDecoder(resp.Body).Decode(&message)
+		return message, nil
+	}
+	return message, err
 }
 
 func (client DiscordClient) GetChannelMessages(channeldID string) (messages []discordgo.Message, err error) {

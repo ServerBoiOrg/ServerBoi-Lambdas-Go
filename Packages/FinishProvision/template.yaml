@@ -18,4 +18,4 @@ Resources:
       Environment:
         Variables:
           SERVER_TABLE: ServerBoi-Server-List
-          WEBHOOK_TABLE: ServerBoi-Webhook-List
+          CHANNEL_TABLE: ServerBoi-Channel-List

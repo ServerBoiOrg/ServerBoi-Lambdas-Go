@@ -281,6 +281,26 @@ func GetWebhookFromGuildID(guildID string) WebhookTableResponse {
 	return responseItem
 }
 
+func GetChannelIDFromGuildID(guildID string) (channelID string, err error) {
+	dynamo := GetDynamo()
+	webhookTable := GetEnvVar("CHANNEL_TABLE")
+
+	response, err := dynamo.GetItem(context.Background(), &dynamodb.GetItemInput{
+		TableName: aws.String(webhookTable),
+		Key: map[string]types.AttributeValue{
+			"GuildID": &types.AttributeValueMemberS{Value: guildID},
+		},
+	})
+	if err != nil {
+		return channelID, err
+	}
+
+	var responseItem ChannelTableResponse
+	attributevalue.UnmarshalMap(response.Item, &responseItem)
+
+	return responseItem.ChannelID, nil
+}
+
 func GetServerFromID(serverID string) (server Server, err error) {
 	dynamo := GetDynamo()
 	serverTable := GetEnvVar("SERVER_TABLE")

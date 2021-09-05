@@ -35,7 +35,7 @@ type FormWorkflowEmbedInput struct {
 }
 
 func FormWorkflowEmbed(input FormWorkflowEmbedInput) *embed.Embed {
-	timestamp := makeTimestamp()
+	timestamp := MakeTimestamp()
 	workflowEmbed := embed.NewEmbed()
 	workflowEmbed.SetTitle(input.Name)
 	workflowEmbed.SetDescription(input.Description)
@@ -115,14 +115,7 @@ func GetServerEmbedData(input GetServerEmbedDataInput) ServerData {
 	} else {
 		thumbnail = "https://cdn.dribbble.com/users/662779/screenshots/5122311/server.gif"
 	}
-	timestamp := makeTimestamp()
-	footer := fmt.Sprintf(
-		"Owner: %v | 🌎 Hosted on %v in region %v | %v",
-		input.Owner,
-		input.Service,
-		input.Region.ServiceName,
-		timestamp,
-	)
+	footer := FormFooter(input.Owner, input.Service, input.Region.ServiceName)
 
 	return ServerData{
 		Name:        fmt.Sprintf("%v (%v)", input.Name, input.ID),
@@ -151,7 +144,6 @@ type FormServerEmbedInput struct {
 }
 
 func FormServerEmbed(input ServerData) *embed.Embed {
-	log.Printf("Input %v", input)
 	serverEmbed := embed.NewEmbed()
 	serverEmbed.SetTitle(input.Name)
 	serverEmbed.SetDescription(input.Description)
@@ -164,7 +156,7 @@ func FormServerEmbed(input ServerData) *embed.Embed {
 	} else {
 		serverEmbed.AddField("Status", input.Status)
 		serverEmbed.AddField("\u200B", "\u200B")
-		serverEmbed.AddField("Address", input.Address)
+		serverEmbed.AddField("Address", fmt.Sprintf("`%s`", input.Address))
 		serverEmbed.AddField("Location", input.Location)
 		serverEmbed.AddField("Application", input.Application)
 		serverEmbed.AddField("Players", input.Players)
@@ -177,9 +169,9 @@ func FormServerEmbed(input ServerData) *embed.Embed {
 
 func CallServer(ip string, port int) (a2s *a2s.ServerInfo, err error) {
 	for i := 0; ; i++ {
-		a2sResponse, err := queryServer(ip, (port + i))
+		a2s, err = QueryServer(ip, (port + i))
 		if err == nil {
-			return a2sResponse, nil
+			return a2s, nil
 		}
 		if i == 5 {
 			return a2s, err
@@ -187,9 +179,21 @@ func CallServer(ip string, port int) (a2s *a2s.ServerInfo, err error) {
 	}
 }
 
-func makeTimestamp() string {
+func MakeTimestamp() string {
 	t := time.Now().UTC()
 	return fmt.Sprintf("⏱️ Last updated: %02d:%02d:%02d UTC", t.Hour(), t.Minute(), t.Second())
+}
+
+func FormFooter(owner string, service string, region string) string {
+	t := time.Now().UTC()
+	timestamp := fmt.Sprintf("⏱️ Last updated: %02d:%02d:%02d UTC", t.Hour(), t.Minute(), t.Second())
+	return fmt.Sprintf(
+		"Owner: %v | 🌎 Hosted on %v in region %v | %v",
+		owner,
+		service,
+		region,
+		timestamp,
+	)
 }
 
 func TranslateState(service string, status string) (state string, stateEmoji string, err error) {
@@ -247,7 +251,7 @@ func TranslateState(service string, status string) (state string, stateEmoji str
 	return state, stateEmoji, err
 }
 
-func queryServer(ip string, port int) (info *a2s.ServerInfo, err error) {
+func QueryServer(ip string, port int) (info *a2s.ServerInfo, err error) {
 	clientString := fmt.Sprintf("%v:%v", ip, port)
 
 	client, err := a2s.NewClient(clientString)
