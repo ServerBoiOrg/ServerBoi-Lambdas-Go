@@ -87,7 +87,6 @@ func GetServerEmbedData(input GetServerEmbedDataInput) ServerData {
 	}
 	state, stateEmoji, stateErr := TranslateState(input.Service, input.Status)
 	if stateErr != nil {
-		fmt.Println(stateErr)
 	}
 
 	var players string
@@ -256,14 +255,12 @@ func QueryServer(ip string, port int) (info *a2s.ServerInfo, err error) {
 
 	client, err := a2s.NewClient(clientString)
 	if err != nil {
-		fmt.Println(err)
 	}
 
 	defer client.Close()
 
 	info, err = client.QueryInfo()
 	if err != nil {
-		log.Println(err)
 	}
 
 	client.Close()

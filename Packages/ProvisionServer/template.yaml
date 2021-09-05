@@ -22,7 +22,6 @@ Resources:
           SERVER_TABLE: ServerBoi-Server-List
           AWS_TABLE: AWS-User-List
           AWS_REGION: us-west-2
-          STAGE: Testing
           DYNAMO_CONTAINER: serverboi-dynamodb-local
           LOCALSTACK_CONTAINER: serverboi-localstack
           API_URL: https://api.serverboi.io

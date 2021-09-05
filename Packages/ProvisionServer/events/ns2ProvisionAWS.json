@@ -1,16 +1,17 @@
 {
-    "ExecutionName": "Test",
+    "ExecutionName": "Provision-f82ba331",
     "Application": "ns2",
     "Service": "aws",
-    "OwnerID": "0001",
-    "Owner": "Tester",
+    "OwnerID": "155875705417236480",
+    "Owner": "Awlsring",
     "InteractionID": "xxxx",
     "InteractionToken": "xxxx",
     "ApplicationID": "xxxx",
-    "GuildID": "xxxx",
-    "Url": "api.serverboi.io",
-    "ServerName": "tst-ns2",
+    "GuildID": "653100420687855616",
+    "Url": "https://api.serverboi.io",
+    "ServerName": "ServerBoi-ns2",
     "CreationOptions": {
-        "Region": "us-west-2"
+      "region": "us-west-2",
+      "service": "aws"
     }
-}
+  }

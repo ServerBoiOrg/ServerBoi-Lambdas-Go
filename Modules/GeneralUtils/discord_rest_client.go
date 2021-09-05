@@ -43,14 +43,12 @@ func (client DiscordClient) EditMessage(
 
 	req, err := http.NewRequest("PATCH", messageUrl, bytes)
 	if err != nil {
-		fmt.Println(err)
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bot %s", client.BotToken))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Println(err)
 	}
 	log.Printf("Request made: %v", resp)
 	defer resp.Body.Close()
@@ -68,17 +66,14 @@ func (client DiscordClient) CreateMessage(channelID string, data DiscordInteract
 	log.Printf(string(responseBody))
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(responseBody))
 	if err != nil {
-		fmt.Println(err)
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bot %s", client.BotToken))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Println(err)
 	}
 	defer resp.Body.Close()
-	fmt.Printf("Bad rqeuest: %v", resp.StatusCode)
 	if resp.StatusCode == http.StatusOK {
 		err = json.NewDecoder(resp.Body).Decode(&message)
 		return message, nil
@@ -91,13 +86,11 @@ func (client DiscordClient) GetChannelMessages(channeldID string) (messages []di
 
 	req, err := http.NewRequest("GET", messageUrl, nil)
 	if err != nil {
-		fmt.Println(err)
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bot %s", client.BotToken))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Println(err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
@@ -113,13 +106,11 @@ func (client DiscordClient) DeleteMessage(channelID string, messageID string) (e
 
 	req, err := http.NewRequest("DELETE", messageUrl, nil)
 	if err != nil {
-		fmt.Println(err)
 	}
 	req.Header.Set("Authorization", fmt.Sprintf("Bot %s", client.BotToken))
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Println(err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {

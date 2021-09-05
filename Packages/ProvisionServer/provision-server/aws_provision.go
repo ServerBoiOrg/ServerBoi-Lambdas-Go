@@ -30,6 +30,7 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 	container := getContainer(buildInfo, architecture)
 
 	serverID := formServerID()
+	log.Printf("ServerID: %v", serverID)
 
 	log.Printf("Generating bootscript")
 	bootscript := formBootscript(
@@ -129,11 +130,17 @@ func formAWSServerItem(server gu.AWSServer) map[string]dynamotypes.AttributeValu
 }
 
 func formNameTag(serverID string) []ec2types.TagSpecification {
+	nameTag := ec2types.Tag{
+		Key:   aws.String("Name"),
+		Value: aws.String(serverID),
+	}
+	tag := ec2types.Tag{
+		Key:   aws.String("ManagedBy"),
+		Value: aws.String("ServerBoi"),
+	}
 	return []ec2types.TagSpecification{{
-		Tags: []ec2types.Tag{{
-			Key:   aws.String("Name"),
-			Value: aws.String(serverID),
-		}},
+		ResourceType: ec2types.ResourceTypeInstance,
+		Tags:         []ec2types.Tag{nameTag, tag},
 	}}
 }
 

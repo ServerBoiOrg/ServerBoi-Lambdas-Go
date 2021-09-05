@@ -20,8 +20,6 @@ import (
 )
 
 func getConfig() aws.Config {
-	log.Printf("Getting config")
-
 	config, err := config.LoadDefaultConfig(context.TODO(), func(options *config.LoadOptions) error {
 		options.Region = GetEnvVar("AWS_REGION")
 
@@ -37,7 +35,6 @@ func getConfig() aws.Config {
 func GetDynamo() (dynamo *dynamodb.Client) {
 	cfg := getConfig()
 	stage := GetEnvVar("STAGE")
-	log.Printf("Getting dynamo session")
 	dynamo = dynamodb.NewFromConfig(cfg, func(options *dynamodb.Options) {
 		if stage == "Testing" {
 			options.EndpointResolver = dynamodb.EndpointResolverFromURL("http://localhost:8000")
@@ -49,7 +46,6 @@ func GetDynamo() (dynamo *dynamodb.Client) {
 
 func GetCloudwatchClient() *cloudwatch.Client {
 	cfg := getConfig()
-	log.Printf("Getting cloudwatch client")
 	cw := cloudwatch.NewFromConfig(cfg, func(options *cloudwatch.Options) {})
 
 	return cw
@@ -65,9 +61,7 @@ func CreateEC2Client(region string, accountID string) ec2.Client {
 		endpoint := fmt.Sprintf("http://%v:4566/", localstackHostname)
 		options.EndpointResolver = ec2.EndpointResolverFromURL(endpoint)
 	} else {
-		log.Printf("Making EC2 client in account: %v", accountID)
 		creds := getRemoteCreds(region, accountID)
-		log.Printf("Got credentials for account.")
 
 		options = ec2.Options{
 			Region:      region,
@@ -76,7 +70,6 @@ func CreateEC2Client(region string, accountID string) ec2.Client {
 	}
 
 	client := ec2.New(options)
-	log.Printf("EC2 Client created")
 
 	return *client
 }
@@ -133,7 +126,6 @@ func getRemoteCreds(region string, accountID string) *aws.CredentialsCache {
 
 	newRole, err := stsClient.AssumeRole(context.Background(), input)
 	if err != nil {
-		fmt.Println("Got an error assuming the role:")
 		panic(err)
 	}
 
@@ -155,8 +147,6 @@ func (server AWSServer) Start() (data DiscordInteractionResponseData, err error)
 	}
 	_, err = client.StartInstances(context.Background(), input)
 	if err != nil {
-		fmt.Println("Got an error retrieving starting EC2 instances:")
-		fmt.Println(err)
 		return data, err
 	}
 	formRespInput := FormResponseInput{
@@ -175,8 +165,6 @@ func (server AWSServer) Stop() (data DiscordInteractionResponseData, err error) 
 	}
 	_, err = client.StopInstances(context.Background(), input)
 	if err != nil {
-		fmt.Println("Got an error retrieving starting EC2 instances:")
-		fmt.Println(err)
 		return data, err
 	}
 
@@ -200,7 +188,6 @@ func (server AWSServer) GetIPv4() (string, error) {
 		},
 	})
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	return fmt.Sprintf("%v", response.Reservations[0].Instances[0].PublicIpAddress), nil
@@ -231,8 +218,6 @@ func (server AWSServer) Restart() (data DiscordInteractionResponseData, err erro
 	}
 	_, err = client.RebootInstances(context.Background(), input)
 	if err != nil {
-		fmt.Println("Got an error retrieving starting EC2 instances:")
-		fmt.Println(err)
 		return data, err
 	}
 	formRespInput := FormResponseInput{
@@ -253,7 +238,6 @@ func (server AWSServer) Status() (status string, err error) {
 	log.Printf("Describing instance: %s", server.InstanceID)
 	response, err := client.DescribeInstances(context.Background(), input)
 	if err != nil {
-		fmt.Println(err)
 		return status, err
 	}
 

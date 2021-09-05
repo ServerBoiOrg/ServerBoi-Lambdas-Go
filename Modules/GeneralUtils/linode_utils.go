@@ -28,7 +28,6 @@ func (server LinodeServer) Start() (data DiscordInteractionResponseData, err err
 
 	err = client.BootInstance(context.Background(), server.LinodeID, 0)
 	if err != nil {
-		fmt.Println(err)
 		return data, err
 	}
 
@@ -44,7 +43,6 @@ func (server LinodeServer) Stop() (data DiscordInteractionResponseData, err erro
 
 	err = client.ShutdownInstance(context.Background(), server.LinodeID)
 	if err != nil {
-		fmt.Println(err)
 		return data, err
 	}
 
@@ -60,7 +58,6 @@ func (server LinodeServer) Restart() (data DiscordInteractionResponseData, err e
 
 	err = client.RebootInstance(context.Background(), server.LinodeID, 0)
 	if err != nil {
-		fmt.Println(err)
 		return data, err
 	}
 
@@ -75,7 +72,6 @@ func (server LinodeServer) Status() (status string, err error) {
 	client := CreateLinodeClient(server.ApiKey)
 	linode, err := client.GetInstance(context.Background(), server.LinodeID)
 	if err != nil {
-		fmt.Println(err)
 		return status, err
 	}
 
@@ -90,7 +86,6 @@ func (server LinodeServer) GetIPv4() (string, error) {
 	client := CreateLinodeClient(server.ApiKey)
 	linode, err := client.GetInstance(context.Background(), server.LinodeID)
 	if err != nil {
-		fmt.Println(err)
 		return "", err
 	}
 	return fmt.Sprintf("%v", linode.IPv4[0]), nil
