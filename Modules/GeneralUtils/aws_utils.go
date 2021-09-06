@@ -2,6 +2,7 @@ package generalutils
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -275,6 +276,7 @@ func GetChannelIDFromGuildID(guildID string) (channelID string, err error) {
 			"GuildID": &types.AttributeValueMemberS{Value: guildID},
 		},
 	})
+	log.Printf("%v", len(response.Item))
 	if err != nil {
 		return channelID, err
 	}
@@ -296,9 +298,14 @@ func GetServerFromID(serverID string) (server Server, err error) {
 			"ServerID": &types.AttributeValueMemberS{Value: serverID},
 		},
 	})
+	log.Printf("%v", len(response.Item))
 	if err != nil {
 		log.Printf("Error retrieving item from dynamo: %v", err)
-		return server, nil
+		return server, err
+	} else if len(response.Item) == 0 {
+		log.Printf("No item was found")
+		err = errors.New("No items found.")
+		return server, err
 	}
 
 	serviceRaw := response.Item["Service"]
@@ -319,4 +326,12 @@ func GetServerFromID(serverID string) (server Server, err error) {
 	default:
 		panic("Unknown service")
 	}
+}
+
+type NoItemsError struct {
+	Path string
+}
+
+func (e *NoItemsError) Error() string {
+	return fmt.Sprintf("No response for GetItem operation: %v", e.Path)
 }

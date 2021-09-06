@@ -17,4 +17,5 @@ Resources:
       Tracing: Active
       Environment:
         Variables:
+          DISCORD_TOKEN: NzEzODU3NDM5MjIwMzY3NDMy.XsmNjA.4ySuplYlYEdMww9sEJjwoIE6xKM
           SERVER_TABLE: ServerBoi-Server-List

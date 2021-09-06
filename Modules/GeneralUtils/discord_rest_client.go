@@ -50,7 +50,6 @@ func (client DiscordClient) EditMessage(
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 	}
-	log.Printf("Request made: %v", resp)
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
 		err = json.NewDecoder(resp.Body).Decode(&message)

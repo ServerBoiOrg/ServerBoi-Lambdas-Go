@@ -102,9 +102,11 @@ func updateServerEmbed(embed *discordgo.MessageEmbed) (serverEmbed *embed.Embed,
 			status = field.Value
 		case "Address":
 			address = strings.Trim(field.Value, "`")
-			listString := strings.Split(address, ":")
-			ip = listString[0]
-			port, _ = strconv.Atoi(listString[1])
+			if strings.Contains(address, ":") {
+				listString := strings.Split(address, ":")
+				ip = listString[0]
+				port, _ = strconv.Atoi(listString[1])
+			}
 		case "Location":
 			location = field.Value
 		case "Application":
@@ -118,7 +120,7 @@ func updateServerEmbed(embed *discordgo.MessageEmbed) (serverEmbed *embed.Embed,
 	log.Printf("Ip: %v", ip)
 	log.Printf("Port: %v", port)
 
-	if status == "🟢 Running" {
+	if strings.Contains(status, "Running") {
 		log.Printf("Getting server info")
 		a2sInfo, err := gu.CallServer(ip, port)
 		if err != nil {
@@ -138,21 +140,25 @@ func updateServerEmbed(embed *discordgo.MessageEmbed) (serverEmbed *embed.Embed,
 			return serverEmbed, err
 		}
 		status = getStatus(server)
-		if status == "Running" {
+		log.Printf("Status: %v", status)
+		if strings.Contains(status, "Running") {
 			ip, err := server.GetIPv4()
+			port := server.GetBaseService().Port
 			if err != nil {
 				log.Printf("Error getting IP: %v", err)
 				address = "`unknown`"
 			}
-			a2sInfo, err := gu.CallServer(ip, server.GetBaseService().Port)
+			a2sInfo, err := gu.CallServer(ip, port)
 			if err != nil {
+				address = fmt.Sprintf("%v:%v", ip, port)
 				players = "Error contacting server"
+			} else {
+				players = fmt.Sprintf("%v/%v", a2sInfo.Players, a2sInfo.MaxPlayers)
+				address = fmt.Sprintf("%s:%v", ip, server.GetBaseService().Port)
 			}
-			players = fmt.Sprintf("%v/%v", a2sInfo.Players, a2sInfo.MaxPlayers)
-			address = fmt.Sprintf("%s:%v", ip, server.GetBaseService().Port)
 		}
 	}
-
+	color := setColorFromStatus(status)
 	footerParts := strings.Split(embed.Footer.Text, "|")
 	footer := fmt.Sprintf("%v|%v| %v", footerParts[0], footerParts[1], gu.MakeTimestamp())
 
@@ -164,10 +170,32 @@ func updateServerEmbed(embed *discordgo.MessageEmbed) (serverEmbed *embed.Embed,
 		Location:    location,
 		Application: application,
 		Players:     players,
-		Color:       embed.Color,
+		Color:       color,
 		Footer:      footer,
 		Thumbnail:   embed.Thumbnail.URL,
 	}), nil
+}
+
+func setColorFromStatus(status string) int {
+	var state string
+	if strings.Contains(status, "Running") {
+		state = "green"
+	} else if strings.Contains(status, "Starting") || strings.Contains(status, "Rebooting") {
+		state = "yellow"
+	} else if strings.Contains(status, "Offline") || strings.Contains(status, "Shutting down") {
+		state = "red"
+	}
+
+	switch state {
+	case "green":
+		return gu.DiscordGreen
+	case "yellow":
+		return gu.Gold
+	case "red":
+		return gu.DiscordRed
+	default:
+		return 0
+	}
 }
 
 func getStatus(server gu.Server) (status string) {
