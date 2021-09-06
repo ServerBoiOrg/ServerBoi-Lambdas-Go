@@ -48,6 +48,24 @@ type DiscordMessageRequestData struct {
 	Components      []DiscordComponentData        `json:"components,omitempty"`
 }
 
+type DiscordComponentInteractionData struct {
+	CustomID      string `json:"custom_id"`
+	ComponentType int    `json:"component_type"`
+}
+
+type DiscordComponentInteraction struct {
+	Message       discordgo.Message               `json:"message"`
+	ID            string                          `json:"id"`
+	ApplicationID string                          `json:"application_id"`
+	Type          int                             `json:"type"`
+	Data          DiscordComponentInteractionData `json:"data"`
+	GuildID       string                          `json:"guild_id"`
+	ChannelID     string                          `json:"channel_id"`
+	Member        DiscordMember                   `json:"member"`
+	Token         string                          `json:"token"`
+	Version       int                             `json:"version"`
+}
+
 type DiscordInteractionApplicationCommand struct {
 	ID            string                        `json:"id"`
 	ApplicationID string                        `json:"application_id"`

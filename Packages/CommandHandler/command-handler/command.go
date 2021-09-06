@@ -7,7 +7,7 @@ import (
 	gu "generalutils"
 )
 
-func command(eventBody string) (applicationID string, interactionToken string, response gu.DiscordInteractionResponseData, err error) {
+func command(eventBody string) (output InteractionOutput) {
 	log.Printf("Command: %v", eventBody)
 
 	//Unmarshal into Interaction Type
@@ -19,20 +19,20 @@ func command(eventBody string) (applicationID string, interactionToken string, r
 
 	commandOption := command.Data.Options[0].Name
 	log.Printf("Command Option: %v", commandOption)
+	var response gu.DiscordInteractionResponseData
 	switch {
 	case commandOption == "create":
-		response, err = createServer(command)
+		response = createServer(command)
 	case commandOption == "onboard":
-		response, err = routeOnboardCommand(command)
+		response = routeOnboardCommand(command)
 	case commandOption == "server":
-		response, err = routeServerCommand(command)
-	}
-
-	if err != nil {
-		log.Fatalf("Error performing server command: %v", err)
-		return "", "", response, err
+		response = routeServerCommand(command)
 	}
 	log.Printf("Response from %v command: %v", commandOption, response)
 
-	return command.ApplicationID, command.Token, response, nil
+	return InteractionOutput{
+		ApplicationID:    command.ApplicationID,
+		InteractionToken: command.Token,
+		Response:         response,
+	}
 }

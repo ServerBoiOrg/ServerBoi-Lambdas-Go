@@ -117,7 +117,6 @@ func handler(event map[string]interface{}) (bool, error) {
 	resp, err := client.CreateMessage(
 		channelID,
 		gu.FormServerEmbedResponseData(gu.FormServerEmbedResponseDataInput{
-			ServerID:    serverInfo.ServerID,
 			ServerEmbed: embed,
 			Running:     true,
 		}))

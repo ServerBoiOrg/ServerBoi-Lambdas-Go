@@ -12,7 +12,7 @@ type ServerCommandResponse struct {
 	Result bool
 }
 
-func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData, err error) {
+func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData) {
 	serverCommand := command.Data.Options[0].Options[0].Name
 	log.Printf("Server Commmad Option: %v", serverCommand)
 
@@ -29,17 +29,31 @@ func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (respon
 	switch {
 	//Server Actions
 	case serverCommand == "status":
-		var status string
-		status, err = server.Status()
+		status, err := server.Status()
+		var message string
+		if err != nil {
+			message = "Error getting server status"
+		} else {
+			message = fmt.Sprintf("Server status: %v", status)
+		}
 		data = gu.FormResponseData(gu.FormResponseInput{
-			"Content": fmt.Sprintf("Server status: %v", status),
+			"Content": message,
 		})
 	case serverCommand == "start":
-		data, err = server.Start()
+		err = server.Start()
+		data = gu.FormResponseData(gu.FormResponseInput{
+			"Content": "Starting server",
+		})
 	case serverCommand == "stop":
-		data, err = server.Stop()
+		err = server.Stop()
+		data = gu.FormResponseData(gu.FormResponseInput{
+			"Content": "Stopping server",
+		})
 	case serverCommand == "restart":
-		data, err = server.Restart()
+		err = server.Restart()
+		data = gu.FormResponseData(gu.FormResponseInput{
+			"Content": "Restarting server",
+		})
 	case serverCommand == "terminate":
 		input := ServerTerminateInput{
 			Token:         command.Token,
@@ -52,14 +66,13 @@ func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (respon
 		formRespInput := gu.FormResponseInput{
 			"Content": fmt.Sprintf("Server command `%v` is unknown.", serverCommand),
 		}
-
 		data = gu.FormResponseData(formRespInput)
 	}
 	if err != nil {
-		log.Fatalf("Error performing command: %v", err)
-		return response, err
+		log.Printf("Error performing command: %v", err)
+		return response
 	}
-	return data, nil
+	return data
 }
 
 type ServerTerminateInput struct {
@@ -88,7 +101,7 @@ func serverTerminate(input ServerTerminateInput) (data gu.DiscordInteractionResp
 	}
 	inputJson, err := json.Marshal(terminationWorkflowInput)
 	if err != nil {
-		log.Println(err)
+		log.Fatalf("Error marshalling data: %v", err)
 	}
 	inputString := fmt.Sprintf(string(inputJson))
 

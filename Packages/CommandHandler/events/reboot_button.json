@@ -1,0 +1,84 @@
+{
+    "resource": "/discord",
+    "path": "/discord",
+    "httpMethod": "POST",
+    "headers": {
+        "Host": "api.serverboi.io",
+        "User-Agent": "Discord-Interactions/1.0 (+https://discord.com)",
+        "X-Amzn-Trace-Id": "Root=1-61358966-2891b3cd2570d8ce19104974",
+        "X-Forwarded-For": "35.227.62.178",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https",
+        "accept": "*/*",
+        "content-type": "application/json",
+        "x-signature-ed25519": "98c1e8d6759061efd14f77fd738028219037a11aa1f8515d2f740f37ae8b2cbdd5b7c6d542588610aeec601adcb28894261ad374b0ed1f4acc1bb7d1d0f0bf0f",
+        "x-signature-timestamp": "1630898534"
+    },
+    "multiValueHeaders": {
+        "Host": [
+            "api.serverboi.io"
+        ],
+        "User-Agent": [
+            "Discord-Interactions/1.0 (+https://discord.com)"
+        ],
+        "X-Amzn-Trace-Id": [
+            "Root=1-61358966-2891b3cd2570d8ce19104974"
+        ],
+        "X-Forwarded-For": [
+            "35.227.62.178"
+        ],
+        "X-Forwarded-Port": [
+            "443"
+        ],
+        "X-Forwarded-Proto": [
+            "https"
+        ],
+        "accept": [
+            "*/*"
+        ],
+        "content-type": [
+            "application/json"
+        ],
+        "x-signature-ed25519": [
+            "98c1e8d6759061efd14f77fd738028219037a11aa1f8515d2f740f37ae8b2cbdd5b7c6d542588610aeec601adcb28894261ad374b0ed1f4acc1bb7d1d0f0bf0f"
+        ],
+        "x-signature-timestamp": [
+            "1630898534"
+        ]
+    },
+    "queryStringParameters": null,
+    "multiValueQueryStringParameters": null,
+    "pathParameters": null,
+    "stageVariables": null,
+    "requestContext": {
+        "accountId": "518723822228",
+        "resourceId": "d6hz4o",
+        "stage": "prod",
+        "domainName": "api.serverboi.io",
+        "domainPrefix": "api",
+        "requestId": "6d1311a8-ee84-4815-af85-21567e1fa879",
+        "protocol": "HTTP/1.1",
+        "identity": {
+            "cognitoIdentityPoolId": "",
+            "accountId": "",
+            "cognitoIdentityId": "",
+            "caller": "",
+            "apiKey": "",
+            "apiKeyId": "",
+            "accessKey": "",
+            "sourceIp": "35.227.62.178",
+            "cognitoAuthenticationType": "",
+            "cognitoAuthenticationProvider": "",
+            "userArn": "",
+            "userAgent": "Discord-Interactions/1.0 (+https://discord.com)",
+            "user": ""
+        },
+        "resourcePath": "/discord",
+        "authorizer": null,
+        "httpMethod": "POST",
+        "requestTime": "06/Sep/2021:03:22:14 +0000",
+        "requestTimeEpoch": 1630898534783,
+        "apiId": "tpl8nttmo2"
+    },
+    "body": "{\"application_id\":\"713857439220367432\",\"channel_id\":\"844786538695884810\",\"data\":{\"component_type\":2,\"custom_id\":\"7ACB.reboot\"},\"guild_id\":\"653100420687855616\",\"id\":\"884277287242043474\",\"member\":{\"avatar\":null,\"deaf\":false,\"is_pending\":false,\"joined_at\":\"2019-12-08T05:07:54.314000+00:00\",\"mute\":false,\"nick\":null,\"pending\":false,\"permissions\":\"549755813887\",\"premium_since\":null,\"roles\":[],\"user\":{\"avatar\":\"a_539a3c047f6bedfe4283dae3ed3bb8c3\",\"discriminator\":\"7032\",\"id\":\"155875705417236480\",\"public_flags\":128,\"username\":\"Awlsring\"}},\"message\":{\"attachments\":[],\"author\":{\"avatar\":\"6e423fd8d45bae7362c51283a595207d\",\"bot\":true,\"discriminator\":\"7556\",\"id\":\"713857439220367432\",\"public_flags\":0,\"username\":\"ServerBoi\"},\"channel_id\":\"844786538695884810\",\"components\":[{\"components\":[{\"custom_id\":\"7ACB.start\",\"disabled\":true,\"emoji\":{\"name\":\"🟢\"},\"hash\":\"\",\"label\":\"Start\",\"style\":1,\"type\":2},{\"custom_id\":\"7ACB.stop\",\"emoji\":{\"name\":\"🔴\"},\"hash\":\"\",\"label\":\"Stop\",\"style\":1,\"type\":2},{\"custom_id\":\"7ACB.reboot\",\"emoji\":{\"name\":\"🔁\"},\"hash\":\"\",\"label\":\"Reboot\",\"style\":1,\"type\":2}],\"type\":1}],\"content\":\"\",\"edited_timestamp\":\"2021-09-06T03:09:07.086000+00:00\",\"embeds\":[{\"color\":5763719,\"description\":\"Connect: steam://connect/54.212.172.9:27015\",\"fields\":[{\"inline\":true,\"name\":\"Status\",\"value\":\"🟢 Running\"},{\"inline\":true,\"name\":\"​\",\"value\":\"​\"},{\"inline\":true,\"name\":\"Address\",\"value\":\"`54.212.172.9:27015`\"},{\"inline\":true,\"name\":\"Location\",\"value\":\"🇺🇸 US-West (Oregon)\"},{\"inline\":true,\"name\":\"Application\",\"value\":\"ns2\"},{\"inline\":true,\"name\":\"Players\",\"value\":\"0/16\"}],\"footer\":{\"text\":\"Owner: Awlsring | 🌎 Hosted on aws in region us-west-2 | ⏱️ Last updated: 03:09:06 UTC\"},\"thumbnail\":{\"height\":304,\"proxy_url\":\"https://images-ext-2.discordapp.net/external/moMoAQQsOS2tB7gpuj-OVv5sGB3LfzbVuuKoTAR9be4/https/wiki.naturalselection2.com/images/f/f3/Hive_spawn_idle.gif\",\"url\":\"https://wiki.naturalselection2.com/images/f/f3/Hive_spawn_idle.gif\",\"width\":208},\"title\":\"ServerBoi-ns2 (7ACB)\",\"type\":\"rich\"}],\"flags\":0,\"id\":\"884256572618973194\",\"mention_everyone\":false,\"mention_roles\":[],\"mentions\":[],\"pinned\":false,\"timestamp\":\"2021-09-06T01:59:55.605000+00:00\",\"tts\":false,\"type\":0},\"token\":\"aW50ZXJhY3Rpb246ODg0Mjc3Mjg3MjQyMDQzNDc0Omd5YmNwU2s1cjMybWZFMWxXbmZodHRYZUJ6UExrRnNyQ1RrbXF1WGhpRXZwSDQ5Z1ozQkg1OE1RR2FKTDBsb09OVFZPUzE1a2Q2WER3MUtWUE9WT3ZuMzRDeUNGT0tXQmk2VWg1dllJOWNzYWdlajcweEZHRWtoSEhZTW5JeXFn\",\"type\":3,\"version\":1}"
+}

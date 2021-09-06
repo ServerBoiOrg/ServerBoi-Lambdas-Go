@@ -81,7 +81,6 @@ func analyzeEmbed(
 			message.ChannelID,
 			message.ID,
 			gu.FormServerEmbedResponseData(gu.FormServerEmbedResponseDataInput{
-				ServerID:    updateResponse.ServerID,
 				ServerEmbed: updateResponse.ServerEmbed,
 				Running:     running,
 			}),

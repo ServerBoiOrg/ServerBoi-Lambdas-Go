@@ -37,9 +37,9 @@ type ChannelTableResponse struct {
 }
 
 type Server interface {
-	Start() (data DiscordInteractionResponseData, err error)
-	Stop() (data DiscordInteractionResponseData, err error)
-	Restart() (data DiscordInteractionResponseData, err error)
+	Start() (err error)
+	Stop() (err error)
+	Restart() (err error)
 	Status() (status string, err error)
 	GetIPv4() (string, error)
 	GetService() string

@@ -78,7 +78,6 @@ func FormWorkflowResponseData(workflowEmbed *embed.Embed) (data DiscordInteracti
 }
 
 type FormServerEmbedResponseDataInput struct {
-	ServerID    string
 	ServerEmbed *embed.Embed
 	Running     bool
 }
@@ -86,7 +85,7 @@ type FormServerEmbedResponseDataInput struct {
 func FormServerEmbedResponseData(input FormServerEmbedResponseDataInput) (data DiscordInteractionResponseData) {
 	log.Printf("Forming workflow response data")
 	data.Embeds = []embed.Embed{*input.ServerEmbed}
-	data.Components = ServerEmbedComponents(input.ServerID, input.Running)
+	data.Components = ServerEmbedComponents(input.Running)
 
 	return data
 }

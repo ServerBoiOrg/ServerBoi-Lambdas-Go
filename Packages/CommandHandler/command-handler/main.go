@@ -48,7 +48,6 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaRe
 		fmt.Println(err)
 		panic(err)
 	}
-	log.Printf("Request: %v", request)
 
 	log.Println("Verifying Public Key")
 	verifyPublicKey(request)
@@ -56,9 +55,7 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaRe
 	interactionType := getCommandType(event.Body)
 	log.Printf("Interaction Type: %v", interactionType)
 
-	var response gu.DiscordInteractionResponseData
-	var applicationID string
-	var interactionToken string
+	var output InteractionOutput
 	switch {
 	case interactionType == 1:
 		data, _ := json.Marshal(pong())
@@ -67,16 +64,16 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaRe
 			Body:       fmt.Sprintf(string(data)),
 		}, nil
 	case interactionType == 2:
-		applicationID, interactionToken, response, err = command(event.Body)
+		output = command(event.Body)
 	case interactionType == 3:
-		applicationID, interactionToken, response = component(event.Body)
+		output = component(event.Body)
 	}
 	if err != nil {
 		log.Fatalf("Error performing command: %v", err)
 		return lambdaResponse, err
 	}
 
-	gu.EditResponse(applicationID, interactionToken, response)
+	gu.EditResponse(output.ApplicationID, output.InteractionToken, output.Response)
 
 	//Probably not needed but eh
 	return events.APIGatewayProxyResponse{
@@ -84,6 +81,12 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaRe
 		Body:       "",
 	}, nil
 
+}
+
+type InteractionOutput struct {
+	ApplicationID    string
+	InteractionToken string
+	Response         gu.DiscordInteractionResponseData
 }
 
 func getCommandType(eventBody string) float64 {

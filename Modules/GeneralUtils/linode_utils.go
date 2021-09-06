@@ -23,49 +23,37 @@ func CreateAuthlessLinodeClient() linodego.Client {
 	return linodego.NewClient(&http.Client{})
 }
 
-func (server LinodeServer) Start() (data DiscordInteractionResponseData, err error) {
+func (server LinodeServer) Start() (err error) {
 	client := CreateLinodeClient(server.ApiKey)
 
 	err = client.BootInstance(context.Background(), server.LinodeID, 0)
 	if err != nil {
-		return data, err
+		return err
 	}
 
-	formRespInput := FormResponseInput{
-		"Content": "Starting server",
-	}
-
-	return FormResponseData(formRespInput), nil
+	return nil
 }
 
-func (server LinodeServer) Stop() (data DiscordInteractionResponseData, err error) {
+func (server LinodeServer) Stop() (err error) {
 	client := CreateLinodeClient(server.ApiKey)
 
 	err = client.ShutdownInstance(context.Background(), server.LinodeID)
 	if err != nil {
-		return data, err
+		return err
 	}
 
-	formRespInput := FormResponseInput{
-		"Content": "Stopping server",
-	}
-
-	return FormResponseData(formRespInput), nil
+	return nil
 }
 
-func (server LinodeServer) Restart() (data DiscordInteractionResponseData, err error) {
+func (server LinodeServer) Restart() (err error) {
 	client := CreateLinodeClient(server.ApiKey)
 
 	err = client.RebootInstance(context.Background(), server.LinodeID, 0)
 	if err != nil {
-		return data, err
+		return err
 	}
 
-	formRespInput := FormResponseInput{
-		"Content": "Restarting server",
-	}
-
-	return FormResponseData(formRespInput), nil
+	return nil
 }
 
 func (server LinodeServer) Status() (status string, err error) {

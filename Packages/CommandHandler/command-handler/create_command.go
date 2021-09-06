@@ -23,7 +23,7 @@ type CreateServerWorkflowInput struct {
 	CreationOptions  map[string]string
 }
 
-func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData, err error) {
+func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData) {
 	application := command.Data.Options[0].Options[0].Name
 	optionsSlice := command.Data.Options[0].Options[0].Options
 	creationOptions := make(map[string]string)
@@ -36,7 +36,7 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 
 	errors := verifyCreateServerParams(creationOptions)
 	if len(errors) > 0 {
-		return gu.FormInvalidParametersResponse(errors), nil
+		return gu.FormInvalidParametersResponse(errors)
 	}
 
 	log.Printf("Application to create: %v", application)
@@ -94,7 +94,7 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 		"Embeds": workflowEmbed,
 	}
 
-	return gu.FormResponseData(formRespInput), nil
+	return gu.FormResponseData(formRespInput)
 }
 
 func verifyCreateServerParams(options map[string]string) []string {

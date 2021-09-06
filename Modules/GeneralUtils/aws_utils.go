@@ -139,7 +139,7 @@ func getRemoteCreds(region string, accountID string) *aws.CredentialsCache {
 	return creds
 }
 
-func (server AWSServer) Start() (data DiscordInteractionResponseData, err error) {
+func (server AWSServer) Start() (err error) {
 	client := CreateEC2Client(server.Region, server.AWSAccountID)
 	input := &ec2.StartInstancesInput{
 		InstanceIds: []string{
@@ -148,16 +148,13 @@ func (server AWSServer) Start() (data DiscordInteractionResponseData, err error)
 	}
 	_, err = client.StartInstances(context.Background(), input)
 	if err != nil {
-		return data, err
-	}
-	formRespInput := FormResponseInput{
-		"Content": "Starting server",
+		return err
 	}
 
-	return FormResponseData(formRespInput), nil
+	return nil
 }
 
-func (server AWSServer) Stop() (data DiscordInteractionResponseData, err error) {
+func (server AWSServer) Stop() (err error) {
 	client := CreateEC2Client(server.Region, server.AWSAccountID)
 	input := &ec2.StopInstancesInput{
 		InstanceIds: []string{
@@ -166,14 +163,10 @@ func (server AWSServer) Stop() (data DiscordInteractionResponseData, err error) 
 	}
 	_, err = client.StopInstances(context.Background(), input)
 	if err != nil {
-		return data, err
+		return err
 	}
 
-	formRespInput := FormResponseInput{
-		"Content": "Stopping server",
-	}
-
-	return FormResponseData(formRespInput), nil
+	return nil
 }
 
 func (server AWSServer) GetService() string {
@@ -210,7 +203,7 @@ func (server AWSServer) GetBaseService() BaseServer {
 	}
 }
 
-func (server AWSServer) Restart() (data DiscordInteractionResponseData, err error) {
+func (server AWSServer) Restart() (err error) {
 	client := CreateEC2Client(server.Region, server.AWSAccountID)
 	input := &ec2.RebootInstancesInput{
 		InstanceIds: []string{
@@ -219,13 +212,10 @@ func (server AWSServer) Restart() (data DiscordInteractionResponseData, err erro
 	}
 	_, err = client.RebootInstances(context.Background(), input)
 	if err != nil {
-		return data, err
-	}
-	formRespInput := FormResponseInput{
-		"Content": "Restarting server",
+		return err
 	}
 
-	return FormResponseData(formRespInput), nil
+	return nil
 }
 
 func (server AWSServer) Status() (status string, err error) {
