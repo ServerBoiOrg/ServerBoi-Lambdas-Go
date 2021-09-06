@@ -21,16 +21,19 @@ func routeServerAction(component gu.DiscordComponentInteraction) (data gu.Discor
 	var message string
 	switch action {
 	case "start":
+		log.Printf("Starting server")
 		err = server.Start()
 		if err == nil {
 			message = "Starting server"
 		}
 	case "stop":
+		log.Printf("Sopping server")
 		err = server.Stop()
 		if err == nil {
 			message = "Stopping server"
 		}
 	case "reboot":
+		log.Printf("Rebooting server")
 		err = server.Restart()
 		if err == nil {
 			message = "Rebooting server"
@@ -40,6 +43,7 @@ func routeServerAction(component gu.DiscordComponentInteraction) (data gu.Discor
 		log.Printf("Error performing command: %v", err)
 		message = fmt.Sprintf("Error running %v on server", action)
 	}
+	log.Printf("Message to send to discord")
 	data = gu.DiscordInteractionResponseData{
 		Content: message,
 		Flags:   1 << 6,

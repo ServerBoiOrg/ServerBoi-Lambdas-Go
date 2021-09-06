@@ -16,6 +16,7 @@ import (
 var (
 	AWSRegions       = []string{"us-east-1", "us-east-2", "us-west-1", "us-west-2", "eu-west-1", "eu-west-2", "eu-west-3", "eu-north-1"}
 	ServerboiRegions = []string{"us-west"}
+	LinodeRegions    = []string{"us-west", "ap-west", "ca-central", "ap-southeast", "us-central", "us-southeast", "us-east", "eu-west", "ap-south", "eu-central", "ap-northeast"}
 )
 
 func GetEnvVar(key string) string {

@@ -184,7 +184,7 @@ func (server AWSServer) GetIPv4() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%v", response.Reservations[0].Instances[0].PublicIpAddress), nil
+	return fmt.Sprintf("%v", *response.Reservations[0].Instances[0].PublicIpAddress), nil
 }
 
 func (server AWSServer) GetServerBoiRegion() ServerBoiRegion {
@@ -205,12 +205,11 @@ func (server AWSServer) GetBaseService() BaseServer {
 
 func (server AWSServer) Restart() (err error) {
 	client := CreateEC2Client(server.Region, server.AWSAccountID)
-	input := &ec2.RebootInstancesInput{
+	_, err = client.RebootInstances(context.Background(), &ec2.RebootInstancesInput{
 		InstanceIds: []string{
 			server.InstanceID,
 		},
-	}
-	_, err = client.RebootInstances(context.Background(), input)
+	})
 	if err != nil {
 		return err
 	}
@@ -226,7 +225,6 @@ func (server AWSServer) Status() (status string, err error) {
 			server.InstanceID,
 		},
 	}
-	log.Printf("Describing instance: %s", server.InstanceID)
 	response, err := client.DescribeInstances(context.Background(), input)
 	if err != nil {
 		return status, err
