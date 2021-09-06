@@ -108,7 +108,7 @@ type DiscordMember struct {
 type DiscordComponentData struct {
 	Type        int                        `json:"type"`
 	CustomID    string                     `json:"custom_id,omitempty"`
-	Disabled    string                     `json:"disabled,omitempty"`
+	Disabled    bool                       `json:"disabled,omitempty"`
 	Style       int                        `json:"style,omitempty"`
 	Label       string                     `json:"label,omitempty"`
 	Emoji       DiscordEmoji               `json:"emoji,omitempty"`
@@ -144,10 +144,9 @@ type DiscordSelectMenuOptions struct {
 
 type DiscordEmoji struct {
 	// Component will have name, id, animated
-	ID            string           `json:"id"`
-	Name          string           `json:"name"`
+	ID            string           `json:"id,omitempty"`
+	Name          string           `json:"name,omitempty"`
 	Roles         []discordgo.Role `json:"roles,omitempty"`
-	User          discordgo.User   `json:"user,omitempty"`
 	RequireColons bool             `json:"require_colons,omitempty"`
 	Managed       bool             `json:"managed,omitempty"`
 	Animated      bool             `json:"animated,omitempty"`

@@ -65,16 +65,26 @@ func analyzeEmbed(
 	wg *sync.WaitGroup,
 ) {
 	log.Printf("Looking at message %v", message.ID)
-	serverEmbed, err := updateServerEmbed(embed)
+	updateResponse, err := updateServerEmbed(embed)
 	log.Printf("Formed new embed")
 	if err != nil {
 		log.Printf("Error: %v", err)
 		client.DeleteMessage(message.ChannelID, message.ID)
 	} else {
+		var running bool
+		if strings.Contains(updateResponse.Status, "Running") {
+			running = true
+		} else {
+			running = false
+		}
 		resp, err := client.EditMessage(
 			message.ChannelID,
 			message.ID,
-			gu.FormServerEmbedResponseData(serverEmbed),
+			gu.FormServerEmbedResponseData(gu.FormServerEmbedResponseDataInput{
+				ServerID:    updateResponse.ServerID,
+				ServerEmbed: updateResponse.ServerEmbed,
+				Running:     running,
+			}),
 		)
 		if err != nil {
 			log.Printf("Error: %v", err)
@@ -85,7 +95,13 @@ func analyzeEmbed(
 	wg.Done()
 }
 
-func updateServerEmbed(embed *discordgo.MessageEmbed) (serverEmbed *embed.Embed, err error) {
+type UpdateServerEmbedOutput struct {
+	ServerEmbed *embed.Embed
+	ServerID    string
+	Status      string
+}
+
+func updateServerEmbed(embed *discordgo.MessageEmbed) (output UpdateServerEmbedOutput, err error) {
 	var (
 		ip          string
 		port        int
@@ -127,7 +143,7 @@ func updateServerEmbed(embed *discordgo.MessageEmbed) (serverEmbed *embed.Embed,
 			log.Printf("Error getting server info, getting server item")
 			server, err := gu.GetServerFromID(serverID)
 			if err != nil {
-				return serverEmbed, err
+				return UpdateServerEmbedOutput{}, err
 			}
 			status = getStatus(server)
 			players = "Error contacting server"
@@ -137,7 +153,7 @@ func updateServerEmbed(embed *discordgo.MessageEmbed) (serverEmbed *embed.Embed,
 	} else {
 		server, err := gu.GetServerFromID(serverID)
 		if err != nil {
-			return serverEmbed, err
+			return UpdateServerEmbedOutput{}, err
 		}
 		status = getStatus(server)
 		log.Printf("Status: %v", status)
@@ -162,7 +178,7 @@ func updateServerEmbed(embed *discordgo.MessageEmbed) (serverEmbed *embed.Embed,
 	footerParts := strings.Split(embed.Footer.Text, "|")
 	footer := fmt.Sprintf("%v|%v| %v", footerParts[0], footerParts[1], gu.MakeTimestamp())
 
-	return gu.FormServerEmbed(gu.ServerData{
+	serverEmbed := gu.FormServerEmbed(gu.ServerData{
 		Name:        embed.Title,
 		Description: embed.Description,
 		Status:      status,
@@ -173,7 +189,13 @@ func updateServerEmbed(embed *discordgo.MessageEmbed) (serverEmbed *embed.Embed,
 		Color:       color,
 		Footer:      footer,
 		Thumbnail:   embed.Thumbnail.URL,
-	}), nil
+	})
+
+	return UpdateServerEmbedOutput{
+		ServerEmbed: serverEmbed,
+		ServerID:    serverID,
+		Status:      status,
+	}, nil
 }
 
 func setColorFromStatus(status string) int {

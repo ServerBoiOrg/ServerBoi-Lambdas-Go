@@ -35,8 +35,6 @@ func init() {
 }
 
 func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaResponse events.APIGatewayProxyResponse, err error) {
-
-	//Log raw event
 	rawEvent, marshalErr := json.Marshal(event)
 	if err != nil {
 		fmt.Println(marshalErr)
@@ -50,6 +48,7 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaRe
 		fmt.Println(err)
 		panic(err)
 	}
+	log.Printf("Request: %v", request)
 
 	log.Println("Verifying Public Key")
 	verifyPublicKey(request)

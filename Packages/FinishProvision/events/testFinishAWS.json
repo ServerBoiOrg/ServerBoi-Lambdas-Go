@@ -1,1 +1,7 @@
-{"embeds":[{"title":"ServerBoi-ns2 (BAB7)","description":"Connect: steam://connect/45.79.110.48:27015","color":5763719,"footer":{"text":"Owner: Awlsring | 🌎 Hosted on linode in region us-west | ⏱️ Last updated: 01:18:53 UTC"},"thumbnail":{"url":"https://wiki.naturalselection2.com/images/f/f3/Hive_spawn_idle.gif"},"fields":[{"name":"Status","value":"🟢 Running","inline":true},{"name":"​","value":"​","inline":true},{"name":"Address","value":"`45.79.110.48:27015`","inline":true},{"name":"Location","value":"🇺🇸 US-West (California)","inline":true},{"name":"Application","value":"ns2","inline":true},{"name":"Players","value":"0/16","inline":true}]}]}
+{
+    "ExecutionName": "Provision-fab02e15",
+    "InteractionToken": "aW50ZXJhY3Rpb246ODgzNTgxMTM3Nzg2NjY3MDA4OldQRzlxOVRZZlZ4aDJPbXFjSms3YkR5Nk9xeVlMT0E4Z3o4YXcwZVFhcmIzZGM1RmtPdUhqVlYxQ2xKTGg0eTV3TkZXOXFEQ2FZN2Y0YkoxcG5UZzlPMDJBbVpUd3c4bzVITGVacURERmg0OTdXUEhxdWxzWXRONzBaNnZPY0lZ",
+    "ServerID": "TEST",
+    "GuildID": "653100420687855616",
+    "ApplicationID": "713857439220367432"
+  }

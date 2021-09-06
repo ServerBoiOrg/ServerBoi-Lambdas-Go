@@ -114,7 +114,13 @@ func handler(event map[string]interface{}) (bool, error) {
 		ApiVersion: "v9",
 	})
 	log.Printf("Posting message")
-	resp, err := client.CreateMessage(channelID, gu.FormServerEmbedResponseData(embed))
+	resp, err := client.CreateMessage(
+		channelID,
+		gu.FormServerEmbedResponseData(gu.FormServerEmbedResponseDataInput{
+			ServerID:    serverInfo.ServerID,
+			ServerEmbed: embed,
+			Running:     true,
+		}))
 	if err != nil {
 		log.Fatalf("Error getting creating message in Channel: %v", err)
 	}

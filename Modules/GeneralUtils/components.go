@@ -1,13 +1,15 @@
 package generalutils
 
-import "fmt"
+import (
+	"fmt"
+)
 
-func ServerEmbedComponents(serverID string) []DiscordComponentData {
-
+func ServerEmbedComponents(serverID string, running bool) []DiscordComponentData {
 	startComponent := DiscordComponentData{
 		Type:     2,
 		Label:    "Start",
 		Style:    1,
+		Disabled: running,
 		CustomID: fmt.Sprintf("%v.start", serverID),
 		Emoji: DiscordEmoji{
 			Name: "🟢",
@@ -18,6 +20,7 @@ func ServerEmbedComponents(serverID string) []DiscordComponentData {
 		Type:     2,
 		Label:    "Stop",
 		Style:    1,
+		Disabled: !running,
 		CustomID: fmt.Sprintf("%v.stop", serverID),
 		Emoji: DiscordEmoji{
 			Name: "🔴",
@@ -28,9 +31,9 @@ func ServerEmbedComponents(serverID string) []DiscordComponentData {
 		Type:     2,
 		Label:    "Reboot",
 		Style:    1,
+		Disabled: !running,
 		CustomID: fmt.Sprintf("%v.reboot", serverID),
 		Emoji: DiscordEmoji{
-			ID:   "",
 			Name: "🔁",
 		},
 	}
