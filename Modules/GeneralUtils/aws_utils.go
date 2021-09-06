@@ -276,7 +276,6 @@ func GetChannelIDFromGuildID(guildID string) (channelID string, err error) {
 			"GuildID": &types.AttributeValueMemberS{Value: guildID},
 		},
 	})
-	log.Printf("%v", len(response.Item))
 	if err != nil {
 		return channelID, err
 	}
@@ -298,7 +297,6 @@ func GetServerFromID(serverID string) (server Server, err error) {
 			"ServerID": &types.AttributeValueMemberS{Value: serverID},
 		},
 	})
-	log.Printf("%v", len(response.Item))
 	if err != nil {
 		log.Printf("Error retrieving item from dynamo: %v", err)
 		return server, err

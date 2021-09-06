@@ -109,11 +109,11 @@ func handler(event map[string]interface{}) (bool, error) {
 		log.Fatalf("Error getting channelID from dynamo: %v", err)
 	}
 
-	log.Printf("Posting message")
 	client := gu.CreateDiscordClient(gu.CreateDiscordClientInput{
 		BotToken:   TOKEN,
 		ApiVersion: "v9",
 	})
+	log.Printf("Posting message")
 	resp, err := client.CreateMessage(channelID, gu.FormServerEmbedResponseData(embed))
 	if err != nil {
 		log.Fatalf("Error getting creating message in Channel: %v", err)

@@ -80,7 +80,7 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 			BlockDeviceMappings: ebsMapping,
 			InstanceType:        instanceType,
 			KeyName:             &testKey,
-			TagSpecifications:   formNameTag(serverID),
+			TagSpecifications:   formServerTagSpec(serverID),
 		},
 	)
 	if creationErr != nil {
@@ -129,19 +129,25 @@ func formAWSServerItem(server gu.AWSServer) map[string]dynamotypes.AttributeValu
 	return serverItem
 }
 
-func formNameTag(serverID string) []ec2types.TagSpecification {
+func formServerTagSpec(serverID string) []ec2types.TagSpecification {
 	nameTag := ec2types.Tag{
 		Key:   aws.String("Name"),
 		Value: aws.String(serverID),
 	}
-	tag := ec2types.Tag{
-		Key:   aws.String("ManagedBy"),
-		Value: aws.String("ServerBoi"),
-	}
+
+	tag := formManagementTag()
+
 	return []ec2types.TagSpecification{{
 		ResourceType: ec2types.ResourceTypeInstance,
 		Tags:         []ec2types.Tag{nameTag, tag},
 	}}
+}
+
+func formManagementTag() ec2types.Tag {
+	return ec2types.Tag{
+		Key:   aws.String("ManagedBy"),
+		Value: aws.String("ServerBoi"),
+	}
 }
 
 func getAWSInstanceType(buildInfo BuildInfo, architecture string) ec2types.InstanceType {
@@ -195,7 +201,7 @@ func getEbsMapping(driveSize int) []ec2types.BlockDeviceMapping {
 }
 
 func getImage(ec2Client *ec2.Client, architecture string) string {
-	// Default Debian11. Skip on test
+	// Default Debian11
 	stage := gu.GetEnvVar("STAGE")
 
 	var imageID string
@@ -255,6 +261,10 @@ func getSecurityGroup(ec2Client *ec2.Client, application string, ports []int) st
 		&ec2.CreateSecurityGroupInput{
 			GroupName:   &secGroupName,
 			Description: &secGroupDescription,
+			TagSpecifications: []ec2types.TagSpecification{{
+				ResourceType: ec2types.ResourceTypeInstance,
+				Tags:         []ec2types.Tag{formManagementTag()},
+			}},
 		},
 	)
 	if createErr != nil {
