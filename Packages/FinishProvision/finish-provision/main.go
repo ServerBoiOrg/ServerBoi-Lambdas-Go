@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,7 +8,6 @@ import (
 	gu "generalutils"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
 )
 
 var (
@@ -50,58 +48,7 @@ func handler(event map[string]interface{}) (bool, error) {
 		log.Fatalf("Error getting service object: %v", err)
 	}
 
-	log.Printf("Getting service")
-	service := server.GetService()
-	var (
-		ip    string
-		state string
-	)
-	log.Printf("Service of server: %v", service)
-	switch service {
-	case "aws":
-		awsServer, _ := server.(gu.AWSServer)
-		client := gu.CreateEC2Client(awsServer.Region, awsServer.AWSAccountID)
-		response, err := client.DescribeInstances(context.Background(), &ec2.DescribeInstancesInput{
-			InstanceIds: []string{
-				awsServer.InstanceID,
-			},
-		})
-		if err != nil {
-			log.Fatalf("Error describing instance: %v", err)
-		}
-
-		ip = *response.Reservations[0].Instances[0].PublicIpAddress
-		state = string(response.Reservations[0].Instances[0].State.Name)
-	case "linode":
-		linodeServer, _ := server.(gu.LinodeServer)
-		client := gu.CreateLinodeClient(linodeServer.ApiKey)
-
-		linode, err := client.GetInstance(context.Background(), linodeServer.LinodeID)
-		if err != nil {
-			log.Fatalf("Error describing linode: %v", err)
-		}
-
-		ip = fmt.Sprintf("%v", linode.IPv4[0])
-		state = string(linode.Status)
-	}
-	log.Printf("IP of server: %v", ip)
-	log.Printf("State of server: %v", state)
-
-	serverInfo := server.GetBaseService()
-	sbRegion := server.GetServerBoiRegion()
-
-	serverData := gu.GetServerEmbedData(gu.GetServerEmbedDataInput{
-		Name:        serverInfo.ServerName,
-		ID:          serverInfo.ServerID,
-		IP:          ip,
-		Status:      state,
-		Region:      sbRegion,
-		Port:        serverInfo.Port,
-		Application: serverInfo.Application,
-		Owner:       serverInfo.Owner,
-		Service:     serverInfo.Service,
-	})
-	embed := gu.FormServerEmbed(serverData)
+	embed := gu.CreateServerEmbedFromServer(server)
 
 	log.Printf("Getting Channel for Guild")
 	channelID, err := gu.GetChannelIDFromGuildID(params.GuildID)

@@ -17,18 +17,17 @@ func command(eventBody string) (output InteractionOutput) {
 	log.Printf("Sending temporary response to Discord")
 	gu.SendTempResponse(command.ID, command.Token)
 
-	commandOption := command.Data.Options[0].Name
-	log.Printf("Command Option: %v", commandOption)
+	log.Printf("Command Option: %v", command.Data.Name)
 	var response gu.DiscordInteractionResponseData
-	switch {
-	case commandOption == "create":
+	switch command.Data.Name {
+	case "create":
 		response = createServer(command)
-	case commandOption == "onboard":
+	case "onboard":
 		response = routeOnboardCommand(command)
-	case commandOption == "server":
+	case "server":
 		response = routeServerCommand(command)
 	}
-	log.Printf("Response from %v command: %v", commandOption, response)
+	log.Printf("Response from %v command: %v", command.Data.Name, response)
 
 	return InteractionOutput{
 		ApplicationID:    command.ApplicationID,

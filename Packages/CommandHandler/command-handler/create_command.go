@@ -2,8 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
+	"math/rand"
+	"strings"
+	"time"
 
 	gu "generalutils"
 )
@@ -11,7 +15,6 @@ import (
 type CreateServerWorkflowInput struct {
 	ExecutionName    string
 	Application      string
-	Service          string
 	OwnerID          string
 	Owner            string
 	InteractionID    string
@@ -19,42 +22,181 @@ type CreateServerWorkflowInput struct {
 	ApplicationID    string
 	GuildID          string
 	Url              string
-	ServerName       string
 	CreationOptions  map[string]string
+	Service          string
+	Name             string
+	Region           string
+	HardwareType     string
+	Private          bool
+}
+
+type GenericCreationOptions struct {
+	Service          string `json:"service"`
+	Region           string `json:"region"`
+	Name             string `json:"name,omitempty"`
+	RegionOverride   string `json:"override-region,omitempty"`
+	HardwareOverride string `json:"override-hardware,omitempty"`
+	Private          bool   `json:"private,omitempty"`
+}
+
+type CreateOptions struct {
+	Service          string
+	Name             string
+	Region           string
+	HardwareType     string
+	Private          bool
+	OptionalCommands map[string]string
+}
+
+func verifyCreationOptions(creationOptions map[string]interface{}) (output CreateOptions, errors []string) {
+	output.Service = creationOptions["service"].(string)
+
+	//Check Name
+	if name, ok := creationOptions["name"]; ok {
+		name := name.(string)
+		name, err := verifyName(name)
+		if err != nil {
+			errors = append(errors, "Provided name not permitted")
+		} else {
+			output.Name = name
+		}
+	}
+	//Set Region
+	if creationOptions["region"] == "override" {
+		if overrideRegion, ok := creationOptions["override-region"]; ok {
+			overrideRegion := overrideRegion.(string)
+			err := verifyRegion(overrideRegion, output.Service)
+			if err != nil {
+				errors = append(errors, fmt.Sprintf(
+					"Region %v is not valid for service %v.",
+					overrideRegion,
+					creationOptions["service"],
+				))
+			} else {
+				output.Region = overrideRegion
+			}
+		} else {
+			errors = append(errors, "No region provided for override.")
+		}
+	} else {
+		output.Region = convertRegion(creationOptions["region"].(string), output.Service)
+	}
+
+	//Check if Hardware Type override
+	if hardwareType, ok := creationOptions["override-hardware"]; ok {
+		err := verifyHardwareType(hardwareType.(string), output.Service)
+		if err != nil {
+			errors = append(errors, "Hardware type %v is not valid for service %v", hardwareType.(string), output.Service)
+		} else {
+			output.HardwareType = hardwareType.(string)
+		}
+	}
+	//Check if private
+	if private, ok := creationOptions["private"]; ok {
+		output.Private = private.(bool)
+	}
+
+	for key, value := range creationOptions {
+		output.OptionalCommands[key] = value.(string)
+	}
+
+	return output, nil
+}
+
+func verifyName(name string) (string, error) {
+	return name, nil
+}
+
+func verifyRegion(region string, service string) (err error) {
+	switch service {
+	case "aws":
+		log.Printf("Checking AWS region %v", region)
+		for _, awsRegion := range gu.AWSRegions {
+			if region == awsRegion {
+				return nil
+			}
+		}
+	case "linode":
+		log.Printf("Checking Linode region %v", region)
+		for _, linodeRegion := range gu.AWSRegions {
+			if region == linodeRegion {
+				return nil
+			}
+		}
+	}
+	return errors.New("Bad region")
+}
+
+func verifyHardwareType(hardwareType string, service string) (err error) {
+	return nil
+}
+
+func convertRegion(serverboiRegion string, service string) (region string) {
+	rand.Seed(time.Now().Unix())
+
+	switch serverboiRegion {
+	case "us-west":
+		switch service {
+		case "aws":
+			list := []string{"us-west-2", "us-west-1"}
+			region = list[rand.Intn(len(list))]
+		case "linode":
+			region = "us-west"
+		}
+	case "us-east":
+		switch service {
+		case "aws":
+			list := []string{"us-east-2", "us-east-1"}
+			region = list[rand.Intn(len(list))]
+		case "linode":
+			region = "us-east"
+		}
+	case "us-central":
+		switch service {
+		case "aws":
+			region = "us-east-2"
+		case "linode":
+			region = "us-central"
+		}
+	case "us-south":
+		switch service {
+		case "aws":
+			region = "us-east-2"
+		case "linode":
+			region = "us-southeast"
+		}
+	}
+	return region
 }
 
 func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData) {
-	application := command.Data.Options[0].Options[0].Name
-	optionsSlice := command.Data.Options[0].Options[0].Options
-	creationOptions := make(map[string]string)
-	for _, option := range optionsSlice {
-		creationOptions[option.Name] = option.Value
+	application := command.Data.Options[0].Name
+	optionsMap := make(map[string]interface{})
+	for _, option := range command.Data.Options[0].Options {
+		optionsMap[option.Name] = option.Value
 	}
-	executionName := gu.GenerateWorkflowUUID("Provision")
-	service := creationOptions["service"]
-	delete(creationOptions, service)
 
-	errors := verifyCreateServerParams(creationOptions)
-	if len(errors) > 0 {
-		return gu.FormInvalidParametersResponse(errors)
+	executionName := gu.GenerateWorkflowUUID("Provision")
+
+	verifiedParams, errors := verifyCreationOptions(optionsMap)
+	if len(errors) != 0 {
+		message := "Couldn't verify provided parameters. The following problems were present.\n"
+		for _, e := range errors {
+			message = fmt.Sprintf("%v* %v", message, e)
+		}
+		return gu.DiscordInteractionResponseData{
+			Content: message,
+		}
+	}
+	if verifiedParams.Name == "" {
+		verifiedParams.Name = fmt.Sprintf("ServerBoi-%v", strings.ToUpper(application))
 	}
 
 	log.Printf("Application to create: %v", application)
-	log.Printf("Service provider: %v", service)
-
-	var name string
-	_, ok := creationOptions["name"]
-	if ok {
-		name = creationOptions["name"]
-		delete(creationOptions, name)
-	} else {
-		name = fmt.Sprintf("ServerBoi-%v", application)
-	}
 
 	executionInput := CreateServerWorkflowInput{
 		ExecutionName:    executionName,
 		Application:      application,
-		Service:          service,
 		OwnerID:          command.Member.User.ID,
 		Owner:            command.Member.User.Username,
 		InteractionID:    command.ID,
@@ -62,8 +204,12 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 		ApplicationID:    command.ApplicationID,
 		GuildID:          command.GuildID,
 		Url:              gu.GetEnvVar("API_URL"),
-		ServerName:       name,
-		CreationOptions:  creationOptions,
+		CreationOptions:  verifiedParams.OptionalCommands,
+		Service:          verifiedParams.Service,
+		Name:             verifiedParams.Name,
+		Region:           verifiedParams.Region,
+		HardwareType:     verifiedParams.HardwareType,
+		Private:          verifiedParams.Private,
 	}
 	log.Printf("Provision Workflow Input: %v", executionInput)
 
@@ -95,17 +241,4 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 	}
 
 	return gu.FormResponseData(formRespInput)
-}
-
-func verifyCreateServerParams(options map[string]string) []string {
-	errors := []string{}
-	serviceErr := verifyService(options["service"])
-	if serviceErr != nil {
-		errors = append(errors, serviceErr.Error())
-	}
-	regionErr := verifyRegion(options["service"], options["region"])
-	if regionErr != nil {
-		errors = append(errors, regionErr.Error())
-	}
-	return errors
 }

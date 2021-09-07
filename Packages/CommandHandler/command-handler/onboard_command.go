@@ -13,7 +13,7 @@ import (
 )
 
 func routeOnboardCommand(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData) {
-	onboardCommand := command.Data.Options[0].Options[0].Name
+	onboardCommand := command.Data.Options[0].Name
 	log.Printf("Onboard Commmad Option: %v", onboardCommand)
 
 	var data gu.DiscordInteractionResponseData
@@ -21,12 +21,12 @@ func routeOnboardCommand(command gu.DiscordInteractionApplicationCommand) (respo
 	//Server Actions
 	case onboardCommand == "aws":
 		data = onboardAWS(OnboardAWSInput{
-			AccountID: command.Data.Options[0].Options[0].Options[0].Value,
+			AccountID: command.Data.Options[0].Options[0].Value,
 			UserID:    command.Member.User.ID,
 		})
 	case onboardCommand == "linode":
 		data = onboardLinode(OnboardLinodeInput{
-			ApiKey: command.Data.Options[0].Options[0].Options[0].Value,
+			ApiKey: command.Data.Options[0].Options[0].Value,
 			UserID: command.Member.User.ID,
 		})
 	default:

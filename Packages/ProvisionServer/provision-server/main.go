@@ -19,7 +19,6 @@ import (
 type ProvisonServerParameters struct {
 	ExecutionName    string            `json:"ExecutionName"`
 	Application      string            `json:"Application"`
-	Service          string            `json:"Service"`
 	OwnerID          string            `json:"OwnerID"`
 	Owner            string            `json:"Owner"`
 	InteractionID    string            `json:"InteractionID"`
@@ -27,8 +26,12 @@ type ProvisonServerParameters struct {
 	ApplicationID    string            `json:"ApplicationID"`
 	GuildID          string            `json:"GuildID"`
 	Url              string            `json:"Url"`
-	ServerName       string            `json:"ServerName"`
 	CreationOptions  map[string]string `json:"CreationOptions,omitempty"`
+	Service          string            `json:"Service"`
+	Name             string            `json:"Name"`
+	Region           string            `json:"Region"`
+	HardwareType     string            `json:"HardwareType"`
+	Private          bool              `json:"Private"`
 }
 
 type ProvisionServerResponse struct {
@@ -63,8 +66,6 @@ func handler(event map[string]interface{}) (string, error) {
 		serverID, serverItem = provisionAWS(params)
 	case "linode":
 		serverID, serverItem = provisionLinode(params)
-	case "vultr":
-
 	}
 
 	writeServerInfo(serverItem)

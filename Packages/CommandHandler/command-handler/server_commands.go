@@ -5,6 +5,7 @@ import (
 	"fmt"
 	gu "generalutils"
 	"log"
+	"strings"
 )
 
 type ServerCommandResponse struct {
@@ -13,10 +14,10 @@ type ServerCommandResponse struct {
 }
 
 func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData) {
-	serverCommand := command.Data.Options[0].Options[0].Name
+	serverCommand := command.Data.Options[0].Name
 	log.Printf("Server Commmad Option: %v", serverCommand)
 
-	serverID := command.Data.Options[0].Options[0].Options[0].Value
+	serverID := command.Data.Options[0].Options[0].Value
 	log.Printf("Target Server: %v", serverID)
 	server, err := gu.GetServerFromID(serverID)
 	if err != nil {
@@ -27,54 +28,81 @@ func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (respon
 	log.Printf("Server Object: %s", server)
 	log.Printf("Running %s on server %s", serverCommand, serverID)
 
-	var data gu.DiscordInteractionResponseData
-	switch {
+	var message string
+	switch serverCommand {
 	//Server Actions
-	case serverCommand == "status":
+	case "status":
 		status, err := server.Status()
-		var message string
 		if err != nil {
 			message = "Error getting server status"
 		} else {
 			message = fmt.Sprintf("Server status: %v", status)
 		}
-		data = gu.FormResponseData(gu.FormResponseInput{
-			"Content": message,
-		})
-	case serverCommand == "start":
+	case "start":
 		err = server.Start()
-		data = gu.FormResponseData(gu.FormResponseInput{
-			"Content": "Starting server",
-		})
-	case serverCommand == "stop":
+		message = "Starting server"
+	case "stop":
 		err = server.Stop()
-		data = gu.FormResponseData(gu.FormResponseInput{
-			"Content": "Stopping server",
-		})
-	case serverCommand == "restart":
+		message = "Stopping server"
+	case "reboot":
 		err = server.Restart()
-		data = gu.FormResponseData(gu.FormResponseInput{
-			"Content": "Restarting server",
-		})
-	case serverCommand == "terminate":
+		message = "Restarting server"
+	case "relist":
+		status := gu.GetStatus(server)
+		var running bool
+		if strings.Contains(status, "Running") {
+			running = true
+		} else {
+			running = false
+		}
+		embed := gu.CreateServerEmbedFromServer(server)
+		log.Printf("Getting Channel for Guild")
+		channelID, err := gu.GetChannelIDFromGuildID(command.GuildID)
+		if err != nil {
+			log.Printf("Error getting channelID from dynamo: %v", err)
+			message = fmt.Sprintf("Error getting channelID from dynamo: %v", err)
+		} else {
+			client := gu.CreateDiscordClient(gu.CreateDiscordClientInput{
+				BotToken:   gu.GetEnvVar("DISCORD_TOKEN"),
+				ApiVersion: "v9",
+			})
+			log.Printf("Posting message")
+			resp, err := client.CreateMessage(
+				channelID,
+				gu.FormServerEmbedResponseData(gu.FormServerEmbedResponseDataInput{
+					ServerEmbed: embed,
+					Running:     running,
+				}),
+			)
+			if err != nil {
+				log.Printf("Error getting creating message in Channel: %v", err)
+				message = fmt.Sprintf("Error getting creating message in Channel: %v", err)
+			} else {
+				log.Printf("Response form server embed post: %v", resp)
+				message = fmt.Sprintf("Server %v embed posted in server channel", serverID)
+			}
+		}
+	case "terminate":
 		input := ServerTerminateInput{
 			Token:         command.Token,
 			InteractionID: command.ID,
 			ApplicationID: command.ApplicationID,
 			ServerID:      serverID,
 		}
-		data, err = serverTerminate(input)
-	default:
-		formRespInput := gu.FormResponseInput{
-			"Content": fmt.Sprintf("Server command `%v` is unknown.", serverCommand),
+		data, err := serverTerminate(input)
+		if err == nil {
+			return data
 		}
-		data = gu.FormResponseData(formRespInput)
+	default:
+		message = fmt.Sprintf("Server command `%v` is unknown.", serverCommand)
 	}
 	if err != nil {
-		log.Printf("Error performing command: %v", err)
-		return response
+		message = fmt.Sprintf("Error performing command: %v", err)
 	}
-	return data
+	formRespInput := gu.FormResponseInput{
+		"Content": message,
+	}
+	return gu.FormResponseData(formRespInput)
 }
 
 type ServerTerminateInput struct {

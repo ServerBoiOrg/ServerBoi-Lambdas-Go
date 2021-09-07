@@ -16,7 +16,6 @@ func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamo
 	apiKey := queryLinodeApiKey(params.OwnerID)
 
 	// Generics actions for each server
-	region := params.CreationOptions["region"]
 	architecture := getArchitecture(params.CreationOptions)
 	log.Printf("Getting build info")
 	buildInfo := getBuildInfo(params.Application)
@@ -31,7 +30,7 @@ func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamo
 			InteractionID:    params.InteractionID,
 			ApplicationID:    params.ApplicationID,
 			ExecutionName:    params.ExecutionName,
-			ServerName:       params.ServerName,
+			ServerName:       params.Name,
 			ServerID:         serverID,
 			GuildID:          params.GuildID,
 			Container:        container,
@@ -40,7 +39,7 @@ func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamo
 		buildInfo.DockerCommands,
 	)
 
-	linodeType := getLinodeType(buildInfo, architecture)
+	linodeType := getLinodeType(params.HardwareType, buildInfo, architecture)
 	image := "linode/debian11"
 	client := gu.CreateLinodeClient(apiKey)
 
@@ -57,7 +56,7 @@ func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamo
 	scriptID := response.ID
 
 	createResp, createErr := client.CreateInstance(context.Background(), linodego.InstanceCreateOptions{
-		Region:        region,
+		Region:        params.Region,
 		Type:          linodeType,
 		Image:         image,
 		Label:         serverID,
@@ -72,20 +71,20 @@ func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamo
 		OwnerID:     params.OwnerID,
 		Owner:       params.Owner,
 		Application: params.Application,
-		ServerName:  params.ServerName,
+		ServerName:  params.Name,
 		Port:        buildInfo.Ports[0],
 		Service:     "linode",
 		ServerID:    serverID,
 		LinodeID:    createResp.ID,
 		ApiKey:      apiKey,
 		LinodeType:  linodeType,
-		Location:    region,
+		Location:    params.Region,
 	}
 
 	return serverID, formLinodeServerItem(server)
 }
 
-func getLinodeType(buildInfo BuildInfo, architecture string) string {
+func getLinodeType(override string, buildInfo BuildInfo, architecture string) string {
 	log.Printf("Getting Linode Type")
 	var archInfo ArchitectureInfo
 	var defaultType string
@@ -96,10 +95,19 @@ func getLinodeType(buildInfo BuildInfo, architecture string) string {
 	default:
 		panic("Unknown architecture")
 	}
+	client := gu.CreateAuthlessLinodeClient()
+	response, _ := client.ListTypes(context.Background(), &linodego.ListOptions{})
+
+	if override != "" {
+		for _, linodeType := range response {
+			if linodeType.ID == override {
+				log.Printf("Linode Type: %v", override)
+				return override
+			}
+		}
+	}
 
 	if buildLinodeType, ok := archInfo.InstanceType["linode"]; ok {
-		client := gu.CreateAuthlessLinodeClient()
-		response, _ := client.ListTypes(context.Background(), &linodego.ListOptions{})
 		for _, linodeType := range response {
 			if linodeType.ID == buildLinodeType {
 				log.Printf("Linode Type: %v", buildLinodeType)

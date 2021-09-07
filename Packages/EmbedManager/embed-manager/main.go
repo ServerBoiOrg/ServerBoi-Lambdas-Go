@@ -144,7 +144,7 @@ func updateServerEmbed(embed *discordgo.MessageEmbed) (output UpdateServerEmbedO
 			if err != nil {
 				return UpdateServerEmbedOutput{}, err
 			}
-			status = getStatus(server)
+			status = gu.GetStatus(server)
 			players = "Error contacting server"
 		} else {
 			players = fmt.Sprintf("%v/%v", a2sInfo.Players, a2sInfo.MaxPlayers)
@@ -154,7 +154,7 @@ func updateServerEmbed(embed *discordgo.MessageEmbed) (output UpdateServerEmbedO
 		if err != nil {
 			return UpdateServerEmbedOutput{}, err
 		}
-		status = getStatus(server)
+		status = gu.GetStatus(server)
 		log.Printf("Status: %v", status)
 		if strings.Contains(status, "Running") {
 			ip, err := server.GetIPv4()
@@ -217,22 +217,6 @@ func setColorFromStatus(status string) int {
 	default:
 		return 0
 	}
-}
-
-func getStatus(server gu.Server) (status string) {
-	state, err := server.Status()
-	state, stateEmoji, err := gu.TranslateState(
-		server.GetBaseService().Service,
-		state,
-	)
-	if err != nil {
-		log.Println(err)
-		status = "Unknown"
-	} else {
-		status = fmt.Sprintf("%v %v", stateEmoji, state)
-	}
-
-	return status
 }
 
 func convertEvent(event map[string]interface{}) (params EmbedManagerPayload) {

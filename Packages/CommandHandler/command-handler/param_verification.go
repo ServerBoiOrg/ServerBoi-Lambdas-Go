@@ -23,32 +23,26 @@ func verifyService(s string) error {
 	}
 }
 
-// Verifies region is a valid region for the service
-func verifyRegion(s string, r string) error {
-	service := strings.ToLower(s)
-	region := strings.ToLower(r)
+// // Verifies region is a valid region for the service
+// func verifyRegion(s string, r string) error {
+// 	service := strings.ToLower(s)
+// 	region := strings.ToLower(r)
 
-	switch service {
-	case "aws":
-		return verifyAWSRegion(region)
-	case "linode":
-		return verifyLinodeRegion(region)
-	default:
-		return errors.New("* region: Valid service is required to check region")
-	}
-}
+// 	switch service {
+// 	case "aws":
+// 		return verifyAWSRegion(region)
+// 	case "linode":
+// 		return verifyLinodeRegion(region)
+// 	default:
+// 		return errors.New("* region: Valid service is required to check region")
+// 	}
+// }
 
 // Verifies the provided region is either an actual AWS region or a Serverboi Logical regions
 func verifyAWSRegion(region string) error {
 	log.Printf("Checking AWS region %v", region)
 	for _, awsRegion := range gu.AWSRegions {
 		if region == awsRegion {
-			return nil
-		}
-	}
-
-	for _, serverboiRegion := range gu.AWSRegions {
-		if region == serverboiRegion {
 			return nil
 		}
 	}
@@ -61,12 +55,6 @@ func verifyLinodeRegion(region string) error {
 	log.Printf("Checking Linode region %v", region)
 	for _, linodeRegion := range gu.LinodeRegions {
 		if region == linodeRegion {
-			return nil
-		}
-	}
-
-	for _, serverboiRegion := range gu.AWSRegions {
-		if region == serverboiRegion {
 			return nil
 		}
 	}

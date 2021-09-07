@@ -19,10 +19,9 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 	accountID := queryAWSAccountID(params.OwnerID)
 	log.Printf("Account to provision server in: %v", accountID)
 
-	region := params.CreationOptions["region"]
 	architecture := getArchitecture(params.CreationOptions)
 
-	ec2Client := gu.CreateEC2Client(region, accountID)
+	ec2Client := gu.CreateEC2Client(params.Region, accountID)
 
 	log.Printf("Getting build info")
 	buildInfo := getBuildInfo(params.Application)
@@ -41,7 +40,7 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 			InteractionID:    params.InteractionID,
 			ApplicationID:    params.ApplicationID,
 			ExecutionName:    params.ExecutionName,
-			ServerName:       params.ServerName,
+			ServerName:       params.Name,
 			ServerID:         serverID,
 			GuildID:          params.GuildID,
 			Container:        container,
@@ -62,7 +61,7 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 	ebsMapping := getEbsMapping(buildInfo.DriveSize)
 
 	log.Printf("Getting instance type")
-	instanceType := getAWSInstanceType(buildInfo, architecture)
+	instanceType := getAWSInstanceType(params.HardwareType, buildInfo, architecture)
 	oneInstance := int32(1)
 
 	//Temporary
@@ -96,10 +95,10 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 		OwnerID:      params.OwnerID,
 		Owner:        params.Owner,
 		Application:  params.Application,
-		ServerName:   params.ServerName,
+		ServerName:   params.Name,
 		Port:         buildInfo.Ports[0],
 		Service:      "aws",
-		Region:       region,
+		Region:       params.Region,
 		ServerID:     serverID,
 		AWSAccountID: accountID,
 		InstanceID:   instanceID,
@@ -150,7 +149,7 @@ func formManagementTag() ec2types.Tag {
 	}
 }
 
-func getAWSInstanceType(buildInfo BuildInfo, architecture string) ec2types.InstanceType {
+func getAWSInstanceType(override string, buildInfo BuildInfo, architecture string) ec2types.InstanceType {
 	var archInfo ArchitectureInfo
 	var defaultType ec2types.InstanceType
 	switch architecture {
@@ -162,6 +161,16 @@ func getAWSInstanceType(buildInfo BuildInfo, architecture string) ec2types.Insta
 		defaultType = ec2types.InstanceTypeC6gLarge
 	default:
 		panic("Unknown architecture")
+	}
+
+	if override != "" {
+		instTypes := ec2types.InstanceType.Values("")
+		for _, inst := range instTypes {
+			if string(inst) == override {
+				log.Printf("Instance Type: %v", inst)
+				return inst
+			}
+		}
 	}
 
 	if instanceType, ok := archInfo.InstanceType["aws"]; ok {
