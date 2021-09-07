@@ -22,6 +22,7 @@ type FinishProvisonParameters struct {
 	InteractionToken string `json:"InteractionToken"`
 	ApplicationID    string `json:"ApplicationID"`
 	ExecutionName    string `json:"ExecutionName"`
+	Private          bool   `json:"Private"`
 }
 
 func handler(event map[string]interface{}) (bool, error) {
@@ -43,34 +44,35 @@ func handler(event map[string]interface{}) (bool, error) {
 		gu.FormWorkflowResponseData(workflowEmbed),
 	)
 
-	server, err := gu.GetServerFromID(params.ServerID)
-	if err != nil {
-		log.Fatalf("Error getting service object: %v", err)
-	}
+	if !params.Private {
+		server, err := gu.GetServerFromID(params.ServerID)
+		if err != nil {
+			log.Fatalf("Error getting service object: %v", err)
+		}
+		embed := gu.CreateServerEmbedFromServer(server)
 
-	embed := gu.CreateServerEmbedFromServer(server)
+		log.Printf("Getting Channel for Guild")
+		channelID, err := gu.GetChannelIDFromGuildID(params.GuildID)
+		if err != nil {
+			log.Fatalf("Error getting channelID from dynamo: %v", err)
+		}
 
-	log.Printf("Getting Channel for Guild")
-	channelID, err := gu.GetChannelIDFromGuildID(params.GuildID)
-	if err != nil {
-		log.Fatalf("Error getting channelID from dynamo: %v", err)
+		client := gu.CreateDiscordClient(gu.CreateDiscordClientInput{
+			BotToken:   TOKEN,
+			ApiVersion: "v9",
+		})
+		log.Printf("Posting message")
+		resp, err := client.CreateMessage(
+			channelID,
+			gu.FormServerEmbedResponseData(gu.FormServerEmbedResponseDataInput{
+				ServerEmbed: embed,
+				Running:     true,
+			}))
+		if err != nil {
+			log.Fatalf("Error getting creating message in Channel: %v", err)
+		}
+		log.Printf("%v", resp)
 	}
-
-	client := gu.CreateDiscordClient(gu.CreateDiscordClientInput{
-		BotToken:   TOKEN,
-		ApiVersion: "v9",
-	})
-	log.Printf("Posting message")
-	resp, err := client.CreateMessage(
-		channelID,
-		gu.FormServerEmbedResponseData(gu.FormServerEmbedResponseDataInput{
-			ServerEmbed: embed,
-			Running:     true,
-		}))
-	if err != nil {
-		log.Fatalf("Error getting creating message in Channel: %v", err)
-	}
-	log.Printf("%v", resp)
 
 	return true, nil
 }

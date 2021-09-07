@@ -22,11 +22,11 @@ type CreateServerWorkflowInput struct {
 	ApplicationID    string
 	GuildID          string
 	Url              string
-	CreationOptions  map[string]string
+	CreationOptions  map[string]string `json:"CreationOptions,omitempty"`
 	Service          string
 	Name             string
 	Region           string
-	HardwareType     string
+	HardwareType     string `json:"HardwareType,omitempty"`
 	Private          bool
 }
 
@@ -50,7 +50,9 @@ type CreateOptions struct {
 
 func verifyCreationOptions(creationOptions map[string]interface{}) (output CreateOptions, errors []string) {
 	output.Service = creationOptions["service"].(string)
+	delete(creationOptions, "service")
 
+	log.Printf("Service to create server on: %v", output.Service)
 	//Check Name
 	if name, ok := creationOptions["name"]; ok {
 		name := name.(string)
@@ -61,6 +63,9 @@ func verifyCreationOptions(creationOptions map[string]interface{}) (output Creat
 			output.Name = name
 		}
 	}
+	delete(creationOptions, "name")
+	log.Printf("Name verified: %v", output.Name)
+
 	//Set Region
 	if creationOptions["region"] == "override" {
 		if overrideRegion, ok := creationOptions["override-region"]; ok {
@@ -73,6 +78,7 @@ func verifyCreationOptions(creationOptions map[string]interface{}) (output Creat
 					creationOptions["service"],
 				))
 			} else {
+				delete(creationOptions, "override-region")
 				output.Region = overrideRegion
 			}
 		} else {
@@ -81,6 +87,8 @@ func verifyCreationOptions(creationOptions map[string]interface{}) (output Creat
 	} else {
 		output.Region = convertRegion(creationOptions["region"].(string), output.Service)
 	}
+	delete(creationOptions, "region")
+	log.Printf("Region verified: %v", output.Region)
 
 	//Check if Hardware Type override
 	if hardwareType, ok := creationOptions["override-hardware"]; ok {
@@ -89,16 +97,24 @@ func verifyCreationOptions(creationOptions map[string]interface{}) (output Creat
 			errors = append(errors, "Hardware type %v is not valid for service %v", hardwareType.(string), output.Service)
 		} else {
 			output.HardwareType = hardwareType.(string)
+			delete(creationOptions, "override-hardware")
+			log.Printf("Hardware Override verified: %v", output.HardwareType)
 		}
 	}
+
 	//Check if private
 	if private, ok := creationOptions["private"]; ok {
 		output.Private = private.(bool)
+		delete(creationOptions, "private")
 	}
+	log.Printf("Private: %v", output.Private)
 
+	tmp := make(map[string]string)
 	for key, value := range creationOptions {
-		output.OptionalCommands[key] = value.(string)
+		tmp[key] = value.(string)
 	}
+	output.OptionalCommands = tmp
+	log.Printf("Creation Options: %v", output.OptionalCommands)
 
 	return output, nil
 }
@@ -170,12 +186,15 @@ func convertRegion(serverboiRegion string, service string) (region string) {
 }
 
 func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData) {
+	log.Printf("Running create command")
+
 	application := command.Data.Options[0].Name
+	log.Printf("Application: %v", application)
+
 	optionsMap := make(map[string]interface{})
 	for _, option := range command.Data.Options[0].Options {
 		optionsMap[option.Name] = option.Value
 	}
-
 	executionName := gu.GenerateWorkflowUUID("Provision")
 
 	verifiedParams, errors := verifyCreationOptions(optionsMap)
@@ -211,7 +230,6 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 		HardwareType:     verifiedParams.HardwareType,
 		Private:          verifiedParams.Private,
 	}
-	log.Printf("Provision Workflow Input: %v", executionInput)
 
 	log.Printf("Converting input to string for submission.")
 	inputJson, err := json.Marshal(executionInput)
@@ -219,6 +237,7 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 		log.Println(err)
 	}
 	inputString := fmt.Sprintf(string(inputJson))
+	log.Printf("Provision Workflow Input: %v", inputString)
 
 	provisionArn := gu.GetEnvVar("PROVISION_ARN")
 

@@ -66,6 +66,14 @@ func (server LinodeServer) Status() (status string, err error) {
 	return fmt.Sprintf("%v", linode.Status), nil
 }
 
+func (server LinodeServer) AuthorizedUsers() []string {
+	return server.Authorized.Users
+}
+
+func (server LinodeServer) AuthorizedRoles() []string {
+	return server.Authorized.Roles
+}
+
 func (server LinodeServer) GetService() string {
 	return server.Service
 }

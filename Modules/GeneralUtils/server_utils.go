@@ -49,6 +49,8 @@ type Server interface {
 	Stop() (err error)
 	Restart() (err error)
 	Status() (status string, err error)
+	AuthorizedUsers() []string
+	AuthorizedRoles() []string
 	GetIPv4() (string, error)
 	GetService() string
 	GetBaseService() BaseServer

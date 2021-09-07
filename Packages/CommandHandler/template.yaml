@@ -21,6 +21,8 @@ Resources:
       Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
         Variables:
           SERVER_TABLE: ServerBoi-Server-List
+          PROVISION_ARN: arn:aws:states:us-west-2:518723822228:stateMachine:Provision-Server-Workflow
+          API_URL: https://api.serverboi.io
           PUBLIC_KEY: 381ab524ef752faf891f76bde76a5cbef77a0d126d132f1a4de72e51fe6d70e2
           AWS_REGION: us-west-2
           STAGE: Testing

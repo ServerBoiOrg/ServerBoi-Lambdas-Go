@@ -67,6 +67,10 @@ func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamo
 		log.Fatalf("Error creating Linode: %v", createErr)
 	}
 
+	authorized := gu.Authorized{
+		Users: []string{params.OwnerID},
+	}
+
 	server := gu.LinodeServer{
 		OwnerID:     params.OwnerID,
 		Owner:       params.Owner,
@@ -79,6 +83,7 @@ func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamo
 		ApiKey:      apiKey,
 		LinodeType:  linodeType,
 		Location:    params.Region,
+		Authorized:  authorized,
 	}
 
 	return serverID, formLinodeServerItem(server)

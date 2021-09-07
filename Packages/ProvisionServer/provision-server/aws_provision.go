@@ -88,8 +88,11 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 
 	instanceID := *response.Instances[0].InstanceId
 	log.Printf("Instance created. ID: %v", instanceID)
-
 	log.Printf(fmt.Sprintf("Ports: %v", buildInfo.Ports))
+
+	authorized := gu.Authorized{
+		Users: []string{params.OwnerID},
+	}
 
 	server := gu.AWSServer{
 		OwnerID:      params.OwnerID,
@@ -103,6 +106,7 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 		AWSAccountID: accountID,
 		InstanceID:   instanceID,
 		InstanceType: string(instanceType),
+		Authorized:   authorized,
 	}
 
 	return serverID, formAWSServerItem(server)

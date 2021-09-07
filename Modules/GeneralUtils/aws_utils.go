@@ -233,6 +233,14 @@ func (server AWSServer) Status() (status string, err error) {
 	return fmt.Sprintf("%v", response.Reservations[0].Instances[0].State.Name), nil
 }
 
+func (server AWSServer) AuthorizedUsers() []string {
+	return server.Authorized.Users
+}
+
+func (server AWSServer) AuthorizedRoles() []string {
+	return server.Authorized.Roles
+}
+
 func GetWebhookFromGuildID(guildID string) WebhookTableResponse {
 	dynamo := GetDynamo()
 	webhookTable := GetEnvVar("WEBHOOK_TABLE")
