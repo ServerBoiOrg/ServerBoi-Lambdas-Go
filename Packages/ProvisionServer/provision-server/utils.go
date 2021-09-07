@@ -60,8 +60,20 @@ func formBaseServerItem(
 	service string,
 	port int,
 	serverID string,
+	authorized gu.Authorized,
 ) map[string]dynamotypes.AttributeValue {
 	portString := strconv.Itoa(port)
+
+	auth := map[string]dynamotypes.AttributeValue{
+		"Users": &dynamotypes.AttributeValueMemberL{
+			Value: []dynamotypes.AttributeValue{
+				&dynamotypes.AttributeValueMemberS{Value: authorized.Users[0]}},
+		},
+		"Roles": &dynamotypes.AttributeValueMemberL{
+			Value: []dynamotypes.AttributeValue{},
+		},
+	}
+
 	serverItem := map[string]dynamotypes.AttributeValue{
 		"OwnerID":     &dynamotypes.AttributeValueMemberS{Value: ownerID},
 		"Owner":       &dynamotypes.AttributeValueMemberS{Value: owner},
@@ -70,6 +82,7 @@ func formBaseServerItem(
 		"Service":     &dynamotypes.AttributeValueMemberS{Value: service},
 		"ServerID":    &dynamotypes.AttributeValueMemberS{Value: serverID},
 		"Port":        &dynamotypes.AttributeValueMemberN{Value: portString},
+		"Authorized":  &dynamotypes.AttributeValueMemberM{Value: auth},
 	}
 
 	return serverItem

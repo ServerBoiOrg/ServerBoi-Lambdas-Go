@@ -1,16 +1,15 @@
 {
-    "ExecutionName": "Test",
+    "ExecutionName": "Provision-82e0d1f2",
     "Application": "ns2",
+    "OwnerID": "155875705417236480",
+    "Owner": "Awlsring",
+    "InteractionID": "884648439261069342",
+    "InteractionToken": "aW50ZXJhY3Rpb246ODg0NjQ4NDM5MjYxMDY5MzQyOnFndDZ1V3hvWkxYTWxYN3RwVGd5ZDYxWnBtTnNhM1pDQXB2a3NaVVFzMFlVNUU5SGVkTlRJQVdDMEVia3hiQVlzcTBucnV1d1hRVkNJcGNFTFhDQXllQ3JxdWR1ZHlyQnA5Yzl2ck1jblVGbTd5cGFhR0RJVU9QTEtqYVBzMnhT",
+    "ApplicationID": "713857439220367432",
+    "GuildID": "653100420687855616",
+    "Url": "https://api.serverboi.io",
     "Service": "linode",
-    "OwnerID": "0001",
-    "Owner": "Tester",
-    "InteractionID": "xxxx",
-    "InteractionToken": "xxxx",
-    "ApplicationID": "xxxx",
-    "GuildID": "xxxx",
-    "Url": "api.serverboi.io",
-    "ServerName": "tst-ns2",
-    "CreationOptions": {
-        "Region": "us-west-2"
-    }
-}
+    "Name": "ServerBoi-NS2",
+    "Region": "us-west",
+    "Private": false
+  }

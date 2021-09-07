@@ -122,6 +122,7 @@ func formAWSServerItem(server gu.AWSServer) map[string]dynamotypes.AttributeValu
 		server.Service,
 		server.Port,
 		server.ServerID,
+		server.Authorized,
 	)
 
 	serverItem["Region"] = &dynamotypes.AttributeValueMemberS{Value: server.Region}

@@ -135,6 +135,7 @@ func formLinodeServerItem(server gu.LinodeServer) map[string]dynamotypes.Attribu
 		server.Service,
 		server.Port,
 		server.ServerID,
+		server.Authorized,
 	)
 	serverItem["Location"] = &dynamotypes.AttributeValueMemberS{Value: server.Location}
 	serverItem["ApiKey"] = &dynamotypes.AttributeValueMemberS{Value: server.ApiKey}
