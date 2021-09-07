@@ -56,11 +56,20 @@ func routeAuthorizeCommand(command gu.DiscordInteractionApplicationCommand) (res
 			}
 			log.Printf("UserID to update %v", userID)
 			users := server.AuthorizedUsers()
-			users = append(users, userID)
+			var exists bool
+			for _, user := range users {
+				if user == userID {
+					exists = true
+				}
+			}
+			if exists {
+				message = "User already authorized for server."
+			} else {
+				users = append(users, userID)
+				updateAuthorization(users, server.AuthorizedRoles(), serverID)
 
-			updateAuthorization(users, server.AuthorizedRoles(), serverID)
-
-			message = "Authorization updated."
+				message = "Authorization updated."
+			}
 		case "role":
 			var roleID string
 			for _, option := range authOptions {
@@ -69,16 +78,22 @@ func routeAuthorizeCommand(command gu.DiscordInteractionApplicationCommand) (res
 				}
 			}
 			roles := server.AuthorizedRoles()
-			roles = append(roles, roleID)
+			var exists bool
+			for _, role := range roles {
+				if role == roleID {
+					exists = true
+				}
+			}
+			if exists {
+				message = "Role already authorized for server."
+			} else {
+				roles = append(roles, roleID)
+				updateAuthorization(server.AuthorizedUsers(), roles, serverID)
 
-			updateAuthorization(server.AuthorizedUsers(), roles, serverID)
-
-			message = "Authorization updated."
+				message = "Authorization updated."
+			}
 		default:
 			message = fmt.Sprintf("Server command `%v` is unknown.", authorizeCommand)
-		}
-		if err != nil {
-			message = fmt.Sprintf("Error performing command: %v", err)
 		}
 	} else {
 		message = "You do not have authorization to authorize others for this server."
