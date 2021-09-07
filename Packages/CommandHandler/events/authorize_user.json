@@ -1,0 +1,84 @@
+{
+    "resource": "/discord",
+    "path": "/discord",
+    "httpMethod": "POST",
+    "headers": {
+        "Host": "api.serverboi.io",
+        "User-Agent": "Discord-Interactions/1.0 (+https://discord.com)",
+        "X-Amzn-Trace-Id": "Root=1-613700cc-4376afb43f64d63406725a0f",
+        "X-Forwarded-For": "35.227.62.178",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https",
+        "accept": "*/*",
+        "content-type": "application/json",
+        "x-signature-ed25519": "21f9ff6fa36f03aa3d8f3124204567a61b3f2449957f41928ae408a9cf718ab579edff7cad5e4fa72ac1c74f6caa7e1685ebc17e92cf2e8d209f090dca5d3904",
+        "x-signature-timestamp": "1630994635"
+    },
+    "multiValueHeaders": {
+        "Host": [
+            "api.serverboi.io"
+        ],
+        "User-Agent": [
+            "Discord-Interactions/1.0 (+https://discord.com)"
+        ],
+        "X-Amzn-Trace-Id": [
+            "Root=1-613700cc-4376afb43f64d63406725a0f"
+        ],
+        "X-Forwarded-For": [
+            "35.227.62.178"
+        ],
+        "X-Forwarded-Port": [
+            "443"
+        ],
+        "X-Forwarded-Proto": [
+            "https"
+        ],
+        "accept": [
+            "*/*"
+        ],
+        "content-type": [
+            "application/json"
+        ],
+        "x-signature-ed25519": [
+            "21f9ff6fa36f03aa3d8f3124204567a61b3f2449957f41928ae408a9cf718ab579edff7cad5e4fa72ac1c74f6caa7e1685ebc17e92cf2e8d209f090dca5d3904"
+        ],
+        "x-signature-timestamp": [
+            "1630994635"
+        ]
+    },
+    "queryStringParameters": null,
+    "multiValueQueryStringParameters": null,
+    "pathParameters": null,
+    "stageVariables": null,
+    "requestContext": {
+        "accountId": "518723822228",
+        "resourceId": "d6hz4o",
+        "stage": "prod",
+        "domainName": "api.serverboi.io",
+        "domainPrefix": "api",
+        "requestId": "7b966848-6789-4642-bede-159d816da42d",
+        "protocol": "HTTP/1.1",
+        "identity": {
+            "cognitoIdentityPoolId": "",
+            "accountId": "",
+            "cognitoIdentityId": "",
+            "caller": "",
+            "apiKey": "",
+            "apiKeyId": "",
+            "accessKey": "",
+            "sourceIp": "35.227.62.178",
+            "cognitoAuthenticationType": "",
+            "cognitoAuthenticationProvider": "",
+            "userArn": "",
+            "userAgent": "Discord-Interactions/1.0 (+https://discord.com)",
+            "user": ""
+        },
+        "resourcePath": "/discord",
+        "authorizer": null,
+        "httpMethod": "POST",
+        "requestTime": "07/Sep/2021:06:03:56 +0000",
+        "requestTimeEpoch": 1630994636179,
+        "apiId": "tpl8nttmo2"
+    },
+    "body": "{\"application_id\":\"713857439220367432\",\"channel_id\":\"844786538695884810\",\"data\":{\"id\":\"884537318692769842\",\"name\":\"authorize\",\"options\":[{\"name\":\"user\",\"options\":[{\"name\":\"id\",\"type\":3,\"value\":\"C6E2\"},{\"name\":\"user\",\"type\":6,\"value\":\"177906920835776512\"}],\"type\":1}],\"resolved\":{\"members\":{\"177906920835776512\":{\"avatar\":null,\"is_pending\":false,\"joined_at\":\"2021-07-23T23:43:03.573000+00:00\",\"nick\":null,\"pending\":false,\"permissions\":\"521942851137\",\"premium_since\":null,\"roles\":[]}},\"users\":{\"177906920835776512\":{\"avatar\":null,\"discriminator\":\"1337\",\"id\":\"177906920835776512\",\"public_flags\":128,\"username\":\"eternalnoob\"}}},\"type\":1},\"guild_id\":\"653100420687855616\",\"id\":\"884680365606842419\",\"member\":{\"avatar\":null,\"deaf\":false,\"is_pending\":false,\"joined_at\":\"2019-12-08T05:07:54.314000+00:00\",\"mute\":false,\"nick\":null,\"pending\":false,\"permissions\":\"549755813887\",\"premium_since\":null,\"roles\":[],\"user\":{\"avatar\":\"a_539a3c047f6bedfe4283dae3ed3bb8c3\",\"discriminator\":\"7032\",\"id\":\"155875705417236480\",\"public_flags\":128,\"username\":\"Awlsring\"}},\"token\":\"aW50ZXJhY3Rpb246ODg0NjgwMzY1NjA2ODQyNDE5OlFwSk11cm5rbTJUcWRySHdGU0VyczRSbHNtck1qbXlKZVlTSFVaYjZjTk1KeG1PTXRnZHRMMm1PZ0ZXbzRqS0JlMk9hVHkxVmZZRWdnRGFFZ0JCeUhjTU5QRTBKRXlUd0drWjhBRmFFdlB4eGw5Sk5zRG5hbHhmNm1Ha1ltdHRJ\",\"type\":2,\"version\":1}"
+}

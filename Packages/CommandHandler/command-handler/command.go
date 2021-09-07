@@ -26,6 +26,8 @@ func command(eventBody string) (output InteractionOutput) {
 		response = routeOnboardCommand(command)
 	case "server":
 		response = routeServerCommand(command)
+	case "authorize":
+		response = routeAuthorizeCommand(command)
 	}
 	log.Printf("Response from %v command: %v", command.Data.Name, response)
 
