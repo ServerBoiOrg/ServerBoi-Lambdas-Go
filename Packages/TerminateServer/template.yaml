@@ -17,5 +17,5 @@ Resources:
       Tracing: Active
       Environment:
         Variables:
-          USER_TABLE: ServerBoi-User-List
+          OWNER_TABLE: ServerBoi-Owner-List
           SERVER_TABLE: ServerBoi-Server-List

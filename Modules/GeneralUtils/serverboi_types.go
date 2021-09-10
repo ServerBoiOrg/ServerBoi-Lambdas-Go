@@ -19,6 +19,12 @@ type ServerBoiRegion struct {
 	Geolocation string
 }
 
+type OwnerItem struct {
+	OwnerID      string `json:"OwnerID"`
+	AWSAccountID string `json:"AWSAccountID,omitempty"`
+	LinodeApiKey string `json:"LinodeApiKey,omitempty"`
+}
+
 type Authorized struct {
 	Users []string `json:"Users"`
 	Roles []string `json:"Roles"`

@@ -33,7 +33,7 @@ func queryTable(userID string, table string) *dynamodb.GetItemOutput {
 }
 
 func queryAWSAccountID(userID string) string {
-	table := gu.GetEnvVar("AWS_TABLE")
+	table := gu.GetEnvVar("OWNER_TABLE")
 
 	response := queryTable(userID, table)
 	var awsResponse AWSTableResponse

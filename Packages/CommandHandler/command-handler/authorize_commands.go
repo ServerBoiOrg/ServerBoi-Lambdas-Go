@@ -47,53 +47,19 @@ func routeAuthorizeCommand(command gu.DiscordInteractionApplicationCommand) (res
 		switch authorizeCommand {
 		//Server Actions
 		case "user":
-			log.Printf("Updating user auth for server")
-			var userID string
-			for _, option := range authOptions {
-				if option.Type == 6 {
-					userID = option.Value
-				}
-			}
-			log.Printf("UserID to update %v", userID)
-			users := server.AuthorizedUsers()
-			var exists bool
-			for _, user := range users {
-				if user == userID {
-					exists = true
-				}
-			}
-			if exists {
-				message = "User already authorized for server."
-			} else {
-				users = append(users, userID)
-				updateAuthorization(users, server.AuthorizedRoles(), serverID)
-
-				message = "Authorization updated."
-			}
+			message = AddItemToAuth(AddItemToAuthInput{
+				Type:        6,
+				Server:      server,
+				AuthOptions: authOptions,
+			})
 		case "role":
-			var roleID string
-			for _, option := range authOptions {
-				if option.Type == 8 {
-					roleID = option.Value
-				}
-			}
-			roles := server.AuthorizedRoles()
-			var exists bool
-			for _, role := range roles {
-				if role == roleID {
-					exists = true
-				}
-			}
-			if exists {
-				message = "Role already authorized for server."
-			} else {
-				roles = append(roles, roleID)
-				updateAuthorization(server.AuthorizedUsers(), roles, serverID)
-
-				message = "Authorization updated."
-			}
+			message = AddItemToAuth(AddItemToAuthInput{
+				Type:        8,
+				Server:      server,
+				AuthOptions: authOptions,
+			})
 		default:
-			message = fmt.Sprintf("Server command `%v` is unknown.", authorizeCommand)
+			message = fmt.Sprintf("Authorize command `%v` is unknown.", authorizeCommand)
 		}
 	} else {
 		message = "You do not have authorization to authorize others for this server."
@@ -155,4 +121,46 @@ func buildAuthRoles(roles []string) []dynamotypes.AttributeValue {
 	}
 
 	return roleValues
+}
+
+type AddItemToAuthInput struct {
+	Type        int
+	Server      gu.Server
+	AuthOptions []gu.DiscordApplicationCommandOption
+}
+
+func AddItemToAuth(input AddItemToAuthInput) string {
+	var (
+		id       string
+		message  string
+		typeName string
+	)
+	switch input.Type {
+	case 6:
+		typeName = "user"
+	case 8:
+		typeName = "role"
+	}
+
+	for _, option := range input.AuthOptions {
+		if option.Type == input.Type {
+			id = option.Value
+		}
+	}
+	roles := input.Server.AuthorizedRoles()
+	var exists bool
+	for _, role := range roles {
+		if role == id {
+			exists = true
+		}
+	}
+	if exists {
+		message = fmt.Sprintf("Specified %v already authorized for server.", typeName)
+	} else {
+		roles = append(roles, id)
+		updateAuthorization(input.Server.AuthorizedUsers(), roles, input.Server.GetBaseService().ServerID)
+
+		message = "Authorization updated."
+	}
+	return message
 }

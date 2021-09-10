@@ -282,6 +282,72 @@ func GetChannelIDFromGuildID(guildID string) (channelID string, err error) {
 	return responseItem.ChannelID, nil
 }
 
+type UpdateOwnerItemInput struct {
+	OwnerID    string
+	FieldName  string
+	FieldValue string
+}
+
+func UpdateOwnerItem(input UpdateOwnerItemInput) error {
+	dynamo := GetDynamo()
+	table := GetEnvVar("OWNER_TABLE")
+
+	key := map[string]types.AttributeValue{
+		"OwnerID": &types.AttributeValueMemberS{Value: input.OwnerID},
+	}
+	value := map[string]types.AttributeValue{
+		":item": &types.AttributeValueMemberS{Value: input.FieldValue},
+	}
+	updateExpression := fmt.Sprintf("SET %v = :item", input.FieldName)
+
+	_, err := dynamo.UpdateItem(context.Background(), &dynamodb.UpdateItemInput{
+		TableName:                 aws.String(table),
+		Key:                       key,
+		UpdateExpression:          &updateExpression,
+		ExpressionAttributeValues: value,
+	})
+	return err
+}
+
+func RemoveFieldFromOwnerItem(input UpdateOwnerItemInput) error {
+	dynamo := GetDynamo()
+	table := GetEnvVar("OWNER_TABLE")
+
+	key := map[string]types.AttributeValue{
+		"OwnerID": &types.AttributeValueMemberS{Value: input.OwnerID},
+	}
+	updateExpression := fmt.Sprintf("REMOVE %v", input.FieldName)
+
+	_, err := dynamo.UpdateItem(context.Background(), &dynamodb.UpdateItemInput{
+		TableName:        aws.String(table),
+		Key:              key,
+		UpdateExpression: &updateExpression,
+	})
+	return err
+}
+
+func GetOwnerItem(ownerID string) (ownerItem OwnerItem, err error) {
+	dynamo := GetDynamo()
+	ownerTable := GetEnvVar("OWNER_TABLE")
+
+	response, err := dynamo.GetItem(context.Background(), &dynamodb.GetItemInput{
+		TableName: aws.String(ownerTable),
+		Key: map[string]types.AttributeValue{
+			"OwnerID": &types.AttributeValueMemberS{Value: ownerID},
+		},
+	})
+	if err != nil {
+		err = errors.New("Error getting item.")
+		return ownerItem, err
+	} else if len(response.Item) == 0 {
+		err = errors.New("No items found.")
+		return ownerItem, err
+	}
+
+	attributevalue.UnmarshalMap(response.Item, &ownerItem)
+	return ownerItem, nil
+}
+
 func GetServerFromID(serverID string) (server Server, err error) {
 	dynamo := GetDynamo()
 	serverTable := GetEnvVar("SERVER_TABLE")

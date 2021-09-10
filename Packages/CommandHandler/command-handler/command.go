@@ -22,12 +22,16 @@ func command(eventBody string) (output InteractionOutput) {
 	switch command.Data.Name {
 	case "create":
 		response = createServer(command)
-	case "onboard":
-		response = routeOnboardCommand(command)
+	case "set":
+		response = routeSetCommand(command)
+	case "remove":
+		response = routeRemoveCommand(command)
 	case "server":
 		response = routeServerCommand(command)
 	case "authorize":
 		response = routeAuthorizeCommand(command)
+	case "deauthorize":
+		response = routeDeauthorizeCommand(command)
 	}
 	log.Printf("Response from %v command: %v", command.Data.Name, response)
 
