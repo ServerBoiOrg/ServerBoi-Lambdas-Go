@@ -43,19 +43,24 @@ func routeRemoveCommand(command gu.DiscordInteractionApplicationCommand) (respon
 				roleID = field.Value
 			}
 		}
-		switch service {
-		case "aws":
-			err = gu.RemoveFieldFromOwnerItem(gu.UpdateOwnerItemInput{
-				OwnerID:   roleID,
-				FieldName: "AWSAccountID",
-			})
-		case "linode":
-			err = gu.RemoveFieldFromOwnerItem(gu.UpdateOwnerItemInput{
-				OwnerID:   roleID,
-				FieldName: "LinodeApiKey",
-			})
-		default:
-			message = fmt.Sprintf("Option %v is not supported", service)
+
+		if checkRoleIdInRoles(roleID, command.Member.Roles) {
+			switch service {
+			case "aws":
+				err = gu.RemoveFieldFromOwnerItem(gu.UpdateOwnerItemInput{
+					OwnerID:   roleID,
+					FieldName: "AWSAccountID",
+				})
+			case "linode":
+				err = gu.RemoveFieldFromOwnerItem(gu.UpdateOwnerItemInput{
+					OwnerID:   roleID,
+					FieldName: "LinodeApiKey",
+				})
+			default:
+				message = fmt.Sprintf("Option %v is not supported", service)
+			}
+		} else {
+			message = "You must be a member of the role to update it."
 		}
 	default:
 		message = fmt.Sprintf("Remove command `%v` is unknown.", removeCommand)

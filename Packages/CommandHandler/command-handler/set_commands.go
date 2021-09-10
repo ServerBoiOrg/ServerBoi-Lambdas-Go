@@ -19,7 +19,7 @@ func routeSetCommand(command gu.DiscordInteractionApplicationCommand) (response 
 	case "personal":
 		personalCommand(setOptions, command.Member.User.ID)
 	case "profile":
-		profileCommand(setOptions)
+		profileCommand(setOptions, command.Member.Roles)
 	default:
 		message = fmt.Sprintf("Profile command `%v` is unknown.", setCommand)
 	}
@@ -52,7 +52,7 @@ func personalCommand(command gu.DiscordApplicationCommandOption, ownerID string)
 	return gu.FormResponseData(formRespInput)
 }
 
-func profileCommand(command gu.DiscordApplicationCommandOption) (response gu.DiscordInteractionResponseData) {
+func profileCommand(command gu.DiscordApplicationCommandOption, roles []string) (response gu.DiscordInteractionResponseData) {
 	profileCommand := command.Options[0].Name
 	profileOptions := command.Options[0].Options
 
@@ -60,10 +60,18 @@ func profileCommand(command gu.DiscordApplicationCommandOption) (response gu.Dis
 	switch profileCommand {
 	case "aws":
 		accountId, role := sortProfileOptionFields(profileOptions)
-		message = setAWSItem(accountId, role)
+		if checkRoleIdInRoles(role, roles) {
+			message = setAWSItem(accountId, role)
+		} else {
+			message = "You must be a member of the role to update it."
+		}
 	case "linode":
 		apiKey, role := sortProfileOptionFields(profileOptions)
-		message = setLinodeItem(role, apiKey)
+		if checkRoleIdInRoles(role, roles) {
+			message = setLinodeItem(role, apiKey)
+		} else {
+			message = "You must be a member of the role to update it."
+		}
 	default:
 		message = fmt.Sprintf("Set command `%v` is unknown.", profileCommand)
 	}
@@ -133,4 +141,13 @@ func testLinodeKey(apikey string) error {
 	} else {
 		return nil
 	}
+}
+
+func checkRoleIdInRoles(roleID string, roles []string) bool {
+	for _, role := range roles {
+		if roleID == role {
+			return true
+		}
+	}
+	return false
 }
