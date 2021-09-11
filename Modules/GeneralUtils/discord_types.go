@@ -79,9 +79,10 @@ type DiscordInteractionApplicationCommand struct {
 }
 
 type DiscordApplicationCommandData struct {
-	ID      string                            `json:"id,omitempty"`
-	Name    string                            `json:"name"`
-	Options []DiscordApplicationCommandOption `json:"options,omitempty"`
+	ID       string                            `json:"id,omitempty"`
+	Name     string                            `json:"name"`
+	Options  []DiscordApplicationCommandOption `json:"options,omitempty"`
+	Resolved map[string]interface{}            `json:"resolved,omitempty"`
 }
 
 type DiscordApplicationCommandOption struct {

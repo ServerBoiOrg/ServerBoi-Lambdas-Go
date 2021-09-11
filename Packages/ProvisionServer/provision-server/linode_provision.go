@@ -13,7 +13,11 @@ import (
 
 func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamotypes.AttributeValue) {
 	log.Printf("Querying aws account for %v item from Dynamo", params.Owner)
-	apiKey := queryLinodeApiKey(params.OwnerID)
+	ownerItem, err := gu.GetOwnerItem(params.OwnerID)
+	if err != nil {
+		log.Fatalf("Unable to get owner item")
+	}
+	apiKey := ownerItem.LinodeApiKey
 
 	// Generics actions for each server
 	architecture := getArchitecture(params.CreationOptions)

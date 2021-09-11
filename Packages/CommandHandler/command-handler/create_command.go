@@ -43,6 +43,8 @@ type CreateOptions struct {
 	Service          string
 	Name             string
 	Region           string
+	ProfileID        string
+	ProfileName      string
 	HardwareType     string
 	Private          bool
 	OptionalCommands map[string]string
@@ -89,6 +91,12 @@ func verifyCreationOptions(creationOptions map[string]interface{}) (output Creat
 	}
 	delete(creationOptions, "region")
 	log.Printf("Region verified: %v", output.Region)
+
+	//Check Profile
+	if profile, ok := creationOptions["profile"]; ok {
+		output.ProfileID = profile.(string)
+		delete(creationOptions, "profile")
+	}
 
 	//Check if Hardware Type override
 	if hardwareType, ok := creationOptions["override-hardware"]; ok {
@@ -185,9 +193,32 @@ func convertRegion(serverboiRegion string, service string) (region string) {
 	return region
 }
 
+func isUserVerifiedForProfile(roleID string, roles []string) bool {
+	for _, role := range roles {
+		if role == roleID {
+			return true
+		}
+	}
+	return false
+}
+
+// This is super gross
+func sortRoleResolveForName(commandOption gu.DiscordApplicationCommandData) (string, error) {
+	if roles, ok := commandOption.Resolved["roles"]; ok {
+		roles := roles.(map[string]interface{})
+		for _, snowflake := range roles {
+			snowflake := snowflake.(map[string]interface{})
+			name := snowflake["name"].(string)
+			return name, nil
+		}
+	} else {
+		log.Printf("bad")
+	}
+	return "", errors.New("No role")
+}
+
 func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData) {
 	log.Printf("Running create command")
-
 	application := command.Data.Options[0].Name
 	log.Printf("Application: %v", application)
 
@@ -211,52 +242,79 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 		verifiedParams.Name = fmt.Sprintf("ServerBoi-%v", strings.ToUpper(application))
 	}
 
-	log.Printf("Application to create: %v", application)
-
-	executionInput := CreateServerWorkflowInput{
-		ExecutionName:    executionName,
-		Application:      application,
-		OwnerID:          command.Member.User.ID,
-		Owner:            command.Member.User.Username,
-		InteractionID:    command.ID,
-		InteractionToken: command.Token,
-		ApplicationID:    command.ApplicationID,
-		GuildID:          command.GuildID,
-		Url:              gu.GetEnvVar("API_URL"),
-		CreationOptions:  verifiedParams.OptionalCommands,
-		Service:          verifiedParams.Service,
-		Name:             verifiedParams.Name,
-		Region:           verifiedParams.Region,
-		HardwareType:     verifiedParams.HardwareType,
-		Private:          verifiedParams.Private,
+	var (
+		ownerName  string
+		ownerID    string
+		authorized bool
+	)
+	if verifiedParams.ProfileID != "" {
+		log.Printf("Create command with profile")
+		roleName, err := sortRoleResolveForName(command.Data)
+		if err == nil {
+			ownerID = verifiedParams.ProfileID
+			ownerName = roleName
+			authorized = isUserVerifiedForProfile(ownerID, command.Member.Roles)
+			log.Printf("Authorized: %v", authorized)
+		}
+	} else {
+		ownerID = verifiedParams.ProfileID
+		ownerName = command.Member.User.Username
+		authorized = true
 	}
 
-	log.Printf("Converting input to string for submission.")
-	inputJson, err := json.Marshal(executionInput)
-	if err != nil {
-		log.Println(err)
-	}
-	inputString := fmt.Sprintf(string(inputJson))
-	log.Printf("Provision Workflow Input: %v", inputString)
+	var formRespInput gu.FormResponseInput
+	if authorized {
+		log.Printf("Application to create: %v", application)
 
-	provisionArn := gu.GetEnvVar("PROVISION_ARN")
+		executionInput := CreateServerWorkflowInput{
+			ExecutionName:    executionName,
+			Application:      application,
+			OwnerID:          ownerID,
+			Owner:            ownerName,
+			InteractionID:    command.ID,
+			InteractionToken: command.Token,
+			ApplicationID:    command.ApplicationID,
+			GuildID:          command.GuildID,
+			Url:              gu.GetEnvVar("API_URL"),
+			CreationOptions:  verifiedParams.OptionalCommands,
+			Service:          verifiedParams.Service,
+			Name:             verifiedParams.Name,
+			Region:           verifiedParams.Region,
+			HardwareType:     verifiedParams.HardwareType,
+			Private:          verifiedParams.Private,
+		}
 
-	log.Printf("Submitting workflow")
-	gu.StartSfnExecution(provisionArn, executionName, inputString)
+		log.Printf("Converting input to string for submission.")
+		inputJson, err := json.Marshal(executionInput)
+		if err != nil {
+			log.Println(err)
+		}
+		inputString := fmt.Sprintf(string(inputJson))
+		log.Printf("Provision Workflow Input: %v", inputString)
 
-	log.Printf("Forming workflow embed")
-	embedInput := gu.FormWorkflowEmbedInput{
-		Name:        "Provision-Server",
-		Description: fmt.Sprintf("WorkflowID: %s", executionName),
-		Status:      "⏳ Pending",
-		Stage:       "Starting...",
-		Color:       gu.Greyple,
-	}
-	workflowEmbed := gu.FormWorkflowEmbed(embedInput)
+		provisionArn := gu.GetEnvVar("PROVISION_ARN")
 
-	log.Printf("Prepping response data")
-	formRespInput := gu.FormResponseInput{
-		"Embeds": workflowEmbed,
+		log.Printf("Submitting workflow")
+		gu.StartSfnExecution(provisionArn, executionName, inputString)
+
+		log.Printf("Forming workflow embed")
+		embedInput := gu.FormWorkflowEmbedInput{
+			Name:        "Provision-Server",
+			Description: fmt.Sprintf("WorkflowID: %s", executionName),
+			Status:      "⏳ Pending",
+			Stage:       "Starting...",
+			Color:       gu.Greyple,
+		}
+		workflowEmbed := gu.FormWorkflowEmbed(embedInput)
+
+		log.Printf("Prepping response data")
+		formRespInput = gu.FormResponseInput{
+			"Embeds": workflowEmbed,
+		}
+	} else {
+		formRespInput = gu.FormResponseInput{
+			"Content": fmt.Sprintf("You are not authorized to use the role %v.", ownerName),
+		}
 	}
 
 	return gu.FormResponseData(formRespInput)

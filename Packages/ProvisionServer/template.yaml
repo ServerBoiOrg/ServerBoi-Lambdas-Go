@@ -20,9 +20,8 @@ Resources:
       Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
         Variables:
           SERVER_TABLE: ServerBoi-Server-List
-          AWS_TABLE: AWS-User-List
+          OWNER_TABLE: ServerBoi-Owner-List
           AWS_REGION: us-west-2
-          LINODE_TABLE: Linode-User-List
           DYNAMO_CONTAINER: serverboi-dynamodb-local
           LOCALSTACK_CONTAINER: serverboi-localstack
           API_URL: https://api.serverboi.io

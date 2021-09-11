@@ -44,6 +44,12 @@ type ChannelTableResponse struct {
 	ChannelID string `json:"ChannelID"`
 }
 
+type OwnerTableResponse struct {
+	OwnerID      string `json:"OwnerID"`
+	AWSAccountID string `json:"AWSAccountID"`
+	LinodeApiKey string `json:"LinodeApiKey"`
+}
+
 type Server interface {
 	Start() (err error)
 	Stop() (err error)

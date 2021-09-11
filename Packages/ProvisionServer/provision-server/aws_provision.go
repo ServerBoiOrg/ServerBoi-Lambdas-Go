@@ -16,7 +16,11 @@ import (
 
 func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotypes.AttributeValue) {
 	log.Printf("Querying aws account for %v item from Dynamo", params.Owner)
-	accountID := queryAWSAccountID(params.OwnerID)
+	ownerItem, err := gu.GetOwnerItem(params.OwnerID)
+	if err != nil {
+		log.Fatalf("Unable to get owner item")
+	}
+	accountID := ownerItem.AWSAccountID
 	log.Printf("Account to provision server in: %v", accountID)
 
 	architecture := getArchitecture(params.CreationOptions)
@@ -388,9 +392,4 @@ func setIngress(ec2Client *ec2.Client, securityGroupID string, ports []int) {
 			IpPermissions: ingressPermissions,
 		},
 	)
-}
-
-type AWSTableResponse struct {
-	UserID       string `json:"UserID"`
-	AWSAccountID string `json:"AWSAccountID"`
 }

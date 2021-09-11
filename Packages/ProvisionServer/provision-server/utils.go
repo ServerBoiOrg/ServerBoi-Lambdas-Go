@@ -9,7 +9,6 @@ import (
 	gu "generalutils"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	dynamotypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/google/uuid"
@@ -30,26 +29,6 @@ func queryTable(userID string, table string) *dynamodb.GetItemOutput {
 	}
 
 	return response
-}
-
-func queryAWSAccountID(userID string) string {
-	table := gu.GetEnvVar("OWNER_TABLE")
-
-	response := queryTable(userID, table)
-	var awsResponse AWSTableResponse
-	attributevalue.UnmarshalMap(response.Item, &awsResponse)
-
-	return awsResponse.AWSAccountID
-}
-
-func queryLinodeApiKey(userID string) string {
-	table := gu.GetEnvVar("LINODE_TABLE")
-
-	response := queryTable(userID, table)
-	var linodeResponse LinodeTableResponse
-	attributevalue.UnmarshalMap(response.Item, &linodeResponse)
-
-	return linodeResponse.ApiKey
 }
 
 func formBaseServerItem(
