@@ -202,6 +202,23 @@ func isUserVerifiedForProfile(roleID string, roles []string) bool {
 	return false
 }
 
+func ownerHasAccountForService(service string, ownerId string) bool {
+	ownerItem, err := gu.GetOwnerItem(ownerId)
+	if err == nil {
+		switch service {
+		case "aws":
+			if ownerItem.AWSAccountID != "" {
+				return true
+			}
+		case "linode":
+			if ownerItem.LinodeApiKey != "" {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // This is super gross
 func sortRoleResolveForName(commandOption gu.DiscordApplicationCommandData) (string, error) {
 	if roles, ok := commandOption.Resolved["roles"]; ok {
@@ -263,7 +280,8 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 	}
 
 	var formRespInput gu.FormResponseInput
-	if authorized {
+	hasAccount := ownerHasAccountForService(verifiedParams.Service, ownerID)
+	if authorized && hasAccount {
 		log.Printf("Application to create: %v", application)
 
 		executionInput := CreateServerWorkflowInput{
@@ -312,8 +330,14 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 			"Embeds": workflowEmbed,
 		}
 	} else {
+		var message string
+		if authorized {
+			message = fmt.Sprintf("You are not authorized to use the role %v.", ownerName)
+		} else {
+			message = fmt.Sprintf("No account registered for chosen service.")
+		}
 		formRespInput = gu.FormResponseInput{
-			"Content": fmt.Sprintf("You are not authorized to use the role %v.", ownerName),
+			"Content": message,
 		}
 	}
 
