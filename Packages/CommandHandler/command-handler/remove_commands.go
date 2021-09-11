@@ -67,7 +67,7 @@ func routeRemoveCommand(command gu.DiscordInteractionApplicationCommand) (respon
 	if err != nil {
 		message = "Error updating item"
 	} else {
-		message = fmt.Sprintf("Field for %v removed from OwnerItem", service)
+		message = fmt.Sprintf("Field for %v removed from %v", service, removeCommand)
 	}
 
 	formRespInput := gu.FormResponseInput{

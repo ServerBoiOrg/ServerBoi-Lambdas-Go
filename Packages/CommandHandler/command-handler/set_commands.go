@@ -17,9 +17,9 @@ func routeSetCommand(command gu.DiscordInteractionApplicationCommand) (response 
 	var message string
 	switch setCommand {
 	case "personal":
-		personalCommand(setOptions, command.Member.User.ID)
+		message = personalCommand(setOptions, command.Member.User.ID)
 	case "profile":
-		profileCommand(setOptions, command.Member.Roles)
+		message = profileCommand(setOptions, command.Member.Roles)
 	default:
 		message = fmt.Sprintf("Set command `%v` is unknown.", setCommand)
 	}
@@ -30,12 +30,11 @@ func routeSetCommand(command gu.DiscordInteractionApplicationCommand) (response 
 	return gu.FormResponseData(formRespInput)
 }
 
-func personalCommand(command gu.DiscordApplicationCommandOption, ownerID string) (response gu.DiscordInteractionResponseData) {
+func personalCommand(command gu.DiscordApplicationCommandOption, ownerID string) (message string) {
 	personalCommand := command.Name
 	personalOptions := command.Options
 	log.Printf("Personal Commmad Option: %v", personalCommand)
 
-	var message string
 	switch personalCommand {
 	case "aws":
 		log.Printf("Service: AWS")
@@ -51,18 +50,13 @@ func personalCommand(command gu.DiscordApplicationCommandOption, ownerID string)
 		message = fmt.Sprintf("Personal command `%v` is unknown.", personalCommand)
 	}
 
-	log.Printf("Message to respond with: %v", message)
-	formRespInput := gu.FormResponseInput{
-		"Content": message,
-	}
-	return gu.FormResponseData(formRespInput)
+	return message
 }
 
-func profileCommand(command gu.DiscordApplicationCommandOption, roles []string) (response gu.DiscordInteractionResponseData) {
+func profileCommand(command gu.DiscordApplicationCommandOption, roles []string) (message string) {
 	profileCommand := command.Name
 	profileOptions := command.Options
 
-	var message string
 	switch profileCommand {
 	case "aws":
 		log.Printf("Service: AWS")
@@ -86,10 +80,7 @@ func profileCommand(command gu.DiscordApplicationCommandOption, roles []string) 
 		message = fmt.Sprintf("Set command `%v` is unknown.", profileCommand)
 	}
 
-	formRespInput := gu.FormResponseInput{
-		"Content": message,
-	}
-	return gu.FormResponseData(formRespInput)
+	return message
 }
 
 func sortProfileOptionFields(setOptions []gu.DiscordApplicationCommandOption) (accountItem string, role string) {
