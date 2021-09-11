@@ -23,21 +23,6 @@ func verifyService(s string) error {
 	}
 }
 
-// // Verifies region is a valid region for the service
-// func verifyRegion(s string, r string) error {
-// 	service := strings.ToLower(s)
-// 	region := strings.ToLower(r)
-
-// 	switch service {
-// 	case "aws":
-// 		return verifyAWSRegion(region)
-// 	case "linode":
-// 		return verifyLinodeRegion(region)
-// 	default:
-// 		return errors.New("* region: Valid service is required to check region")
-// 	}
-// }
-
 // Verifies the provided region is either an actual AWS region or a Serverboi Logical regions
 func verifyAWSRegion(region string) error {
 	log.Printf("Checking AWS region %v", region)

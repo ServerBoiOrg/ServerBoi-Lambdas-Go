@@ -21,7 +21,7 @@ func routeSetCommand(command gu.DiscordInteractionApplicationCommand) (response 
 	case "profile":
 		profileCommand(setOptions, command.Member.Roles)
 	default:
-		message = fmt.Sprintf("Profile command `%v` is unknown.", setCommand)
+		message = fmt.Sprintf("Set command `%v` is unknown.", setCommand)
 	}
 
 	formRespInput := gu.FormResponseInput{
@@ -31,21 +31,27 @@ func routeSetCommand(command gu.DiscordInteractionApplicationCommand) (response 
 }
 
 func personalCommand(command gu.DiscordApplicationCommandOption, ownerID string) (response gu.DiscordInteractionResponseData) {
-	personalCommand := command.Options[0].Name
-	personalOptions := command.Options[0].Options
+	personalCommand := command.Name
+	personalOptions := command.Options
+	log.Printf("Personal Commmad Option: %v", personalCommand)
 
 	var message string
 	switch personalCommand {
 	case "aws":
+		log.Printf("Service: AWS")
 		accountID := personalOptions[0].Value
+		log.Printf("Account to add: %v", accountID)
 		message = setAWSItem(ownerID, accountID)
 	case "linode":
+		log.Printf("Service: Linode")
 		apiKey := personalOptions[0].Value
+		log.Printf("Adding Api Key")
 		message = setLinodeItem(ownerID, apiKey)
 	default:
-		message = fmt.Sprintf("Set command `%v` is unknown.", personalCommand)
+		message = fmt.Sprintf("Personal command `%v` is unknown.", personalCommand)
 	}
 
+	log.Printf("Message to respond with: %v", message)
 	formRespInput := gu.FormResponseInput{
 		"Content": message,
 	}
@@ -53,21 +59,25 @@ func personalCommand(command gu.DiscordApplicationCommandOption, ownerID string)
 }
 
 func profileCommand(command gu.DiscordApplicationCommandOption, roles []string) (response gu.DiscordInteractionResponseData) {
-	profileCommand := command.Options[0].Name
-	profileOptions := command.Options[0].Options
+	profileCommand := command.Name
+	profileOptions := command.Options
 
 	var message string
 	switch profileCommand {
 	case "aws":
-		accountId, role := sortProfileOptionFields(profileOptions)
+		log.Printf("Service: AWS")
+		accountID, role := sortProfileOptionFields(profileOptions)
 		if checkRoleIdInRoles(role, roles) {
-			message = setAWSItem(accountId, role)
+			log.Printf("Account to add: %v", accountID)
+			message = setAWSItem(role, accountID)
 		} else {
 			message = "You must be a member of the role to update it."
 		}
 	case "linode":
+		log.Printf("Service: Linode")
 		apiKey, role := sortProfileOptionFields(profileOptions)
 		if checkRoleIdInRoles(role, roles) {
+			log.Printf("Adding Api Key")
 			message = setLinodeItem(role, apiKey)
 		} else {
 			message = "You must be a member of the role to update it."
@@ -87,7 +97,7 @@ func sortProfileOptionFields(setOptions []gu.DiscordApplicationCommandOption) (a
 		switch option.Type {
 		case 3:
 			accountItem = option.Value
-		case 6:
+		case 8:
 			role = option.Value
 		}
 	}
@@ -95,6 +105,7 @@ func sortProfileOptionFields(setOptions []gu.DiscordApplicationCommandOption) (a
 }
 
 func setAWSItem(ownerID string, accountID string) string {
+	log.Printf("Setting AWS Account for Owner %v", ownerID)
 	err := gu.UpdateOwnerItem(gu.UpdateOwnerItemInput{
 		OwnerID:    ownerID,
 		FieldName:  "AWSAccountID",
@@ -144,8 +155,10 @@ func testLinodeKey(apikey string) error {
 }
 
 func checkRoleIdInRoles(roleID string, roles []string) bool {
+	log.Printf("Checking if %v in roles", roleID)
 	for _, role := range roles {
 		if roleID == role {
+			log.Printf("Role in roles, returning role")
 			return true
 		}
 	}

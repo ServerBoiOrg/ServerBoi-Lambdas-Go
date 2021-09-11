@@ -38,12 +38,11 @@ func routeRemoveCommand(command gu.DiscordInteractionApplicationCommand) (respon
 		for _, field := range removeOptions {
 			switch field.Type {
 			case 3:
-				field.Value = service
+				service = field.Value
 			case 8:
 				roleID = field.Value
 			}
 		}
-
 		if checkRoleIdInRoles(roleID, command.Member.Roles) {
 			switch service {
 			case "aws":

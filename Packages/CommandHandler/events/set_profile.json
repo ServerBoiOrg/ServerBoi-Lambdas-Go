@@ -1,0 +1,84 @@
+{
+    "resource": "/discord",
+    "path": "/discord",
+    "httpMethod": "POST",
+    "headers": {
+        "Host": "api.serverboi.io",
+        "User-Agent": "Discord-Interactions/1.0 (+https://discord.com)",
+        "X-Amzn-Trace-Id": "Root=1-613c12c3-2f877db65dd8d15b379d36be",
+        "X-Forwarded-For": "35.196.132.85",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https",
+        "accept": "*/*",
+        "content-type": "application/json",
+        "x-signature-ed25519": "6e0bb22215560289c473e7aa82cf03e271df19df43c3dafc948216fd203db042d4f9e2c8d2c22981056c0650b096838ac00337dcecfc033df4f12c4d6bfe9e06",
+        "x-signature-timestamp": "1631326915"
+    },
+    "multiValueHeaders": {
+        "Host": [
+            "api.serverboi.io"
+        ],
+        "User-Agent": [
+            "Discord-Interactions/1.0 (+https://discord.com)"
+        ],
+        "X-Amzn-Trace-Id": [
+            "Root=1-613c12c3-2f877db65dd8d15b379d36be"
+        ],
+        "X-Forwarded-For": [
+            "35.196.132.85"
+        ],
+        "X-Forwarded-Port": [
+            "443"
+        ],
+        "X-Forwarded-Proto": [
+            "https"
+        ],
+        "accept": [
+            "*/*"
+        ],
+        "content-type": [
+            "application/json"
+        ],
+        "x-signature-ed25519": [
+            "6e0bb22215560289c473e7aa82cf03e271df19df43c3dafc948216fd203db042d4f9e2c8d2c22981056c0650b096838ac00337dcecfc033df4f12c4d6bfe9e06"
+        ],
+        "x-signature-timestamp": [
+            "1631326915"
+        ]
+    },
+    "queryStringParameters": null,
+    "multiValueQueryStringParameters": null,
+    "pathParameters": null,
+    "stageVariables": null,
+    "requestContext": {
+        "accountId": "518723822228",
+        "resourceId": "zhw4ub",
+        "stage": "prod",
+        "domainName": "api.serverboi.io",
+        "domainPrefix": "api",
+        "requestId": "020d1247-220d-4762-9a27-1e1931843bef",
+        "protocol": "HTTP/1.1",
+        "identity": {
+            "cognitoIdentityPoolId": "",
+            "accountId": "",
+            "cognitoIdentityId": "",
+            "caller": "",
+            "apiKey": "",
+            "apiKeyId": "",
+            "accessKey": "",
+            "sourceIp": "35.196.132.85",
+            "cognitoAuthenticationType": "",
+            "cognitoAuthenticationProvider": "",
+            "userArn": "",
+            "userAgent": "Discord-Interactions/1.0 (+https://discord.com)",
+            "user": ""
+        },
+        "resourcePath": "/discord",
+        "authorizer": null,
+        "httpMethod": "POST",
+        "requestTime": "11/Sep/2021:02:21:55 +0000",
+        "requestTimeEpoch": 1631326915795,
+        "apiId": "hzj07jnkqi"
+    },
+    "body": "{\"application_id\":\"713857439220367432\",\"channel_id\":\"844786538695884810\",\"data\":{\"id\":\"885759985114550292\",\"name\":\"set\",\"options\":[{\"name\":\"profile\",\"options\":[{\"name\":\"aws\",\"options\":[{\"name\":\"account-id\",\"type\":3,\"value\":\"518723822228\"},{\"name\":\"role\",\"type\":8,\"value\":\"885046409554980884\"}],\"type\":1}],\"type\":2}],\"resolved\":{\"roles\":{\"885046409554980884\":{\"color\":10038562,\"hoist\":false,\"icon\":null,\"id\":\"885046409554980884\",\"managed\":false,\"mentionable\":false,\"name\":\"Server-Profile\",\"permissions\":\"521942851137\",\"position\":1}}},\"type\":1},\"guild_id\":\"653100420687855616\",\"id\":\"886074047383875615\",\"member\":{\"avatar\":null,\"deaf\":false,\"is_pending\":false,\"joined_at\":\"2019-12-08T05:07:54.314000+00:00\",\"mute\":false,\"nick\":null,\"pending\":false,\"permissions\":\"1099511627775\",\"premium_since\":null,\"roles\":[\"885046409554980884\"],\"user\":{\"avatar\":\"a_539a3c047f6bedfe4283dae3ed3bb8c3\",\"discriminator\":\"7032\",\"id\":\"155875705417236480\",\"public_flags\":128,\"username\":\"Awlsring\"}},\"token\":\"aW50ZXJhY3Rpb246ODg2MDc0MDQ3MzgzODc1NjE1OnF5dlVqT0N1NTBWZFJGaHRudEp1MzJZZkVwMWNkUFUyWDlVTHcxZnlvYjlFaWFJb0RvbERVbE1LeDRHeHVUMk13YzFMdWtadVk3WndvMzY2WkxSWnhGRjFRcTNDNVdxcjQzcVM0ZGxya1V1MTlLNnNWTTI5RGJTeU1TY04wTDho\",\"type\":2,\"version\":1}"
+}

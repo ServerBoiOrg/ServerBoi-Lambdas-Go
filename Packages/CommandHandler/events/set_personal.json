@@ -1,0 +1,84 @@
+{
+    "resource": "/discord",
+    "path": "/discord",
+    "httpMethod": "POST",
+    "headers": {
+        "Host": "api.serverboi.io",
+        "User-Agent": "Discord-Interactions/1.0 (+https://discord.com)",
+        "X-Amzn-Trace-Id": "Root=1-613c0f08-7897918040a4c93b41a7231c",
+        "X-Forwarded-For": "35.237.4.214",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https",
+        "accept": "*/*",
+        "content-type": "application/json",
+        "x-signature-ed25519": "2216101c68f2cbfb54efa4e2b638d2c840a0272176153ae6bd70daab40ce53afb4ff1a1398587d3d588cacbdd323182fa5d708e8211684a6a7386c893322bd00",
+        "x-signature-timestamp": "1631325960"
+    },
+    "multiValueHeaders": {
+        "Host": [
+            "api.serverboi.io"
+        ],
+        "User-Agent": [
+            "Discord-Interactions/1.0 (+https://discord.com)"
+        ],
+        "X-Amzn-Trace-Id": [
+            "Root=1-613c0f08-7897918040a4c93b41a7231c"
+        ],
+        "X-Forwarded-For": [
+            "35.237.4.214"
+        ],
+        "X-Forwarded-Port": [
+            "443"
+        ],
+        "X-Forwarded-Proto": [
+            "https"
+        ],
+        "accept": [
+            "*/*"
+        ],
+        "content-type": [
+            "application/json"
+        ],
+        "x-signature-ed25519": [
+            "2216101c68f2cbfb54efa4e2b638d2c840a0272176153ae6bd70daab40ce53afb4ff1a1398587d3d588cacbdd323182fa5d708e8211684a6a7386c893322bd00"
+        ],
+        "x-signature-timestamp": [
+            "1631325960"
+        ]
+    },
+    "queryStringParameters": null,
+    "multiValueQueryStringParameters": null,
+    "pathParameters": null,
+    "stageVariables": null,
+    "requestContext": {
+        "accountId": "518723822228",
+        "resourceId": "zhw4ub",
+        "stage": "prod",
+        "domainName": "api.serverboi.io",
+        "domainPrefix": "api",
+        "requestId": "c4b5fdfe-aefd-4ed6-9850-d11cccca6934",
+        "protocol": "HTTP/1.1",
+        "identity": {
+            "cognitoIdentityPoolId": "",
+            "accountId": "",
+            "cognitoIdentityId": "",
+            "caller": "",
+            "apiKey": "",
+            "apiKeyId": "",
+            "accessKey": "",
+            "sourceIp": "35.237.4.214",
+            "cognitoAuthenticationType": "",
+            "cognitoAuthenticationProvider": "",
+            "userArn": "",
+            "userAgent": "Discord-Interactions/1.0 (+https://discord.com)",
+            "user": ""
+        },
+        "resourcePath": "/discord",
+        "authorizer": null,
+        "httpMethod": "POST",
+        "requestTime": "11/Sep/2021:02:06:00 +0000",
+        "requestTimeEpoch": 1631325960980,
+        "apiId": "hzj07jnkqi"
+    },
+    "body": "{\"application_id\":\"713857439220367432\",\"channel_id\":\"844786538695884810\",\"data\":{\"id\":\"885759985114550292\",\"name\":\"set\",\"options\":[{\"name\":\"personal\",\"options\":[{\"name\":\"aws\",\"options\":[{\"name\":\"account-id\",\"type\":3,\"value\":\"742762521158\"}],\"type\":1}],\"type\":2}],\"type\":1},\"guild_id\":\"653100420687855616\",\"id\":\"886070042997948446\",\"member\":{\"avatar\":null,\"deaf\":false,\"is_pending\":false,\"joined_at\":\"2019-12-08T05:07:54.314000+00:00\",\"mute\":false,\"nick\":null,\"pending\":false,\"permissions\":\"1099511627775\",\"premium_since\":null,\"roles\":[\"885046409554980884\"],\"user\":{\"avatar\":\"a_539a3c047f6bedfe4283dae3ed3bb8c3\",\"discriminator\":\"7032\",\"id\":\"155875705417236480\",\"public_flags\":128,\"username\":\"Awlsring\"}},\"token\":\"aW50ZXJhY3Rpb246ODg2MDcwMDQyOTk3OTQ4NDQ2Olc4TFNYUHBOUlQ2UktvcUVFbjZlUTNFYzh0UEpVNUdDWU5TakRvZzlxS1RJSHIyNUJENmZIWW9heWpWMTJFajVySk5oVzE1VFR5SjJtaG1ZbGpWS2dOYWtVYVhMeWtiWUhMUDFhMEg0d3Y3WEJvMWZXVEZqbW1yRDBVWDYycGky\",\"type\":2,\"version\":1}"
+}

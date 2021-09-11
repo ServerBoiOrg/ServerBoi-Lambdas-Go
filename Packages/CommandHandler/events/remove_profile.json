@@ -1,0 +1,84 @@
+{
+    "resource": "/discord",
+    "path": "/discord",
+    "httpMethod": "POST",
+    "headers": {
+        "Host": "api.serverboi.io",
+        "User-Agent": "Discord-Interactions/1.0 (+https://discord.com)",
+        "X-Amzn-Trace-Id": "Root=1-613c152d-2913a09912dcff4e46d19d2b",
+        "X-Forwarded-For": "35.237.4.214",
+        "X-Forwarded-Port": "443",
+        "X-Forwarded-Proto": "https",
+        "accept": "*/*",
+        "content-type": "application/json",
+        "x-signature-ed25519": "921b4fb80686c90f23af0458f5185972fa2674eb5ebd389f91e14c640283b41fb6015326bed15fac2d1fe1700665058dcee6c6e84fe78b51cb98ab343fdc0d0e",
+        "x-signature-timestamp": "1631327533"
+    },
+    "multiValueHeaders": {
+        "Host": [
+            "api.serverboi.io"
+        ],
+        "User-Agent": [
+            "Discord-Interactions/1.0 (+https://discord.com)"
+        ],
+        "X-Amzn-Trace-Id": [
+            "Root=1-613c152d-2913a09912dcff4e46d19d2b"
+        ],
+        "X-Forwarded-For": [
+            "35.237.4.214"
+        ],
+        "X-Forwarded-Port": [
+            "443"
+        ],
+        "X-Forwarded-Proto": [
+            "https"
+        ],
+        "accept": [
+            "*/*"
+        ],
+        "content-type": [
+            "application/json"
+        ],
+        "x-signature-ed25519": [
+            "921b4fb80686c90f23af0458f5185972fa2674eb5ebd389f91e14c640283b41fb6015326bed15fac2d1fe1700665058dcee6c6e84fe78b51cb98ab343fdc0d0e"
+        ],
+        "x-signature-timestamp": [
+            "1631327533"
+        ]
+    },
+    "queryStringParameters": null,
+    "multiValueQueryStringParameters": null,
+    "pathParameters": null,
+    "stageVariables": null,
+    "requestContext": {
+        "accountId": "518723822228",
+        "resourceId": "zhw4ub",
+        "stage": "prod",
+        "domainName": "api.serverboi.io",
+        "domainPrefix": "api",
+        "requestId": "cf6eb517-3b9b-421e-9d96-9baa6e3da132",
+        "protocol": "HTTP/1.1",
+        "identity": {
+            "cognitoIdentityPoolId": "",
+            "accountId": "",
+            "cognitoIdentityId": "",
+            "caller": "",
+            "apiKey": "",
+            "apiKeyId": "",
+            "accessKey": "",
+            "sourceIp": "35.237.4.214",
+            "cognitoAuthenticationType": "",
+            "cognitoAuthenticationProvider": "",
+            "userArn": "",
+            "userAgent": "Discord-Interactions/1.0 (+https://discord.com)",
+            "user": ""
+        },
+        "resourcePath": "/discord",
+        "authorizer": null,
+        "httpMethod": "POST",
+        "requestTime": "11/Sep/2021:02:32:13 +0000",
+        "requestTimeEpoch": 1631327533636,
+        "apiId": "hzj07jnkqi"
+    },
+    "body": "{\"application_id\":\"713857439220367432\",\"channel_id\":\"844786538695884810\",\"data\":{\"id\":\"885761425287544832\",\"name\":\"remove\",\"options\":[{\"name\":\"profile\",\"options\":[{\"name\":\"service\",\"type\":3,\"value\":\"aws\"},{\"name\":\"role\",\"type\":8,\"value\":\"885046409554980884\"}],\"type\":1}],\"resolved\":{\"roles\":{\"885046409554980884\":{\"color\":10038562,\"hoist\":false,\"icon\":null,\"id\":\"885046409554980884\",\"managed\":false,\"mentionable\":false,\"name\":\"Server-Profile\",\"permissions\":\"521942851137\",\"position\":1}}},\"type\":1},\"guild_id\":\"653100420687855616\",\"id\":\"886076639316951110\",\"member\":{\"avatar\":null,\"deaf\":false,\"is_pending\":false,\"joined_at\":\"2019-12-08T05:07:54.314000+00:00\",\"mute\":false,\"nick\":null,\"pending\":false,\"permissions\":\"1099511627775\",\"premium_since\":null,\"roles\":[\"885046409554980884\"],\"user\":{\"avatar\":\"a_539a3c047f6bedfe4283dae3ed3bb8c3\",\"discriminator\":\"7032\",\"id\":\"155875705417236480\",\"public_flags\":128,\"username\":\"Awlsring\"}},\"token\":\"aW50ZXJhY3Rpb246ODg2MDc2NjM5MzE2OTUxMTEwOjNhU2F4SEViSjhhQUhtYnNybmU4SnoySGhYSlJpWDNwQ2h1Zm1LZ3dwajJXZUxOdkRIUjFVMVExdk5vQUk4NHQxUWI2WUFWUkQ0TE14UW1uUHdxOFlzTEg3MDZHNjRiVndhbllQVXFQOUI4S0RaUklvV0t0enk5MDJqMUZENkhY\",\"type\":2,\"version\":1}"
+}
