@@ -71,8 +71,15 @@ func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamo
 		log.Fatalf("Error creating Linode: %v", createErr)
 	}
 
-	authorized := gu.Authorized{
-		Users: []string{params.OwnerID},
+	var authorized gu.Authorized
+	if params.IsRole {
+		authorized = gu.Authorized{
+			Roles: []string{params.OwnerID},
+		}
+	} else {
+		authorized = gu.Authorized{
+			Users: []string{params.OwnerID},
+		}
 	}
 
 	server := gu.LinodeServer{

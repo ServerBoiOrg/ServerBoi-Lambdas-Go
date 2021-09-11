@@ -94,8 +94,15 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 	log.Printf("Instance created. ID: %v", instanceID)
 	log.Printf(fmt.Sprintf("Ports: %v", buildInfo.Ports))
 
-	authorized := gu.Authorized{
-		Users: []string{params.OwnerID},
+	var authorized gu.Authorized
+	if params.IsRole {
+		authorized = gu.Authorized{
+			Roles: []string{params.OwnerID},
+		}
+	} else {
+		authorized = gu.Authorized{
+			Users: []string{params.OwnerID},
+		}
 	}
 
 	server := gu.AWSServer{

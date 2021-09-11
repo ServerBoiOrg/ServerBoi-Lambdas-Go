@@ -28,6 +28,7 @@ type CreateServerWorkflowInput struct {
 	Region           string
 	HardwareType     string `json:"HardwareType,omitempty"`
 	Private          bool
+	IsRole           bool
 }
 
 type GenericCreationOptions struct {
@@ -262,6 +263,7 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 	var (
 		ownerName  string
 		ownerID    string
+		isRole     bool
 		authorized bool
 	)
 	if verifiedParams.ProfileID != "" {
@@ -270,12 +272,14 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 		if err == nil {
 			ownerID = verifiedParams.ProfileID
 			ownerName = roleName
+			isRole = true
 			authorized = isUserVerifiedForProfile(ownerID, command.Member.Roles)
 			log.Printf("Authorized: %v", authorized)
 		}
 	} else {
 		ownerID = verifiedParams.ProfileID
 		ownerName = command.Member.User.Username
+		isRole = false
 		authorized = true
 	}
 
@@ -300,6 +304,7 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 			Region:           verifiedParams.Region,
 			HardwareType:     verifiedParams.HardwareType,
 			Private:          verifiedParams.Private,
+			IsRole:           isRole,
 		}
 
 		log.Printf("Converting input to string for submission.")

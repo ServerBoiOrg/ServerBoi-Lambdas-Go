@@ -32,6 +32,7 @@ type ProvisonServerParameters struct {
 	Region           string            `json:"Region"`
 	HardwareType     string            `json:"HardwareType"`
 	Private          bool              `json:"Private"`
+	IsRole           bool              `json:"IsRole"`
 }
 
 type ProvisionServerResponse struct {
