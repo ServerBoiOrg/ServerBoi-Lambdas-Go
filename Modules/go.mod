@@ -1,3 +1,3 @@
-module github.com/serverboiorg/serverboi-go-lambdas/modules
+module github.com/serverboiorg/serverboi-lambdas-go/modules
 
 go 1.16
