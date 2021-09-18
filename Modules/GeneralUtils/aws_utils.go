@@ -235,7 +235,6 @@ func GetOwnerItem(ownerID string) (ownerItem *OwnerItem, err error) {
 		},
 	})
 	if err != nil {
-		err = errors.New("Error getting item.")
 		return ownerItem, err
 	} else if len(response.Item) == 0 {
 		err = errors.New("No items found.")

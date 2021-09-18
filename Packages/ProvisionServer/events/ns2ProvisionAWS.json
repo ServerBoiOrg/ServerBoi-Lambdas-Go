@@ -1,15 +1,16 @@
 {
-  "ExecutionName": "Provision-711550fe",
+  "ExecutionName": "Provision-064E15EF",
   "Application": "ns2",
   "OwnerID": "885046409554980884",
   "Owner": "Server-Profile",
-  "InteractionID": "886086934018007110",
-  "InteractionToken": "aW50ZXJhY3Rpb246ODg2MDg2OTM0MDE4MDA3MTEwOkRmb3BoVzdzUlhKcWhiOW5QMEtpOXVkOWdzZEpDM2M3aW1CYUtxMXY2aHpDWmJWc2plRENWS1FLTmp4Z3A3MnBHTDNobE50TlJLdkUxZ2hiclFzdHloN3FiQkxkSWh5MjBTU3owSGZ5cTVHMHdLamZPNVFXY1lvV3ZsbFlyZ3ZN",
+  "InteractionID": "888675937753894972",
+  "InteractionToken": "aW50ZXJhY3Rpb246ODg4Njc1OTM3NzUzODk0OTcyOnA5ekhiZ0N5RjJSWGk1ZzFaaExPYzZPeExYUndqbVh1OUJhbk9jaUxVeUVuYVZjSU5pb25icTFORVJCYlR3NUZKeHdZQ1VuekxWZ1NKSnVoQ2VmNWNPd2F4bDJlT2lDNUtPZkxJam1vR1pYYnI3T2RQcmNQbGdIV3dDUnE5RTdw",
   "ApplicationID": "713857439220367432",
   "GuildID": "653100420687855616",
   "Url": "https://api.serverboi.io",
   "Service": "aws",
   "Name": "ServerBoi-NS2",
-  "Region": "us-west-2",
-  "Private": false
+  "Region": "us-west-1",
+  "Private": false,
+  "IsRole": true
 }

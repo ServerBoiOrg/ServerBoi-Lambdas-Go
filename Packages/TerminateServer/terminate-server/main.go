@@ -26,6 +26,7 @@ type TerminateServerPayload struct {
 	Token         string `json:"Token"`
 	ApplicationID string `json:"ApplicationID"`
 	ExecutionName string `json:"ExecutionName"`
+	Fallback      bool   `json:"Fallback"`
 }
 
 func handler(event map[string]interface{}) (bool, error) {
@@ -81,13 +82,25 @@ func handler(event map[string]interface{}) (bool, error) {
 	// Delete server item
 	deleteServerItem(server.GetBaseService().ServerID)
 
+	var (
+		status string
+		color  int
+	)
+	if params.Fallback {
+		status = "❌ Failed"
+		color = ru.DiscordRed
+	} else {
+		status = "✔️ Finished"
+		color = ru.DarkGreen
+	}
+
 	updateEmbed(&UpdateEmbedInput{
 		params.ExecutionName,
 		params.ApplicationID,
 		params.Token,
-		"✔️ Finished",
+		status,
 		"Complete",
-		ru.DarkGreen,
+		color,
 		client,
 	})
 

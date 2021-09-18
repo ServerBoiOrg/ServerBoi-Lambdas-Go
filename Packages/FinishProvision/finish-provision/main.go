@@ -118,6 +118,7 @@ func handler(event map[string]interface{}) (bool, error) {
 			}
 			done := dc.StatusCodeHandler(*headers)
 			if done {
+				log.Printf("Status Code of Response: %v", headers.StatusCode)
 				log.Printf("%v", resp)
 				break
 			}

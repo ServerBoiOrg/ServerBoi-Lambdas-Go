@@ -63,8 +63,11 @@ func handler(event map[string]interface{}) (bool, error) {
 		log.Printf("Making call %v.", (i + 1))
 		spotHeaders := doCall(client, <-calls)
 		i++
-		log.Printf("Call limit: %v", spotHeaders.Limit)
 		for c := 2; c < spotHeaders.Limit; c++ {
+			log.Printf("Call limit: %v", spotHeaders.Limit)
+			if i == callTotal {
+				break
+			}
 			log.Printf("Making call %v", (i + 1))
 			doCall(client, <-calls)
 			i++

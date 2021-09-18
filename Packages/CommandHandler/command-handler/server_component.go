@@ -42,18 +42,33 @@ func routeServerAction(component *dt.Interaction) (data *dt.InteractionCallbackD
 			err = server.Start()
 			if err == nil {
 				message = "Starting server"
+				embed, components, _ := updateEmbed(server)
+				editServerMessage(component.Message.ChannelID, component.Message.ID, &dt.EditMessageData{
+					Embeds:     []*dt.Embed{embed},
+					Components: components,
+				})
 			}
 		case "stop":
 			log.Printf("Sopping server")
 			err = server.Stop()
 			if err == nil {
 				message = "Stopping server"
+				embed, components, _ := updateEmbed(server)
+				editServerMessage(component.Message.ChannelID, component.Message.ID, &dt.EditMessageData{
+					Embeds:     []*dt.Embed{embed},
+					Components: components,
+				})
 			}
 		case "reboot":
 			log.Printf("Rebooting server")
 			err = server.Restart()
 			if err == nil {
 				message = "Rebooting server"
+				embed, components, _ := updateEmbed(server)
+				editServerMessage(component.Message.ChannelID, component.Message.ID, &dt.EditMessageData{
+					Embeds:     []*dt.Embed{embed},
+					Components: components,
+				})
 			}
 		}
 		if err != nil {

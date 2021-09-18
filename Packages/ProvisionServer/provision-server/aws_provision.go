@@ -68,9 +68,6 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 	instanceType := getAWSInstanceType(params.HardwareType, buildInfo, architecture)
 	oneInstance := int32(1)
 
-	//Temporary
-	testKey := "ServerBoiTestKey"
-
 	log.Printf("Creating instance")
 	response, creationErr := ec2Client.RunInstances(
 		context.Background(),
@@ -82,7 +79,6 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 			ImageId:             &imageID,
 			BlockDeviceMappings: ebsMapping,
 			InstanceType:        instanceType,
-			KeyName:             &testKey,
 			TagSpecifications:   formServerTagSpec(serverID),
 		},
 	)
@@ -287,12 +283,13 @@ func getSecurityGroup(ec2Client *ec2.Client, application string, ports []int) st
 			GroupName:   &secGroupName,
 			Description: &secGroupDescription,
 			TagSpecifications: []ec2types.TagSpecification{{
-				ResourceType: ec2types.ResourceTypeInstance,
+				ResourceType: ec2types.ResourceTypeSecurityGroup,
 				Tags:         []ec2types.Tag{formManagementTag()},
 			}},
 		},
 	)
 	if createErr != nil {
+		log.Printf("Security group already exists, describing it.")
 		nameInList := []string{secGroupName}
 		describeResponse, describeErr := ec2Client.DescribeSecurityGroups(
 			context.Background(),

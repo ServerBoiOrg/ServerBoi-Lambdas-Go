@@ -90,6 +90,6 @@ func GenerateWorkflowUUID(workflowName string) string {
 	uuidWithHyphen := uuid.New()
 	uuidString := strings.Replace(uuidWithHyphen.String(), "-", "", -1)
 	subuuid := uuidString[0:8]
-	workflowID := fmt.Sprintf("%v-%v", workflowName, subuuid)
-	return workflowID
+	uuid := strings.ToUpper(subuuid)
+	return fmt.Sprintf("%v-%v", workflowName, uuid)
 }

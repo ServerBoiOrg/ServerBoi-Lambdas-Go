@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	dc "discordhttpclient"
@@ -110,39 +109,8 @@ type TerminateWorkflow struct {
 }
 
 func serverRelist(server gu.Server, guildID string) (message string) {
-	status, err := server.GetStatus()
-	if err != nil {
-		return "Error getting server status."
-	}
-	state, _, err := ru.TranslateState(
-		server.GetBaseService().Service,
-		status,
-	)
-	if err != nil {
-		return "Error getting server status."
-	}
-	var running bool
-	if strings.Contains(state, "Running") {
-		running = true
-	} else {
-		running = false
-	}
-	serverInfo := server.GetBaseService()
-	ip, err := server.GetIPv4()
-	if err != nil {
-		return "Error getting server status."
-	}
-	embed := ru.CreateServerEmbed(ru.GetServerData(&ru.GetServerDataInput{
-		Name:        serverInfo.ServerName,
-		ID:          serverInfo.ServerID,
-		IP:          ip,
-		Status:      status,
-		Region:      serverInfo.Region,
-		Port:        serverInfo.Port,
-		Application: serverInfo.Application,
-		Owner:       serverInfo.Owner,
-		Service:     serverInfo.Service,
-	}))
+	log.Printf("Forming embed and components")
+	embed, components, err := updateEmbed(server)
 	log.Printf("Getting Channel for Guild")
 	channelID, err := gu.GetChannelIDFromGuildID(guildID)
 	if err != nil {
@@ -160,7 +128,7 @@ func serverRelist(server gu.Server, guildID string) (message string) {
 				ChannelID: channelID,
 				Data: &dt.CreateMessageData{
 					Embeds:     []*dt.Embed{embed},
-					Components: ru.ServerEmbedComponents(running),
+					Components: components,
 				},
 			})
 			if headers.StatusCode == 429 {
@@ -174,7 +142,7 @@ func serverRelist(server gu.Server, guildID string) (message string) {
 			message = fmt.Sprintf("Error getting creating message in Channel: %v", err)
 		} else {
 			log.Printf("Response form server embed post: %v", resp)
-			message = fmt.Sprintf("Server %v embed posted in server channel", serverInfo.ServerID)
+			message = fmt.Sprintf("Server embed posted in server channel")
 		}
 	}
 	return message

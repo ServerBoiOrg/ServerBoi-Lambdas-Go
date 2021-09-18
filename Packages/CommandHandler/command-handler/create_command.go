@@ -209,16 +209,21 @@ func isUserVerifiedForProfile(roleID string, roles []string) bool {
 func ownerHasAccountForService(service string, ownerId string) bool {
 	ownerItem, err := gu.GetOwnerItem(ownerId)
 	if err == nil {
+		log.Printf("Checking if owner has account for service %v", service)
 		switch service {
 		case "aws":
 			if ownerItem.AWSAccountID != "" {
+				log.Printf("Has AWS Account")
 				return true
 			}
 		case "linode":
 			if ownerItem.LinodeApiKey != "" {
+				log.Printf("Has Linode Account")
 				return true
 			}
 		}
+	} else {
+		log.Printf("Error getting Owner item: %v", err)
 	}
 	return false
 }
@@ -272,13 +277,15 @@ func createServer(command *dt.Interaction) (response *dt.InteractionCallbackData
 			log.Printf("Authorized: %v", authorized)
 		}
 	} else {
-		ownerID = verifiedParams.ProfileID
+		log.Printf("Create command as personal")
+		ownerID = command.Member.User.ID
 		ownerName = command.Member.User.Username
 		isRole = false
 		authorized = true
 	}
 
 	hasAccount := ownerHasAccountForService(verifiedParams.Service, ownerID)
+	log.Printf("Authorized: %v | HasAccount: %v", authorized, hasAccount)
 	if authorized && hasAccount {
 		log.Printf("Application to create: %v", application)
 
@@ -328,7 +335,7 @@ func createServer(command *dt.Interaction) (response *dt.InteractionCallbackData
 		}
 	} else {
 		var message string
-		if authorized {
+		if hasAccount {
 			message = fmt.Sprintf("You are not authorized to use the role %v.", ownerName)
 		} else {
 			message = fmt.Sprintf("No account registered for chosen service.")

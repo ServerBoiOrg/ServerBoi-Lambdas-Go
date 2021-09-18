@@ -122,6 +122,7 @@ func formDockerCommand(input FormDockerCommandInput, dockerCommands []string) st
 	command := fmt.Sprintf(`sudo docker run -t -d \
     --net=host \
     --name serverboi-%v \
+	--restart unless-stopped \
     -e INTERACTION_TOKEN=%v \
     -e APPLICATION_ID=%v \
     -e EXECUTION_NAME=%v \
