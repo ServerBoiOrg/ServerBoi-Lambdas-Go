@@ -1,3 +1,3 @@
-module github.com/serverboiorg/erverboi-go-lambdas
+module github.com/serverboiorg/serverboi-go-lambdas
 
 go 1.16
