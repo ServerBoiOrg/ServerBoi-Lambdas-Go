@@ -1,4 +1,4 @@
-module github.com/serverboi-go-lambdas/modules/generalutils
+module github.com/serverboiorg/erverboi-go-lambdas/generalutils
 
 go 1.16
 
