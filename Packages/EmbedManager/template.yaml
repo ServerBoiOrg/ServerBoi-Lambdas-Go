@@ -18,4 +18,3 @@ Resources:
       Environment:
         Variables:
           SERVER_TABLE: ServerBoi-Server-List
-          DISCORD_TOKEN: NzEzODU3NDM5MjIwMzY3NDMy.XsmNjA.A2VKzag3TqVcBp333PBZev_IlCg
