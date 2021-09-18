@@ -5,9 +5,11 @@ import (
 	"fmt"
 	gu "generalutils"
 	"log"
+
+	dt "github.com/awlsring/discordtypes"
 )
 
-func routeDeauthorizeCommand(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData) {
+func routeDeauthorizeCommand(command *dt.Interaction) (response *dt.InteractionCallbackData) {
 	deauthorizeCommand := command.Data.Options[0].Name
 	deauthOptions := command.Data.Options[0].Options
 	log.Printf("Deauthorize Commmad Option: %v", deauthorizeCommand)
@@ -16,9 +18,9 @@ func routeDeauthorizeCommand(command gu.DiscordInteractionApplicationCommand) (r
 	log.Printf("Target Server: %v", serverID)
 	server, err := gu.GetServerFromID(serverID)
 	if err != nil {
-		return gu.FormResponseData(gu.FormResponseInput{
-			"Content": fmt.Sprintf("Server %v can't be found.", serverID),
-		})
+		return &dt.InteractionCallbackData{
+			Content: fmt.Sprintf("Server %v can't be found.", serverID),
+		}
 	}
 	log.Printf("Server Object: %s", server)
 	log.Printf("Running %s on server %s", deauthorizeCommand, serverID)
@@ -60,10 +62,9 @@ func routeDeauthorizeCommand(command gu.DiscordInteractionApplicationCommand) (r
 	} else {
 		message = "Only owners can deauthorize others for this server."
 	}
-	formRespInput := gu.FormResponseInput{
-		"Content": message,
+	return &dt.InteractionCallbackData{
+		Content: message,
 	}
-	return gu.FormResponseData(formRespInput)
 }
 
 func removeFromList(list []string, item string) (items []string, err error) {
@@ -78,7 +79,7 @@ func removeFromList(list []string, item string) (items []string, err error) {
 type RemoveFromAuthInput struct {
 	Type          int
 	Server        gu.Server
-	DeauthOptions []gu.DiscordApplicationCommandOption
+	DeauthOptions []*dt.ApplicationCommandInteractionDataOption
 }
 
 func removeItemFromAuth(input RemoveFromAuthInput) string {
@@ -86,27 +87,35 @@ func removeItemFromAuth(input RemoveFromAuthInput) string {
 		id       string
 		message  string
 		typeName string
+		users    []string
+		roles    []string
+		err      error
 	)
-	switch input.Type {
-	case 6:
-		typeName = "user"
-	case 8:
-		typeName = "role"
-	}
-
 	for _, option := range input.DeauthOptions {
 		if option.Type == input.Type {
 			id = option.Value
 		}
 	}
+
+	users = input.Server.AuthorizedUsers()
+	roles = input.Server.AuthorizedRoles()
+
+	switch input.Type {
+	case 6:
+		typeName = "user"
+		users, err = removeFromList(users, id)
+	case 8:
+		typeName = "role"
+		roles, err = removeFromList(roles, id)
+	}
+
 	if id == input.Server.GetBaseService().OwnerID {
 		message = "The owner of a server can't be deauthorized."
 	} else {
-		roles, err := removeFromList(input.Server.AuthorizedRoles(), id)
 		if err != nil {
 			message = fmt.Sprintf("Specified %v isn't authorized on this server.", typeName)
 		} else {
-			updateAuthorization(input.Server.AuthorizedUsers(), roles, input.Server.GetBaseService().ServerID)
+			updateAuthorization(users, roles, input.Server.GetBaseService().ServerID)
 			message = "Authorization updated."
 		}
 	}

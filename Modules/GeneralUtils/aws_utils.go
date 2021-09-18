@@ -52,7 +52,7 @@ func GetCloudwatchClient() *cloudwatch.Client {
 	return cw
 }
 
-func CreateEC2Client(region string, accountID string) ec2.Client {
+func CreateEC2Client(region string, accountID string) *ec2.Client {
 	stage := GetEnvVar("STAGE")
 	var options ec2.Options
 
@@ -72,10 +72,10 @@ func CreateEC2Client(region string, accountID string) ec2.Client {
 
 	client := ec2.New(options)
 
-	return *client
+	return client
 }
 
-func CreateSfnClient() sfn.Client {
+func CreateSfnClient() *sfn.Client {
 	stage := GetEnvVar("STAGE")
 
 	cfg := getConfig()
@@ -85,7 +85,7 @@ func CreateSfnClient() sfn.Client {
 		}
 	})
 
-	return *client
+	return client
 }
 
 func StartSfnExecution(statemachineArn string, executionName string, input string) {
@@ -139,109 +139,7 @@ func getRemoteCreds(region string, accountID string) *aws.CredentialsCache {
 	return creds
 }
 
-func (server AWSServer) Start() (err error) {
-	client := CreateEC2Client(server.Region, server.AWSAccountID)
-	input := &ec2.StartInstancesInput{
-		InstanceIds: []string{
-			server.InstanceID,
-		},
-	}
-	_, err = client.StartInstances(context.Background(), input)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (server AWSServer) Stop() (err error) {
-	client := CreateEC2Client(server.Region, server.AWSAccountID)
-	input := &ec2.StopInstancesInput{
-		InstanceIds: []string{
-			server.InstanceID,
-		},
-	}
-	_, err = client.StopInstances(context.Background(), input)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (server AWSServer) GetService() string {
-	return server.Service
-}
-
-func (server AWSServer) GetIPv4() (string, error) {
-	client := CreateEC2Client(server.Region, server.AWSAccountID)
-	log.Printf("Describing instance: %s", server.InstanceID)
-	response, err := client.DescribeInstances(context.Background(), &ec2.DescribeInstancesInput{
-		InstanceIds: []string{
-			server.InstanceID,
-		},
-	})
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%v", *response.Reservations[0].Instances[0].PublicIpAddress), nil
-}
-
-func (server AWSServer) GetServerBoiRegion() ServerBoiRegion {
-	return FormServerBoiRegion(server.Service, server.Region)
-}
-
-func (server AWSServer) GetBaseService() BaseServer {
-	return BaseServer{
-		ServerID:    server.ServerID,
-		Application: server.Application,
-		ServerName:  server.ServerName,
-		Service:     server.Service,
-		Owner:       server.Owner,
-		OwnerID:     server.OwnerID,
-		Port:        server.Port,
-	}
-}
-
-func (server AWSServer) Restart() (err error) {
-	client := CreateEC2Client(server.Region, server.AWSAccountID)
-	_, err = client.RebootInstances(context.Background(), &ec2.RebootInstancesInput{
-		InstanceIds: []string{
-			server.InstanceID,
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (server AWSServer) Status() (status string, err error) {
-	client := CreateEC2Client(server.Region, server.AWSAccountID)
-	log.Printf("Ec2 Client made in Target account")
-	input := &ec2.DescribeInstancesInput{
-		InstanceIds: []string{
-			server.InstanceID,
-		},
-	}
-	response, err := client.DescribeInstances(context.Background(), input)
-	if err != nil {
-		return status, err
-	}
-
-	return fmt.Sprintf("%v", response.Reservations[0].Instances[0].State.Name), nil
-}
-
-func (server AWSServer) AuthorizedUsers() []string {
-	return server.Authorized.Users
-}
-
-func (server AWSServer) AuthorizedRoles() []string {
-	return server.Authorized.Roles
-}
-
-func GetWebhookFromGuildID(guildID string) WebhookTableResponse {
+func GetWebhookFromGuildID(guildID string) *WebhookTableResponse {
 	dynamo := GetDynamo()
 	webhookTable := GetEnvVar("WEBHOOK_TABLE")
 
@@ -259,7 +157,7 @@ func GetWebhookFromGuildID(guildID string) WebhookTableResponse {
 	var responseItem WebhookTableResponse
 	attributevalue.UnmarshalMap(response.Item, &responseItem)
 
-	return responseItem
+	return &responseItem
 }
 
 func GetChannelIDFromGuildID(guildID string) (channelID string, err error) {
@@ -288,7 +186,7 @@ type UpdateOwnerItemInput struct {
 	FieldValue string
 }
 
-func UpdateOwnerItem(input UpdateOwnerItemInput) error {
+func UpdateOwnerItem(input *UpdateOwnerItemInput) error {
 	dynamo := GetDynamo()
 	table := GetEnvVar("OWNER_TABLE")
 
@@ -309,7 +207,7 @@ func UpdateOwnerItem(input UpdateOwnerItemInput) error {
 	return err
 }
 
-func RemoveFieldFromOwnerItem(input UpdateOwnerItemInput) error {
+func RemoveFieldFromOwnerItem(input *UpdateOwnerItemInput) error {
 	dynamo := GetDynamo()
 	table := GetEnvVar("OWNER_TABLE")
 
@@ -326,7 +224,7 @@ func RemoveFieldFromOwnerItem(input UpdateOwnerItemInput) error {
 	return err
 }
 
-func GetOwnerItem(ownerID string) (ownerItem OwnerItem, err error) {
+func GetOwnerItem(ownerID string) (ownerItem *OwnerItem, err error) {
 	dynamo := GetDynamo()
 	ownerTable := GetEnvVar("OWNER_TABLE")
 
@@ -386,12 +284,4 @@ func GetServerFromID(serverID string) (server Server, err error) {
 	default:
 		panic("Unknown service")
 	}
-}
-
-type NoItemsError struct {
-	Path string
-}
-
-func (e *NoItemsError) Error() string {
-	return fmt.Sprintf("No response for GetItem operation: %v", e.Path)
 }

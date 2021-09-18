@@ -19,3 +19,4 @@ Resources:
         Variables:
           SERVER_TABLE: ServerBoi-Server-List
           CHANNEL_TABLE: ServerBoi-Channel-Table
+          DISCORD_TOKEN: NzEzODU3NDM5MjIwMzY3NDMy.XsmNjA.A2VKzag3TqVcBp333PBZev_IlCg

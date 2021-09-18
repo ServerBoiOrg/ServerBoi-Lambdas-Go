@@ -1,8 +1,8 @@
 package main
 
-import gu "generalutils"
+import dt "github.com/awlsring/discordtypes"
 
-func pong() (pong gu.DiscordInteractionResponse) {
+func pong() (pong *dt.InteractionResponse) {
 	pong.Type = 1
 	return pong
 }

@@ -5,9 +5,11 @@ import (
 	gu "generalutils"
 	"log"
 	"strings"
+
+	dt "github.com/awlsring/discordtypes"
 )
 
-func routeServerAction(component gu.DiscordComponentInteraction) (data gu.DiscordInteractionResponseData) {
+func routeServerAction(component *dt.Interaction) (data *dt.InteractionCallbackData) {
 	embed := component.Message.Embeds[0]
 	serverID := strings.Trim(embed.Title[len(embed.Title)-6:], "()")
 	customSplit := strings.Split(component.Data.CustomID, ":")
@@ -62,10 +64,8 @@ func routeServerAction(component gu.DiscordComponentInteraction) (data gu.Discor
 		message = "You do not have authorization to run commands on this server."
 	}
 	log.Printf("Message to send to discord")
-	data = gu.DiscordInteractionResponseData{
+	return &dt.InteractionCallbackData{
 		Content: message,
 		Flags:   1 << 6,
 	}
-
-	return data
 }

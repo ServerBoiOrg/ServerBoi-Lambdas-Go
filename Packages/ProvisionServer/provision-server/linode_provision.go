@@ -94,7 +94,7 @@ func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamo
 		ApiKey:      apiKey,
 		LinodeType:  linodeType,
 		Location:    params.Region,
-		Authorized:  authorized,
+		Authorized:  &authorized,
 	}
 
 	return serverID, formLinodeServerItem(server)

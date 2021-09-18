@@ -56,10 +56,10 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 	bootscript = b64.StdEncoding.EncodeToString([]byte(bootscript))
 
 	log.Printf("Getting/Creating Security Group")
-	groupID := getSecurityGroup(&ec2Client, params.Application, buildInfo.Ports)
+	groupID := getSecurityGroup(ec2Client, params.Application, buildInfo.Ports)
 
 	log.Printf("Seraching for Debian Image for %v", architecture)
-	imageID := getImage(&ec2Client, architecture)
+	imageID := getImage(ec2Client, architecture)
 
 	log.Printf("Generating EBS Mapping")
 	ebsMapping := getEbsMapping(buildInfo.DriveSize)
@@ -117,7 +117,7 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 		AWSAccountID: accountID,
 		InstanceID:   instanceID,
 		InstanceType: string(instanceType),
-		Authorized:   authorized,
+		Authorized:   &authorized,
 	}
 
 	return serverID, formAWSServerItem(server)

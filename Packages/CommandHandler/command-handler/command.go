@@ -4,21 +4,26 @@ import (
 	"encoding/json"
 	"log"
 
-	gu "generalutils"
+	dc "discordhttpclient"
+
+	dt "github.com/awlsring/discordtypes"
 )
 
-func command(eventBody string) (output InteractionOutput) {
+func command(eventBody string) (output *dc.InteractionFollowupInput) {
 	log.Printf("Command: %v", eventBody)
 
 	//Unmarshal into Interaction Type
-	var command gu.DiscordInteractionApplicationCommand
+	var command *dt.Interaction
 	json.Unmarshal([]byte(eventBody), &command)
 
 	log.Printf("Sending temporary response to Discord")
-	gu.SendTempResponse(command.ID, command.Token)
+	client.TemporaryResponse(&dc.InteractionCallbackInput{
+		InteractionID:    command.ID,
+		InteractionToken: command.Token,
+	})
 
 	log.Printf("Command Option: %v", command.Data.Name)
-	var response gu.DiscordInteractionResponseData
+	var response *dt.InteractionCallbackData
 	switch command.Data.Name {
 	case "create":
 		response = createServer(command)
@@ -35,9 +40,9 @@ func command(eventBody string) (output InteractionOutput) {
 	}
 	log.Printf("Response from %v command: %v", command.Data.Name, response)
 
-	return InteractionOutput{
+	return &dc.InteractionFollowupInput{
 		ApplicationID:    command.ApplicationID,
 		InteractionToken: command.Token,
-		Response:         response,
+		Data:             response,
 	}
 }

@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"log"
 
+	dc "discordhttpclient"
 	gu "generalutils"
+	ru "responseutils"
 
+	dt "github.com/awlsring/discordtypes"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
@@ -46,18 +49,37 @@ func handler(event map[string]interface{}) (string, error) {
 	params := convertEvent(event)
 	// logMetric(params.Service)
 	// logMetric(params.Application)
-	embedInput := gu.FormWorkflowEmbedInput{
+
+	embed := ru.CreateWorkflowEmbed(&ru.CreateWorkflowEmbedInput{
 		Name:        "Provision-Server",
 		Description: fmt.Sprintf("WorkflowID: %s", params.ExecutionName),
 		Status:      "🟢 Running",
 		Stage:       "Provisioning Server",
-		Color:       gu.DiscordGreen,
+		Color:       ru.DiscordGreen,
+	})
+
+	client := dc.CreateClient(&dc.CreateClientInput{
+		BotToken:   gu.GetEnvVar("DISCORD_TOKEN"),
+		ApiVersion: "v9",
+	})
+
+	for {
+		resp, headers, err := client.EditInteractionResponse(&dc.InteractionFollowupInput{
+			ApplicationID:    params.ApplicationID,
+			InteractionToken: params.InteractionToken,
+			Data: &dt.InteractionCallbackData{
+				Embeds: []*dt.Embed{embed},
+			},
+		})
+		if err != nil {
+			log.Fatalf("Error getting creating message in Channel: %v", err)
+		}
+		done := dc.StatusCodeHandler(*headers)
+		if done {
+			log.Printf("%v", resp)
+			break
+		}
 	}
-	embed := gu.FormWorkflowEmbed(embedInput)
-	formRespInput := gu.FormResponseInput{
-		"Embeds": embed,
-	}
-	gu.EditResponse(params.ApplicationID, params.InteractionToken, gu.FormResponseData(formRespInput))
 
 	var serverID string
 	var serverItem map[string]dynamotypes.AttributeValue

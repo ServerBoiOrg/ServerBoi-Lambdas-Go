@@ -4,9 +4,11 @@ import (
 	"fmt"
 	gu "generalutils"
 	"log"
+
+	dt "github.com/awlsring/discordtypes"
 )
 
-func routeRemoveCommand(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData) {
+func routeRemoveCommand(command *dt.Interaction) (response *dt.InteractionCallbackData) {
 	removeCommand := command.Data.Options[0].Name
 	removeOptions := command.Data.Options[0].Options
 	log.Printf("Remove Commmad Option: %v", removeCommand)
@@ -21,12 +23,12 @@ func routeRemoveCommand(command gu.DiscordInteractionApplicationCommand) (respon
 		service = removeOptions[0].Value
 		switch service {
 		case "aws":
-			err = gu.RemoveFieldFromOwnerItem(gu.UpdateOwnerItemInput{
+			err = gu.RemoveFieldFromOwnerItem(&gu.UpdateOwnerItemInput{
 				OwnerID:   command.Member.User.ID,
 				FieldName: "AWSAccountID",
 			})
 		case "linode":
-			err = gu.RemoveFieldFromOwnerItem(gu.UpdateOwnerItemInput{
+			err = gu.RemoveFieldFromOwnerItem(&gu.UpdateOwnerItemInput{
 				OwnerID:   command.Member.User.ID,
 				FieldName: "LinodeApiKey",
 			})
@@ -46,12 +48,12 @@ func routeRemoveCommand(command gu.DiscordInteractionApplicationCommand) (respon
 		if checkRoleIdInRoles(roleID, command.Member.Roles) {
 			switch service {
 			case "aws":
-				err = gu.RemoveFieldFromOwnerItem(gu.UpdateOwnerItemInput{
+				err = gu.RemoveFieldFromOwnerItem(&gu.UpdateOwnerItemInput{
 					OwnerID:   roleID,
 					FieldName: "AWSAccountID",
 				})
 			case "linode":
-				err = gu.RemoveFieldFromOwnerItem(gu.UpdateOwnerItemInput{
+				err = gu.RemoveFieldFromOwnerItem(&gu.UpdateOwnerItemInput{
 					OwnerID:   roleID,
 					FieldName: "LinodeApiKey",
 				})
@@ -70,8 +72,7 @@ func routeRemoveCommand(command gu.DiscordInteractionApplicationCommand) (respon
 		message = fmt.Sprintf("Field for %v removed from %v", service, removeCommand)
 	}
 
-	formRespInput := gu.FormResponseInput{
-		"Content": message,
+	return &dt.InteractionCallbackData{
+		Content: message,
 	}
-	return gu.FormResponseData(formRespInput)
 }

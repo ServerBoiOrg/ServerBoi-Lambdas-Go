@@ -1,26 +1,31 @@
 package main
 
 import (
+	dc "discordhttpclient"
 	"encoding/json"
-	gu "generalutils"
 	"log"
 	"strings"
+
+	dt "github.com/awlsring/discordtypes"
 )
 
-func component(eventBody string) (output InteractionOutput) {
+func component(eventBody string) (output *dc.InteractionFollowupInput) {
 	log.Printf("Component: %v", eventBody)
 
 	//Unmarshal into ComponentInteraction Type
-	var component gu.DiscordComponentInteraction
+	var component *dt.Interaction
 	json.Unmarshal([]byte(eventBody), &component)
 
 	customSplit := strings.Split(component.Data.CustomID, ":")
 	componentType := customSplit[0]
 
 	log.Printf("Sending temporary response to Discord")
-	gu.SendTempResponse(component.ID, component.Token)
+	client.TemporaryResponse(&dc.InteractionCallbackInput{
+		InteractionID:    component.ID,
+		InteractionToken: component.Token,
+	})
 
-	var response gu.DiscordInteractionResponseData
+	var response *dt.InteractionCallbackData
 	var err error
 	switch componentType {
 	case "server":
@@ -28,13 +33,13 @@ func component(eventBody string) (output InteractionOutput) {
 	}
 	if err != nil {
 		log.Printf("Error performing server command: %v", err)
-		return InteractionOutput{}
+		return &dc.InteractionFollowupInput{}
 	}
 	log.Printf("Response from %v command: %v", componentType, response)
 
-	return InteractionOutput{
+	return &dc.InteractionFollowupInput{
 		ApplicationID:    component.ApplicationID,
 		InteractionToken: component.Token,
-		Response:         response,
+		Data:             response,
 	}
 }

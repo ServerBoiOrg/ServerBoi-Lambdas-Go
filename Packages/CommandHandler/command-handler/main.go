@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 
+	dc "discordhttpclient"
 	gu "generalutils"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -16,10 +17,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var ginLambda *ginadapter.GinLambda
-
 var (
+	ginLambda    *ginadapter.GinLambda
 	SERVER_TABLE = gu.GetEnvVar("SERVER_TABLE")
+	TOKEN        = gu.GetEnvVar("DISCORD_TOKEN")
+	client       = dc.CreateClient(&dc.CreateClientInput{
+		BotToken:   TOKEN,
+		ApiVersion: "v9",
+	})
 )
 
 func init() {
@@ -55,7 +60,7 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaRe
 	interactionType := getCommandType(event.Body)
 	log.Printf("Interaction Type: %v", interactionType)
 
-	var output InteractionOutput
+	var output *dc.InteractionFollowupInput
 	switch {
 	case interactionType == 1:
 		data, _ := json.Marshal(pong())
@@ -73,7 +78,11 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaRe
 		return lambdaResponse, err
 	}
 
-	gu.EditResponse(output.ApplicationID, output.InteractionToken, output.Response)
+	client.EditInteractionResponse(&dc.InteractionFollowupInput{
+		ApplicationID:    output.ApplicationID,
+		InteractionToken: output.InteractionToken,
+		Data:             output.Data,
+	})
 
 	//Probably not needed but eh
 	return events.APIGatewayProxyResponse{
@@ -81,12 +90,6 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaRe
 		Body:       "",
 	}, nil
 
-}
-
-type InteractionOutput struct {
-	ApplicationID    string
-	InteractionToken string
-	Response         gu.DiscordInteractionResponseData
 }
 
 func getCommandType(eventBody string) float64 {

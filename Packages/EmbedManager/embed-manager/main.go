@@ -6,16 +6,18 @@ import (
 	"log"
 	"strconv"
 	"strings"
-	"sync"
+	"time"
 
+	dc "discordhttpclient"
 	gu "generalutils"
+	ru "responseutils"
+
+	dt "github.com/awlsring/discordtypes"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/bwmarrin/discordgo"
-	embed "github.com/clinet/discordgo-embed"
 )
 
-var DISCORD_TOKEN = gu.GetEnvVar("DISCORD_TOKEN")
+var TOKEN = gu.GetEnvVar("DISCORD_TOKEN")
 
 type EmbedManagerPayload struct {
 	ChannelID string `json:"ChannelID"`
@@ -25,30 +27,124 @@ func handler(event map[string]interface{}) (bool, error) {
 	log.Printf("Event: %v", event)
 	params := convertEvent(event)
 
-	client := gu.CreateDiscordClient(gu.CreateDiscordClientInput{
-		BotToken:   DISCORD_TOKEN,
+	client := dc.CreateClient(&dc.CreateClientInput{
+		BotToken:   TOKEN,
 		ApiVersion: "v9",
 	})
 
-	messages, err := client.GetChannelMessages(params.ChannelID)
-	log.Printf("Messages: %v", len(messages))
-	if err != nil {
-		log.Fatalf("Error getting messages for channel %v", params.ChannelID)
+	var (
+		messages []*dt.Message
+		headers  *dc.DiscordHeaders
+		err      error
+	)
+	for {
+		messages, headers, err = client.GetChannelMessages(params.ChannelID)
+		if err != nil {
+			log.Fatalf("Error getting messages for channel %v", params.ChannelID)
+		}
+		done := dc.StatusCodeHandler(*headers)
+		if done {
+			break
+		}
 	}
-	var wg sync.WaitGroup
+
+	callTotal := 0
+	log.Printf("Embeds to update: %v", callTotal)
+	calls := make(chan *MutateMessageParams)
 	for _, message := range messages {
 		embeds := message.Embeds
 		for _, embed := range embeds {
-			wg.Add(1)
-			go analyzeEmbed(client, embed, message, &wg)
+			callTotal++
+			go analyzeEmbed(embed, message, calls)
 		}
 	}
-	wg.Wait()
+
+	for i := 0; i < callTotal; {
+		log.Printf("Making call %v.", (i + 1))
+		spotHeaders := doCall(client, <-calls)
+		i++
+		log.Printf("Call limit: %v", spotHeaders.Limit)
+		for c := 2; c < spotHeaders.Limit; c++ {
+			log.Printf("Making call %v", (i + 1))
+			doCall(client, <-calls)
+			i++
+		}
+		if i < callTotal {
+			log.Printf("Waiting: %v", spotHeaders.ResetAfter)
+			time.Sleep(time.Duration(spotHeaders.ResetAfter*1000) * time.Millisecond)
+		}
+	}
 	return true, nil
+
 }
 
 func main() {
 	lambda.Start(handler)
+}
+
+func doCall(client *dc.Client, call *MutateMessageParams) *dc.DiscordHeaders {
+	log.Printf("Doing call")
+	var (
+		headers *dc.DiscordHeaders
+		err     error
+	)
+	for {
+		if call.Post {
+			_, headers, err = client.EditMessage(&dc.EditInteractionMessageInput{
+				ChannelID: call.ChannelID,
+				MessageID: call.MessageID,
+				Data:      call.Data,
+			})
+		} else {
+			headers, err = client.DeleteMessage(&dc.DeleteMessageInput{
+				ChannelID: call.ChannelID,
+				MessageID: call.MessageID,
+			})
+		}
+		if err != nil {
+			log.Printf("Breaking. Error editing message %v: %v", call.MessageID, err)
+			break
+		}
+		log.Printf("Status Code: %v", headers.StatusCode)
+		if headers.StatusCode == 429 {
+			log.Printf("Throttled, waiting %v", headers.ResetAfter)
+			time.Sleep(time.Duration(headers.ResetAfter*1000) * time.Millisecond)
+		} else {
+			break
+		}
+	}
+	return headers
+}
+
+type MutateMessageParams struct {
+	MessageID string
+	ChannelID string
+	Post      bool
+	Data      *dt.EditMessageData
+}
+
+func analyzeEmbed(
+	embed *dt.Embed,
+	message *dt.Message,
+	out chan<- *MutateMessageParams,
+) {
+	log.Printf("Looking at message %v", message.ID)
+	data, err := updateServerEmbed(embed)
+	if err != nil {
+		out <- &MutateMessageParams{
+			MessageID: message.ID,
+			ChannelID: message.ChannelID,
+			Post:      false,
+			Data:      &dt.EditMessageData{},
+		}
+	} else {
+		out <- &MutateMessageParams{
+			MessageID: message.ID,
+			ChannelID: message.ChannelID,
+			Post:      true,
+			Data:      data,
+		}
+	}
 }
 
 type UpdateServerEmbedInput struct {
@@ -58,53 +154,18 @@ type UpdateServerEmbedInput struct {
 	Port   int
 }
 
-func analyzeEmbed(
-	client gu.DiscordClient,
-	embed *discordgo.MessageEmbed,
-	message discordgo.Message,
-	wg *sync.WaitGroup,
-) {
-	log.Printf("Looking at message %v", message.ID)
-	updateResponse, err := updateServerEmbed(embed)
-	log.Printf("Formed new embed")
-	if err != nil {
-		log.Printf("Error: %v", err)
-		client.DeleteMessage(message.ChannelID, message.ID)
-	} else {
-		var running bool
-		if strings.Contains(updateResponse.Status, "Running") {
-			running = true
-		} else {
-			running = false
-		}
-		resp, err := client.EditMessage(
-			message.ChannelID,
-			message.ID,
-			gu.FormServerEmbedResponseData(gu.FormServerEmbedResponseDataInput{
-				ServerEmbed: updateResponse.ServerEmbed,
-				Running:     running,
-			}),
-		)
-		if err != nil {
-			log.Printf("Error: %v", err)
-		}
-		log.Printf("Resp: %v", resp)
-	}
-	log.Printf("Done")
-	wg.Done()
-}
-
 type UpdateServerEmbedOutput struct {
-	ServerEmbed *embed.Embed
+	ServerEmbed *dt.Embed
 	ServerID    string
 	Status      string
 }
 
-func updateServerEmbed(embed *discordgo.MessageEmbed) (output UpdateServerEmbedOutput, err error) {
+func updateServerEmbed(embed *dt.Embed) (output *dt.EditMessageData, err error) {
 	var (
 		ip          string
 		port        int
 		status      string
+		running     bool
 		address     string
 		location    string
 		application string
@@ -137,14 +198,17 @@ func updateServerEmbed(embed *discordgo.MessageEmbed) (output UpdateServerEmbedO
 
 	if strings.Contains(status, "Running") {
 		log.Printf("Getting server info")
-		a2sInfo, err := gu.CallServer(ip, port)
+		a2sInfo, err := ru.CallServer(ip, port)
 		if err != nil {
 			log.Printf("Error getting server info, getting server item")
 			server, err := gu.GetServerFromID(serverID)
 			if err != nil {
-				return UpdateServerEmbedOutput{}, err
+				return &dt.EditMessageData{}, err
 			}
-			status = gu.GetStatus(server)
+			status, err = getStatus(server)
+			if err != nil {
+				return &dt.EditMessageData{}, err
+			}
 			players = "Error contacting server"
 		} else {
 			players = fmt.Sprintf("%v/%v", a2sInfo.Players, a2sInfo.MaxPlayers)
@@ -152,9 +216,12 @@ func updateServerEmbed(embed *discordgo.MessageEmbed) (output UpdateServerEmbedO
 	} else {
 		server, err := gu.GetServerFromID(serverID)
 		if err != nil {
-			return UpdateServerEmbedOutput{}, err
+			return &dt.EditMessageData{}, err
 		}
-		status = gu.GetStatus(server)
+		status, err = getStatus(server)
+		if err != nil {
+			return &dt.EditMessageData{}, err
+		}
 		log.Printf("Status: %v", status)
 		if strings.Contains(status, "Running") {
 			ip, err := server.GetIPv4()
@@ -163,7 +230,7 @@ func updateServerEmbed(embed *discordgo.MessageEmbed) (output UpdateServerEmbedO
 				log.Printf("Error getting IP: %v", err)
 				address = "`unknown`"
 			}
-			a2sInfo, err := gu.CallServer(ip, port)
+			a2sInfo, err := ru.CallServer(ip, port)
 			if err != nil {
 				address = fmt.Sprintf("%v:%v", ip, port)
 				players = "Error contacting server"
@@ -175,9 +242,12 @@ func updateServerEmbed(embed *discordgo.MessageEmbed) (output UpdateServerEmbedO
 	}
 	color := setColorFromStatus(status)
 	footerParts := strings.Split(embed.Footer.Text, "|")
-	footer := fmt.Sprintf("%v|%v| %v", footerParts[0], footerParts[1], gu.MakeTimestamp())
+	footer := fmt.Sprintf("%v|%v| %v", footerParts[0], footerParts[1], ru.MakeTimestamp())
+	if strings.Contains(status, "Running") {
+		running = true
+	}
 
-	serverEmbed := gu.FormServerEmbed(gu.ServerData{
+	serverEmbed := ru.CreateServerEmbed(&ru.ServerData{
 		Name:        embed.Title,
 		Description: embed.Description,
 		Status:      status,
@@ -190,10 +260,9 @@ func updateServerEmbed(embed *discordgo.MessageEmbed) (output UpdateServerEmbedO
 		Thumbnail:   embed.Thumbnail.URL,
 	})
 
-	return UpdateServerEmbedOutput{
-		ServerEmbed: serverEmbed,
-		ServerID:    serverID,
-		Status:      status,
+	return &dt.EditMessageData{
+		Embeds:     []*dt.Embed{serverEmbed},
+		Components: ru.ServerEmbedComponents(running),
 	}, nil
 }
 
@@ -209,14 +278,32 @@ func setColorFromStatus(status string) int {
 
 	switch state {
 	case "green":
-		return gu.DiscordGreen
+		return ru.DiscordGreen
 	case "yellow":
-		return gu.Gold
+		return ru.Gold
 	case "red":
-		return gu.DiscordRed
+		return ru.DiscordRed
 	default:
 		return 0
 	}
+}
+
+func getStatus(server gu.Server) (string, error) {
+	status, err := server.GetStatus()
+	if err != nil {
+		return "", err
+	}
+	state, stateEmoji, err := ru.TranslateState(
+		server.GetBaseService().Service,
+		status,
+	)
+	if err != nil {
+		log.Println(err)
+		status = "Unknown"
+	} else {
+		status = fmt.Sprintf("%v %v", stateEmoji, state)
+	}
+	return status, nil
 }
 
 func convertEvent(event map[string]interface{}) (params EmbedManagerPayload) {

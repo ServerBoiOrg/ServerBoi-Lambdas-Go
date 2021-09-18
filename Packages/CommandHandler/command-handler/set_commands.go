@@ -6,10 +6,11 @@ import (
 	gu "generalutils"
 	"log"
 
+	dt "github.com/awlsring/discordtypes"
 	"github.com/linode/linodego"
 )
 
-func routeSetCommand(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData) {
+func routeSetCommand(command *dt.Interaction) (response *dt.InteractionCallbackData) {
 	setCommand := command.Data.Options[0].Name
 	setOptions := command.Data.Options[0].Options[0]
 	log.Printf("Set Commmad Option: %v", setCommand)
@@ -24,13 +25,12 @@ func routeSetCommand(command gu.DiscordInteractionApplicationCommand) (response 
 		message = fmt.Sprintf("Set command `%v` is unknown.", setCommand)
 	}
 
-	formRespInput := gu.FormResponseInput{
-		"Content": message,
+	return &dt.InteractionCallbackData{
+		Content: message,
 	}
-	return gu.FormResponseData(formRespInput)
 }
 
-func personalCommand(command gu.DiscordApplicationCommandOption, ownerID string) (message string) {
+func personalCommand(command *dt.ApplicationCommandInteractionDataOption, ownerID string) (message string) {
 	personalCommand := command.Name
 	personalOptions := command.Options
 	log.Printf("Personal Commmad Option: %v", personalCommand)
@@ -53,7 +53,7 @@ func personalCommand(command gu.DiscordApplicationCommandOption, ownerID string)
 	return message
 }
 
-func profileCommand(command gu.DiscordApplicationCommandOption, roles []string) (message string) {
+func profileCommand(command *dt.ApplicationCommandInteractionDataOption, roles []string) (message string) {
 	profileCommand := command.Name
 	profileOptions := command.Options
 
@@ -83,7 +83,7 @@ func profileCommand(command gu.DiscordApplicationCommandOption, roles []string) 
 	return message
 }
 
-func sortProfileOptionFields(setOptions []gu.DiscordApplicationCommandOption) (accountItem string, role string) {
+func sortProfileOptionFields(setOptions []*dt.ApplicationCommandInteractionDataOption) (accountItem string, role string) {
 	for _, option := range setOptions {
 		switch option.Type {
 		case 3:
@@ -97,7 +97,7 @@ func sortProfileOptionFields(setOptions []gu.DiscordApplicationCommandOption) (a
 
 func setAWSItem(ownerID string, accountID string) string {
 	log.Printf("Setting AWS Account for Owner %v", ownerID)
-	err := gu.UpdateOwnerItem(gu.UpdateOwnerItemInput{
+	err := gu.UpdateOwnerItem(&gu.UpdateOwnerItemInput{
 		OwnerID:    ownerID,
 		FieldName:  "AWSAccountID",
 		FieldValue: accountID,
@@ -115,7 +115,7 @@ func setLinodeItem(ownerID string, apiKey string) string {
 	if err != nil {
 		return "Unable to validate Api Key. Check the key's scopes and ensure the key has valid permissions."
 	} else {
-		err = gu.UpdateOwnerItem(gu.UpdateOwnerItemInput{
+		err = gu.UpdateOwnerItem(&gu.UpdateOwnerItemInput{
 			OwnerID:    ownerID,
 			FieldName:  "LinodeApiKey",
 			FieldValue: apiKey,

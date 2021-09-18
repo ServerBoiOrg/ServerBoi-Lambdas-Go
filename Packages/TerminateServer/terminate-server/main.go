@@ -6,7 +6,11 @@ import (
 	"fmt"
 	"log"
 
+	dc "discordhttpclient"
 	gu "generalutils"
+	ru "responseutils"
+
+	dt "github.com/awlsring/discordtypes"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -15,7 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 )
 
-var TOKEN_BUCKET = gu.GetEnvVar("TOKEN_BUCKET")
+var TOKEN = gu.GetEnvVar("DISCORD_TOKEN")
 
 type TerminateServerPayload struct {
 	ServerID      string `json:"ServerID"`
@@ -28,13 +32,19 @@ func handler(event map[string]interface{}) (bool, error) {
 	log.Printf("Event: %v", event)
 	params := convertEvent(event)
 
-	updateEmbed(UpdateEmbedInput{
+	client := dc.CreateClient(&dc.CreateClientInput{
+		BotToken:   TOKEN,
+		ApiVersion: "v9",
+	})
+
+	updateEmbed(&UpdateEmbedInput{
 		params.ExecutionName,
 		params.ApplicationID,
 		params.Token,
 		"🟢 Running",
 		"Terminating",
-		gu.DiscordGreen,
+		ru.DiscordGreen,
+		client,
 	})
 
 	server, err := gu.GetServerFromID(params.ServerID)
@@ -71,13 +81,14 @@ func handler(event map[string]interface{}) (bool, error) {
 	// Delete server item
 	deleteServerItem(server.GetBaseService().ServerID)
 
-	updateEmbed(UpdateEmbedInput{
+	updateEmbed(&UpdateEmbedInput{
 		params.ExecutionName,
 		params.ApplicationID,
 		params.Token,
 		"✔️ Finished",
 		"Complete",
-		gu.DarkGreen,
+		ru.DarkGreen,
+		client,
 	})
 
 	return true, nil
@@ -110,23 +121,34 @@ type UpdateEmbedInput struct {
 	Status           string
 	Stage            string
 	Color            int
+	Client           *dc.Client
 }
 
-func updateEmbed(input UpdateEmbedInput) {
-	embedInput := gu.FormWorkflowEmbedInput{
+func updateEmbed(input *UpdateEmbedInput) {
+	embed := ru.CreateWorkflowEmbed(&ru.CreateWorkflowEmbedInput{
 		Name:        "Terminate-Workflow",
 		Description: fmt.Sprintf("WorkflowID: %s", input.ExecutionName),
 		Status:      input.Status,
 		Stage:       input.Stage,
 		Color:       input.Color,
-	}
-	workflowEmbed := gu.FormWorkflowEmbed(embedInput)
+	})
 
-	gu.EditResponse(
-		input.ApplicationID,
-		input.InteractionToken,
-		gu.FormWorkflowResponseData(workflowEmbed),
-	)
+	for {
+		_, headers, err := input.Client.EditInteractionResponse(&dc.InteractionFollowupInput{
+			ApplicationID:    input.ApplicationID,
+			InteractionToken: input.InteractionToken,
+			Data: &dt.InteractionCallbackData{
+				Embeds: []*dt.Embed{embed},
+			},
+		})
+		if err != nil {
+			log.Fatalf("Error editing embed message: %v", err)
+		}
+		done := dc.StatusCodeHandler(*headers)
+		if done {
+			break
+		}
+	}
 }
 
 func convertEvent(event map[string]interface{}) (params TerminateServerPayload) {

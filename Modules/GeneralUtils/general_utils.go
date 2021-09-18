@@ -79,17 +79,6 @@ func verifyAWSRegion(region string) error {
 	return errors.New(fmt.Sprintf("* region: `%v` is not an AWS Region or ServerBoi Region", region))
 }
 
-func FormInvalidParametersResponse(errors []string) DiscordInteractionResponseData {
-	message := "Command parameters had the following errors:"
-	for _, errorMessage := range errors {
-		message = fmt.Sprintf("%v\n%v", message, errorMessage)
-	}
-	formRespInput := FormResponseInput{
-		"Content": message,
-	}
-	return FormResponseData(formRespInput)
-}
-
 func DecodeToPublicKey(applicationPublicKey string) ed25519.PublicKey {
 	rawKey := []byte(applicationPublicKey)
 	byteKey := make([]byte, hex.DecodedLen(len(rawKey)))

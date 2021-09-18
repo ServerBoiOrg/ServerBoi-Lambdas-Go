@@ -10,6 +10,9 @@ import (
 	"time"
 
 	gu "generalutils"
+	ru "responseutils"
+
+	dt "github.com/awlsring/discordtypes"
 )
 
 type CreateServerWorkflowInput struct {
@@ -220,22 +223,14 @@ func ownerHasAccountForService(service string, ownerId string) bool {
 	return false
 }
 
-// This is super gross
-func sortRoleResolveForName(commandOption gu.DiscordApplicationCommandData) (string, error) {
-	if roles, ok := commandOption.Resolved["roles"]; ok {
-		roles := roles.(map[string]interface{})
-		for _, snowflake := range roles {
-			snowflake := snowflake.(map[string]interface{})
-			name := snowflake["name"].(string)
-			return name, nil
-		}
-	} else {
-		log.Printf("bad")
+func getResolvedRoleName(commandOption *dt.InteractionData) (string, error) {
+	for _, role := range commandOption.Resolved.Roles {
+		return role.Name, nil
 	}
 	return "", errors.New("No role")
 }
 
-func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData) {
+func createServer(command *dt.Interaction) (response *dt.InteractionCallbackData) {
 	log.Printf("Running create command")
 	application := command.Data.Options[0].Name
 	log.Printf("Application: %v", application)
@@ -252,7 +247,7 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 		for _, e := range errors {
 			message = fmt.Sprintf("%v* %v", message, e)
 		}
-		return gu.DiscordInteractionResponseData{
+		return &dt.InteractionCallbackData{
 			Content: message,
 		}
 	}
@@ -268,7 +263,7 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 	)
 	if verifiedParams.ProfileID != "" {
 		log.Printf("Create command with profile")
-		roleName, err := sortRoleResolveForName(command.Data)
+		roleName, err := getResolvedRoleName(command.Data)
 		if err == nil {
 			ownerID = verifiedParams.ProfileID
 			ownerName = roleName
@@ -283,7 +278,6 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 		authorized = true
 	}
 
-	var formRespInput gu.FormResponseInput
 	hasAccount := ownerHasAccountForService(verifiedParams.Service, ownerID)
 	if authorized && hasAccount {
 		log.Printf("Application to create: %v", application)
@@ -321,18 +315,16 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 		gu.StartSfnExecution(provisionArn, executionName, inputString)
 
 		log.Printf("Forming workflow embed")
-		embedInput := gu.FormWorkflowEmbedInput{
+		workflowEmbed := ru.CreateWorkflowEmbed(&ru.CreateWorkflowEmbedInput{
 			Name:        "Provision-Server",
 			Description: fmt.Sprintf("WorkflowID: %s", executionName),
 			Status:      "⏳ Pending",
 			Stage:       "Starting...",
-			Color:       gu.Greyple,
-		}
-		workflowEmbed := gu.FormWorkflowEmbed(embedInput)
-
+			Color:       ru.Greyple,
+		})
 		log.Printf("Prepping response data")
-		formRespInput = gu.FormResponseInput{
-			"Embeds": workflowEmbed,
+		response = &dt.InteractionCallbackData{
+			Embeds: []*dt.Embed{workflowEmbed},
 		}
 	} else {
 		var message string
@@ -341,10 +333,10 @@ func createServer(command gu.DiscordInteractionApplicationCommand) (response gu.
 		} else {
 			message = fmt.Sprintf("No account registered for chosen service.")
 		}
-		formRespInput = gu.FormResponseInput{
-			"Content": message,
+		response = &dt.InteractionCallbackData{
+			Content: message,
 		}
 	}
 
-	return gu.FormResponseData(formRespInput)
+	return response
 }

@@ -1,45 +1,47 @@
-package generalutils
+package responseutils
 
-func ServerEmbedComponents(running bool) []DiscordComponentData {
-	startComponent := DiscordComponentData{
+import dt "github.com/awlsring/discordtypes"
+
+func ServerEmbedComponents(running bool) []*dt.Component {
+	startComponent := &dt.Component{
 		Type:     2,
 		Label:    "Start",
 		Style:    1,
 		Disabled: running,
 		CustomID: "server:start",
-		Emoji: DiscordEmoji{
+		Emoji: &dt.Emoji{
 			Name: "🟢",
 		},
 	}
 
-	stopComponent := DiscordComponentData{
+	stopComponent := &dt.Component{
 		Type:     2,
 		Label:    "Stop",
 		Style:    1,
 		Disabled: !running,
 		CustomID: "server:stop",
-		Emoji: DiscordEmoji{
+		Emoji: &dt.Emoji{
 			Name: "🔴",
 		},
 	}
 
-	rebootComponent := DiscordComponentData{
+	rebootComponent := &dt.Component{
 		Type:     2,
 		Label:    "Reboot",
 		Style:    1,
 		Disabled: !running,
 		CustomID: "server:reboot",
-		Emoji: DiscordEmoji{
+		Emoji: &dt.Emoji{
 			Name: "🔁",
 		},
 	}
 
-	componentData := DiscordComponentData{
+	componentData := &dt.Component{
 		Type: 1,
-		Components: []DiscordComponentData{
+		Components: []*dt.Component{
 			startComponent, stopComponent, rebootComponent,
 		},
 	}
 
-	return []DiscordComponentData{componentData}
+	return []*dt.Component{componentData}
 }

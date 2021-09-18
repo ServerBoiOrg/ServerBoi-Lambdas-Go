@@ -39,7 +39,7 @@ func formBaseServerItem(
 	service string,
 	port int,
 	serverID string,
-	authorized gu.Authorized,
+	authorized *gu.Authorized,
 ) map[string]dynamotypes.AttributeValue {
 	portString := strconv.Itoa(port)
 

@@ -3,9 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	gu "generalutils"
 	"log"
 	"strings"
+
+	dc "discordhttpclient"
+	gu "generalutils"
+	ru "responseutils"
+
+	dt "github.com/awlsring/discordtypes"
 )
 
 type ServerCommandResponse struct {
@@ -13,7 +18,7 @@ type ServerCommandResponse struct {
 	Result bool
 }
 
-func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData) {
+func routeServerCommand(command *dt.Interaction) (response *dt.InteractionCallbackData) {
 	serverCommand := command.Data.Options[0].Name
 	log.Printf("Server Commmad Option: %v", serverCommand)
 
@@ -21,9 +26,9 @@ func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (respon
 	log.Printf("Target Server: %v", serverID)
 	server, err := gu.GetServerFromID(serverID)
 	if err != nil {
-		return gu.FormResponseData(gu.FormResponseInput{
-			"Content": fmt.Sprintf("Server %v can't be found.", serverID),
-		})
+		return &dt.InteractionCallbackData{
+			Content: fmt.Sprintf("Server %v can't be found.", serverID),
+		}
 	}
 	log.Printf("Server Object: %s", server)
 	log.Printf("Running %s on server %s", serverCommand, serverID)
@@ -63,40 +68,7 @@ func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (respon
 			err = server.Restart()
 			message = "Restarting server"
 		case "relist":
-			status := gu.GetStatus(server)
-			var running bool
-			if strings.Contains(status, "Running") {
-				running = true
-			} else {
-				running = false
-			}
-			embed := gu.CreateServerEmbedFromServer(server)
-			log.Printf("Getting Channel for Guild")
-			channelID, err := gu.GetChannelIDFromGuildID(command.GuildID)
-			if err != nil {
-				log.Printf("Error getting channelID from dynamo: %v", err)
-				message = fmt.Sprintf("Error getting channelID from dynamo: %v", err)
-			} else {
-				client := gu.CreateDiscordClient(gu.CreateDiscordClientInput{
-					BotToken:   gu.GetEnvVar("DISCORD_TOKEN"),
-					ApiVersion: "v9",
-				})
-				log.Printf("Posting message")
-				resp, err := client.CreateMessage(
-					channelID,
-					gu.FormServerEmbedResponseData(gu.FormServerEmbedResponseDataInput{
-						ServerEmbed: embed,
-						Running:     running,
-					}),
-				)
-				if err != nil {
-					log.Printf("Error getting creating message in Channel: %v", err)
-					message = fmt.Sprintf("Error getting creating message in Channel: %v", err)
-				} else {
-					log.Printf("Response form server embed post: %v", resp)
-					message = fmt.Sprintf("Server %v embed posted in server channel", serverID)
-				}
-			}
+
 		case "terminate":
 			input := ServerTerminateInput{
 				Token:         command.Token,
@@ -117,10 +89,9 @@ func routeServerCommand(command gu.DiscordInteractionApplicationCommand) (respon
 	} else {
 		message = "You do not have authorization to run commands on this server."
 	}
-	formRespInput := gu.FormResponseInput{
-		"Content": message,
+	return &dt.InteractionCallbackData{
+		Content: message,
 	}
-	return gu.FormResponseData(formRespInput)
 }
 
 type ServerTerminateInput struct {
@@ -137,7 +108,66 @@ type TerminateWorkflow struct {
 	ExecutionName string
 }
 
-func serverTerminate(input ServerTerminateInput) (data gu.DiscordInteractionResponseData, err error) {
+func serverRelist(server gu.Server, guildID string) (message string) {
+	status, err := server.GetStatus()
+	if err != nil {
+		return "Error getting server status."
+	}
+	state, _, err := ru.TranslateState(
+		server.GetBaseService().Service,
+		status,
+	)
+	if err != nil {
+		return "Error getting server status."
+	}
+	var running bool
+	if strings.Contains(state, "Running") {
+		running = true
+	} else {
+		running = false
+	}
+	serverInfo := server.GetBaseService()
+	ip, err := server.GetIPv4()
+	if err != nil {
+		return "Error getting server status."
+	}
+	embed := ru.CreateServerEmbed(ru.GetServerData(&ru.GetServerDataInput{
+		Name:        serverInfo.ServerName,
+		ID:          serverInfo.ServerID,
+		IP:          ip,
+		Status:      status,
+		Region:      serverInfo.Region,
+		Port:        serverInfo.Port,
+		Application: serverInfo.Application,
+		Owner:       serverInfo.Owner,
+		Service:     serverInfo.Service,
+	}))
+	log.Printf("Getting Channel for Guild")
+	channelID, err := gu.GetChannelIDFromGuildID(guildID)
+	if err != nil {
+		log.Printf("Error getting channelID from dynamo: %v", err)
+		message = fmt.Sprintf("Error getting channelID from dynamo: %v", err)
+	} else {
+		log.Printf("Posting message")
+		resp, _, err := client.CreateMessage(&dc.CreateMessageInput{
+			ChannelID: channelID,
+			Data: &dt.CreateMessageData{
+				Embeds:     []*dt.Embed{embed},
+				Components: ru.ServerEmbedComponents(running),
+			},
+		})
+		if err != nil {
+			log.Printf("Error getting creating message in Channel: %v", err)
+			message = fmt.Sprintf("Error getting creating message in Channel: %v", err)
+		} else {
+			log.Printf("Response form server embed post: %v", resp)
+			message = fmt.Sprintf("Server %v embed posted in server channel", serverInfo.ServerID)
+		}
+	}
+	return message
+}
+
+func serverTerminate(input ServerTerminateInput) (data *dt.InteractionCallbackData, err error) {
 	executionName := gu.GenerateWorkflowUUID("Terminate")
 	terminateArn := gu.GetEnvVar("TERMINATE_ARN")
 
@@ -155,18 +185,15 @@ func serverTerminate(input ServerTerminateInput) (data gu.DiscordInteractionResp
 
 	gu.StartSfnExecution(terminateArn, executionName, inputString)
 
-	embedInput := gu.FormWorkflowEmbedInput{
+	workflowEmbed := ru.CreateWorkflowEmbed(&ru.CreateWorkflowEmbedInput{
 		Name:        "Terminate-Workflow",
 		Description: fmt.Sprintf("WorkflowID: %s", executionName),
 		Status:      "⏳ Pending",
 		Stage:       "Starting...",
-		Color:       gu.Greyple,
-	}
-	workflowEmbed := gu.FormWorkflowEmbed(embedInput)
+		Color:       ru.Greyple,
+	})
 
-	formRespInput := gu.FormResponseInput{
-		"Embeds": workflowEmbed,
-	}
-
-	return gu.FormResponseData(formRespInput), nil
+	return &dt.InteractionCallbackData{
+		Embeds: []*dt.Embed{workflowEmbed},
+	}, nil
 }

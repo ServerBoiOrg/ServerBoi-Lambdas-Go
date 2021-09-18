@@ -6,13 +6,15 @@ import (
 	gu "generalutils"
 	"log"
 
+	dt "github.com/awlsring/discordtypes"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	dynamotypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
-func routeAuthorizeCommand(command gu.DiscordInteractionApplicationCommand) (response gu.DiscordInteractionResponseData) {
+func routeAuthorizeCommand(command *dt.Interaction) (response *dt.InteractionCallbackData) {
 	authorizeCommand := command.Data.Options[0].Name
 	authOptions := command.Data.Options[0].Options
 	log.Printf("Authorize Commmad Option: %v", authorizeCommand)
@@ -21,9 +23,9 @@ func routeAuthorizeCommand(command gu.DiscordInteractionApplicationCommand) (res
 	log.Printf("Target Server: %v", serverID)
 	server, err := gu.GetServerFromID(serverID)
 	if err != nil {
-		return gu.FormResponseData(gu.FormResponseInput{
-			"Content": fmt.Sprintf("Server %v can't be found.", serverID),
-		})
+		return &dt.InteractionCallbackData{
+			Content: fmt.Sprintf("Server %v can't be found.", serverID),
+		}
 	}
 	log.Printf("Server Object: %s", server)
 	log.Printf("Running %s on server %s", authorizeCommand, serverID)
@@ -64,10 +66,9 @@ func routeAuthorizeCommand(command gu.DiscordInteractionApplicationCommand) (res
 	} else {
 		message = "You do not have authorization to authorize others for this server."
 	}
-	formRespInput := gu.FormResponseInput{
-		"Content": message,
+	return &dt.InteractionCallbackData{
+		Content: message,
 	}
-	return gu.FormResponseData(formRespInput)
 }
 
 func updateAuthorization(users []string, roles []string, serverID string) {
@@ -126,7 +127,7 @@ func buildAuthRoles(roles []string) []dynamotypes.AttributeValue {
 type AddItemToAuthInput struct {
 	Type        int
 	Server      gu.Server
-	AuthOptions []gu.DiscordApplicationCommandOption
+	AuthOptions []*dt.ApplicationCommandInteractionDataOption
 }
 
 func AddItemToAuth(input AddItemToAuthInput) string {
@@ -134,33 +135,43 @@ func AddItemToAuth(input AddItemToAuthInput) string {
 		id       string
 		message  string
 		typeName string
+		exists   bool
+		users    []string
+		roles    []string
 	)
-	switch input.Type {
-	case 6:
-		typeName = "user"
-	case 8:
-		typeName = "role"
-	}
-
 	for _, option := range input.AuthOptions {
 		if option.Type == input.Type {
+			typeName = option.Name
 			id = option.Value
 		}
 	}
-	roles := input.Server.AuthorizedRoles()
-	var exists bool
-	for _, role := range roles {
-		if role == id {
-			exists = true
-		}
+
+	users = input.Server.AuthorizedUsers()
+	roles = input.Server.AuthorizedRoles()
+
+	switch input.Type {
+	case 6:
+		exists = checkAuth(id, users)
+		users = append(users, id)
+	case 8:
+		exists = checkAuth(id, roles)
+		roles = append(roles, id)
 	}
+
 	if exists {
 		message = fmt.Sprintf("Specified %v already authorized for server.", typeName)
 	} else {
-		roles = append(roles, id)
-		updateAuthorization(input.Server.AuthorizedUsers(), roles, input.Server.GetBaseService().ServerID)
-
+		updateAuthorization(users, roles, input.Server.GetBaseService().ServerID)
 		message = "Authorization updated."
 	}
 	return message
+}
+
+func checkAuth(item string, list []string) bool {
+	for _, listItem := range list {
+		if listItem == item {
+			return true
+		}
+	}
+	return false
 }

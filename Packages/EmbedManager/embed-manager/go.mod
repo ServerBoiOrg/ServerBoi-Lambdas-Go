@@ -1,12 +1,17 @@
 require (
+	discordhttpclient v0.0.0
 	generalutils v0.0.0
+	github.com/awlsring/discordtypes v0.1.6
 	github.com/aws/aws-lambda-go v1.23.0
-	github.com/bwmarrin/discordgo v0.23.2
-	github.com/clinet/discordgo-embed v0.0.0-20190411043415-d754bc1a576c
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e // indirect
+	responseutils v0.0.0
 )
 
 replace generalutils => ../../../Modules/GeneralUtils
+
+replace discordhttpclient => ../../../Modules/DiscordHttpClient
+
+replace responseutils => ../../../Modules/ResponseUtils
 
 module EmbedManager
 

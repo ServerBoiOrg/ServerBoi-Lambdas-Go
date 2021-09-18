@@ -16,6 +16,7 @@ func CreateLinodeClient(apiKey string) linodego.Client {
 			Source: tokenSource,
 		},
 	}
+	// return linodego.NewClient(oauth2Client)
 	return linodego.NewClient(oauth2Client)
 }
 
@@ -87,8 +88,17 @@ func (server LinodeServer) GetIPv4() (string, error) {
 	return fmt.Sprintf("%v", linode.IPv4[0]), nil
 }
 
-func (server LinodeServer) GetBaseService() BaseServer {
-	return BaseServer{
+func (server LinodeServer) GetStatus() (string, error) {
+	client := CreateLinodeClient(server.ApiKey)
+	linode, err := client.GetInstance(context.Background(), server.LinodeID)
+	if err != nil {
+		return "", err
+	}
+	return string(linode.Status), nil
+}
+
+func (server LinodeServer) GetBaseService() *BaseServer {
+	return &BaseServer{
 		ServerID:    server.ServerID,
 		Application: server.Application,
 		ServerName:  server.ServerName,
@@ -96,9 +106,6 @@ func (server LinodeServer) GetBaseService() BaseServer {
 		Owner:       server.Owner,
 		OwnerID:     server.OwnerID,
 		Port:        server.Port,
+		Region:      server.Location,
 	}
-}
-
-func (server LinodeServer) GetServerBoiRegion() ServerBoiRegion {
-	return FormServerBoiRegion(server.Service, server.Location)
 }
