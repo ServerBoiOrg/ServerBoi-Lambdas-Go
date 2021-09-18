@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	dc "discordhttpclient"
 	gu "generalutils"
@@ -78,11 +79,18 @@ func Handler(ctx context.Context, event events.APIGatewayProxyRequest) (lambdaRe
 		return lambdaResponse, err
 	}
 
-	client.EditInteractionResponse(&dc.InteractionFollowupInput{
-		ApplicationID:    output.ApplicationID,
-		InteractionToken: output.InteractionToken,
-		Data:             output.Data,
-	})
+	for {
+		_, headers, _ := client.EditInteractionResponse(&dc.InteractionFollowupInput{
+			ApplicationID:    output.ApplicationID,
+			InteractionToken: output.InteractionToken,
+			Data:             output.Data,
+		})
+		if headers.StatusCode == 429 {
+			log.Printf("Thottled, waiting")
+			time.Sleep(time.Duration(headers.ResetAfter*1000) * time.Millisecond)
+		}
+		break
+	}
 
 	//Probably not needed but eh
 	return events.APIGatewayProxyResponse{

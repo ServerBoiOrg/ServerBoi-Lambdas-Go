@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"time"
 
 	dc "discordhttpclient"
 
@@ -17,10 +18,17 @@ func command(eventBody string) (output *dc.InteractionFollowupInput) {
 	json.Unmarshal([]byte(eventBody), &command)
 
 	log.Printf("Sending temporary response to Discord")
-	client.TemporaryResponse(&dc.InteractionCallbackInput{
-		InteractionID:    command.ID,
-		InteractionToken: command.Token,
-	})
+	for {
+		headers, _ := client.TemporaryResponse(&dc.InteractionCallbackInput{
+			InteractionID:    command.ID,
+			InteractionToken: command.Token,
+		})
+		if headers.StatusCode == 429 {
+			log.Printf("Thottled, waiting")
+			time.Sleep(time.Duration(headers.ResetAfter*1000) * time.Millisecond)
+		}
+		break
+	}
 
 	log.Printf("Command Option: %v", command.Data.Name)
 	var response *dt.InteractionCallbackData

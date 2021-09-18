@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"strings"
+	"time"
 
 	dt "github.com/awlsring/discordtypes"
 )
@@ -20,10 +21,17 @@ func component(eventBody string) (output *dc.InteractionFollowupInput) {
 	componentType := customSplit[0]
 
 	log.Printf("Sending temporary response to Discord")
-	client.TemporaryResponse(&dc.InteractionCallbackInput{
-		InteractionID:    component.ID,
-		InteractionToken: component.Token,
-	})
+	for {
+		headers, _ := client.TemporaryResponse(&dc.InteractionCallbackInput{
+			InteractionID:    component.ID,
+			InteractionToken: component.Token,
+		})
+		if headers.StatusCode == 429 {
+			log.Printf("Thottled, waiting")
+			time.Sleep(time.Duration(headers.ResetAfter*1000) * time.Millisecond)
+		}
+		break
+	}
 
 	var response *dt.InteractionCallbackData
 	var err error

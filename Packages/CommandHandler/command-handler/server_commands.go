@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	dc "discordhttpclient"
 	gu "generalutils"
@@ -149,13 +150,25 @@ func serverRelist(server gu.Server, guildID string) (message string) {
 		message = fmt.Sprintf("Error getting channelID from dynamo: %v", err)
 	} else {
 		log.Printf("Posting message")
-		resp, _, err := client.CreateMessage(&dc.CreateMessageInput{
-			ChannelID: channelID,
-			Data: &dt.CreateMessageData{
-				Embeds:     []*dt.Embed{embed},
-				Components: ru.ServerEmbedComponents(running),
-			},
-		})
+		var (
+			resp    *dt.Message
+			headers *dc.DiscordHeaders
+			err     error
+		)
+		for {
+			resp, headers, err = client.CreateMessage(&dc.CreateMessageInput{
+				ChannelID: channelID,
+				Data: &dt.CreateMessageData{
+					Embeds:     []*dt.Embed{embed},
+					Components: ru.ServerEmbedComponents(running),
+				},
+			})
+			if headers.StatusCode == 429 {
+				log.Printf("Thottled, waiting")
+				time.Sleep(time.Duration(headers.ResetAfter*1000) * time.Millisecond)
+			}
+			break
+		}
 		if err != nil {
 			log.Printf("Error getting creating message in Channel: %v", err)
 			message = fmt.Sprintf("Error getting creating message in Channel: %v", err)
