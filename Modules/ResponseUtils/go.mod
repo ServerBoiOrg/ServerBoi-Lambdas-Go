@@ -1,4 +1,4 @@
-module github.com/serverboiorg/serverboi-go-lambdas/responseutils
+module github.com/serverboiorg/serverboi-go-lambdas/modules/responseutils
 
 go 1.16
 
