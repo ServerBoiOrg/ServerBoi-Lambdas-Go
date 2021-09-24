@@ -1,6 +1,6 @@
 {
-  "ExecutionName": "Provision-12b779d8",
-  "Application": "ns2",
+  "ExecutionName": "Provision-TestLinode",
+  "Application": "valheim",
   "OwnerID": "885046409554980884",
   "Owner": "Server-Profile",
   "InteractionID": "886116042005418005",
@@ -9,8 +9,10 @@
   "GuildID": "653100420687855616",
   "Url": "https://api.serverboi.io",
   "Service": "linode",
-  "Name": "ServerBoi-NS2",
+  "Name": "ServerBoi-Valheim",
   "Region": "us-west",
   "Private": false,
+  "ClientPort": "0",
+  "QueryPort": "0",
   "IsRole": true
 }

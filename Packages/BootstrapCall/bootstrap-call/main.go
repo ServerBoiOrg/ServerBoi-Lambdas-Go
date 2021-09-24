@@ -17,12 +17,7 @@ import (
 var TOKEN_BUCKET = gu.GetEnvVar("TOKEN_BUCKET")
 
 type BootstrapCallPayload struct {
-	ApplicationID    string `json:"application_id"`
-	ExecutionName    string `json:"execution_name"`
-	InteractionToken string `json:"interaction_token"`
-	Port             int    `json:"port"`
-	ServerID         string `json:"server_id"`
-	GuildID          string `json:"guild_id"`
+	ExecutionName string `json:"execution_name"`
 }
 
 func handler(event map[string]interface{}) (bool, error) {

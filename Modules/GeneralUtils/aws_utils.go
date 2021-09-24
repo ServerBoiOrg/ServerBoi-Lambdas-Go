@@ -104,10 +104,17 @@ func StartSfnExecution(statemachineArn string, executionName string, input strin
 
 func GetS3Client() *s3.Client {
 	cfg := getConfig()
-	log.Printf("Getting S3 client")
-	s3 := s3.NewFromConfig(cfg)
+	client := s3.NewFromConfig(cfg)
 
-	return s3
+	return client
+}
+
+func GetPresignedS3Client() *s3.PresignClient {
+	cfg := getConfig()
+	client := s3.NewFromConfig(cfg)
+	pre := s3.NewPresignClient(client)
+
+	return pre
 }
 
 func getRemoteCreds(region string, accountID string) *aws.CredentialsCache {
@@ -245,11 +252,31 @@ func GetOwnerItem(ownerID string) (ownerItem *OwnerItem, err error) {
 	return ownerItem, nil
 }
 
+func ServerIDExists(serverID string) (bool, error) {
+	dynamo := GetDynamo()
+	serverTable := GetEnvVar("SERVER_TABLE")
+
+	response, err := dynamo.GetItem(context.Background(), &dynamodb.GetItemInput{
+		TableName: aws.String(serverTable),
+		Key: map[string]types.AttributeValue{
+			"ServerID": &types.AttributeValueMemberS{Value: serverID},
+		},
+	})
+	if err != nil {
+		return false, err
+	}
+
+	if len(response.Item) == 0 {
+		return false, nil
+	} else {
+		return true, nil
+	}
+}
+
 func GetServerFromID(serverID string) (server Server, err error) {
 	dynamo := GetDynamo()
 	serverTable := GetEnvVar("SERVER_TABLE")
 
-	log.Printf("Querying server %v item from Dynamo", serverID)
 	response, err := dynamo.GetItem(context.Background(), &dynamodb.GetItemInput{
 		TableName: aws.String(serverTable),
 		Key: map[string]types.AttributeValue{

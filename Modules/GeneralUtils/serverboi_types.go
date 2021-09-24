@@ -8,6 +8,8 @@ type BaseServer struct {
 	Owner       string `json:"Owner"`
 	OwnerID     string `json:"OwnerID"`
 	Port        int    `json:"Port"`
+	QueryPort   int    `json:"QueryPort"`
+	QueryType   string `json:"QueryType"`
 	Region      string `json:"Region"`
 }
 
@@ -43,6 +45,8 @@ type AWSServer struct {
 	InstanceType string      `json:"InstanceType"`
 	Region       string      `json:"Region"`
 	Port         int         `json:"Port"`
+	QueryPort    int         `json:"QueryPort"`
+	QueryType    string      `json:"QueryType"`
 	Authorized   *Authorized `json:"Authorized"`
 }
 
@@ -54,6 +58,8 @@ type LinodeServer struct {
 	OwnerID     string      `json:"OwnerID"`
 	Service     string      `json:"Service"`
 	Port        int         `json:"Port"`
+	QueryPort   int         `json:"QueryPort"`
+	QueryType   string      `json:"QueryType"`
 	LinodeID    int         `json:"LinodeID"`
 	ApiKey      string      `json:"ApiKey"`
 	LinodeType  string      `json:"LinodeType"`

@@ -28,6 +28,8 @@ type ProvisonServerParameters struct {
 	InteractionToken string            `json:"InteractionToken"`
 	ApplicationID    string            `json:"ApplicationID"`
 	GuildID          string            `json:"GuildID"`
+	ClientPort       string            `json:"ClientPort"`
+	QueryPort        string            `json:"QueryPort"`
 	Url              string            `json:"Url"`
 	CreationOptions  map[string]string `json:"CreationOptions,omitempty"`
 	Service          string            `json:"Service"`
@@ -39,9 +41,8 @@ type ProvisonServerParameters struct {
 }
 
 type ProvisionServerResponse struct {
-	ServerID   string `json:"ServerID"`
-	InstanceID string `json:"InstanceID,omitempty"`
-	AccountID  string `json:"AccountID,omitempty"`
+	ServerID         string `json:"ServerID"`
+	PrivateKeyObject string `json:"PrivateKeyObject"`
 }
 
 func handler(event map[string]interface{}) (string, error) {
@@ -59,7 +60,6 @@ func handler(event map[string]interface{}) (string, error) {
 	})
 
 	client := dc.CreateClient(&dc.CreateClientInput{
-		BotToken:   gu.GetEnvVar("DISCORD_TOKEN"),
 		ApiVersion: "v9",
 	})
 
@@ -81,19 +81,22 @@ func handler(event map[string]interface{}) (string, error) {
 		}
 	}
 
-	var serverID string
-	var serverItem map[string]dynamotypes.AttributeValue
+	var output *ProvisionOutput
 	log.Printf("Cloud Provider for server: %v", params.Service)
 	switch params.Service {
 	case "aws":
-		serverID, serverItem = provisionAWS(params)
+		output = provisionAWS(&params)
 	case "linode":
-		serverID, serverItem = provisionLinode(params)
+		output = provisionLinode(&params)
 	}
 
-	writeServerInfo(serverItem)
-	log.Printf("ServerID: %v", serverID)
-	return serverID, nil
+	writeServerInfo(output.ServerItem)
+	response := &ProvisionServerResponse{
+		ServerID:         output.ServerID,
+		PrivateKeyObject: output.PrivateKeyObject,
+	}
+	b, _ := json.Marshal(response)
+	return string(b), nil
 }
 
 func writeServerInfo(serverItem map[string]dynamotypes.AttributeValue) {

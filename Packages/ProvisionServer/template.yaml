@@ -7,7 +7,7 @@ Description:
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 15
+    Timeout: 60
 
 Resources:
   ProvisionServer:
@@ -25,3 +25,7 @@ Resources:
           DYNAMO_CONTAINER: serverboi-dynamodb-local
           LOCALSTACK_CONTAINER: serverboi-localstack
           API_URL: https://api.serverboi.io
+          CONFIGURATION_BUCKET: serverboi-provision-configuration-bucket
+          COMPOSE_BUCKET: serverboi-docker-compose-bucket
+          KEY_BUCKET: serverboi-provision-configuration-bucket
+          DISCORD_TOKEN: a

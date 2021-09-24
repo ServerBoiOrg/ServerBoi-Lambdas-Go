@@ -5,13 +5,16 @@ import (
 	"fmt"
 	gu "generalutils"
 	"log"
+	"math/rand"
 	"strconv"
+	"strings"
+	"time"
 
 	dynamotypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/linode/linodego"
 )
 
-func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamotypes.AttributeValue) {
+func provisionLinode(params *ProvisonServerParameters) *ProvisionOutput {
 	log.Printf("Querying aws account for %v item from Dynamo", params.Owner)
 	ownerItem, err := gu.GetOwnerItem(params.OwnerID)
 	if err != nil {
@@ -19,31 +22,8 @@ func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamo
 	}
 	apiKey := ownerItem.LinodeApiKey
 
-	// Generics actions for each server
-	architecture := getArchitecture(params.CreationOptions)
-	log.Printf("Getting build info")
-	buildInfo := getBuildInfo(params.Application)
-	container := getContainer(buildInfo, architecture)
-	serverID := formServerID()
-	log.Printf("Generating bootscript")
-	bootscript := formBootscript(
-		FormDockerCommandInput{
-			Application:      params.Application,
-			Url:              params.Url,
-			InteractionToken: params.InteractionToken,
-			InteractionID:    params.InteractionID,
-			ApplicationID:    params.ApplicationID,
-			ExecutionName:    params.ExecutionName,
-			ServerName:       params.Name,
-			ServerID:         serverID,
-			GuildID:          params.GuildID,
-			Container:        container,
-			EnvVar:           params.CreationOptions,
-		},
-		buildInfo.DockerCommands,
-	)
+	output := genericProvision(params)
 
-	linodeType := getLinodeType(params.HardwareType, buildInfo, architecture)
 	image := "linode/debian11"
 	client := gu.CreateLinodeClient(apiKey)
 
@@ -52,7 +32,7 @@ func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamo
 	response, stackErr := client.CreateStackscript(context.Background(), linodego.StackscriptCreateOptions{
 		Label:  fmt.Sprintf("ServerBoi-%v", params.Application),
 		Images: []string{image},
-		Script: bootscript,
+		Script: output.Bootscript,
 	})
 	if stackErr != nil {
 		log.Fatalf("Error creating Stackscript: %v", stackErr)
@@ -60,24 +40,25 @@ func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamo
 	scriptID := response.ID
 
 	createResp, createErr := client.CreateInstance(context.Background(), linodego.InstanceCreateOptions{
-		Region:        params.Region,
-		Type:          linodeType,
-		Image:         image,
-		Label:         serverID,
-		StackScriptID: scriptID,
-		RootPass:      "shnytgshnytgeashnytga1!123123",
+		Region:         params.Region,
+		Type:           output.HardwareType,
+		Image:          image,
+		Label:          output.ServerID,
+		StackScriptID:  scriptID,
+		AuthorizedKeys: []string{strings.TrimSpace(output.PublicKey)},
+		RootPass:       generateUselessPassword(),
 	})
 	if createErr != nil {
 		log.Fatalf("Error creating Linode: %v", createErr)
 	}
 
-	var authorized gu.Authorized
+	var authorized *gu.Authorized
 	if params.IsRole {
-		authorized = gu.Authorized{
+		authorized = &gu.Authorized{
 			Roles: []string{params.OwnerID},
 		}
 	} else {
-		authorized = gu.Authorized{
+		authorized = &gu.Authorized{
 			Users: []string{params.OwnerID},
 		}
 	}
@@ -87,26 +68,32 @@ func provisionLinode(params ProvisonServerParameters) (string, map[string]dynamo
 		Owner:       params.Owner,
 		Application: params.Application,
 		ServerName:  params.Name,
-		Port:        buildInfo.Ports[0],
+		Port:        output.Configuration.ClientPort,
+		QueryPort:   output.Configuration.QueryPort,
+		QueryType:   output.Configuration.QueryType,
 		Service:     "linode",
-		ServerID:    serverID,
+		ServerID:    output.ServerID,
 		LinodeID:    createResp.ID,
 		ApiKey:      apiKey,
-		LinodeType:  linodeType,
+		LinodeType:  output.HardwareType,
 		Location:    params.Region,
-		Authorized:  &authorized,
+		Authorized:  authorized,
 	}
 
-	return serverID, formLinodeServerItem(server)
+	return &ProvisionOutput{
+		ServerID:         output.ServerID,
+		PrivateKeyObject: output.PrivateKeyObject,
+		ServerItem:       formLinodeServerItem(server),
+	}
 }
 
-func getLinodeType(override string, buildInfo BuildInfo, architecture string) string {
+func getLinodeType(override string, configuration *ApplicationConfiguration, architecture string) string {
 	log.Printf("Getting Linode Type")
-	var archInfo ArchitectureInfo
+	var archInfo *ArchitectureConfiguration
 	var defaultType string
 	switch architecture {
 	case "x86":
-		archInfo = buildInfo.X86
+		archInfo = configuration.X86
 		defaultType = "g6-standard-2"
 	default:
 		panic("Unknown architecture")
@@ -137,6 +124,16 @@ func getLinodeType(override string, buildInfo BuildInfo, architecture string) st
 	}
 }
 
+func generateUselessPassword() string {
+	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	rand.Seed(time.Now().UnixNano())
+	b := make([]rune, 20)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
+}
+
 func formLinodeServerItem(server gu.LinodeServer) map[string]dynamotypes.AttributeValue {
 	serverItem := formBaseServerItem(
 		server.OwnerID,
@@ -145,6 +142,8 @@ func formLinodeServerItem(server gu.LinodeServer) map[string]dynamotypes.Attribu
 		server.ServerName,
 		server.Service,
 		server.Port,
+		server.QueryPort,
+		server.QueryType,
 		server.ServerID,
 		server.Authorized,
 	)

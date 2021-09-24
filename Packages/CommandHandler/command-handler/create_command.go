@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,6 +26,8 @@ type CreateServerWorkflowInput struct {
 	ApplicationID    string
 	GuildID          string
 	Url              string
+	ClientPort       int
+	QueryPort        int
 	CreationOptions  map[string]string `json:"CreationOptions,omitempty"`
 	Service          string
 	Name             string
@@ -52,6 +55,8 @@ type CreateOptions struct {
 	HardwareType     string
 	Private          bool
 	OptionalCommands map[string]string
+	ClientPort       int
+	QueryPort        int
 }
 
 func verifyCreationOptions(creationOptions map[string]interface{}) (output CreateOptions, errors []string) {
@@ -121,6 +126,42 @@ func verifyCreationOptions(creationOptions map[string]interface{}) (output Creat
 	}
 	log.Printf("Private: %v", output.Private)
 
+	//Check if client port
+	if clientPort, ok := creationOptions["clientPort"]; ok {
+		p := clientPort.(string)
+		pI, err := strconv.Atoi(p)
+		if err != nil {
+			errors = append(errors, "Client port must be a number between 1-65353")
+		} else {
+			port := verifyPort(pI)
+			if err != nil || port == 0 {
+				errors = append(errors, "Client port must be a number between 1-65353")
+			} else {
+				output.ClientPort = port
+			}
+		}
+		delete(creationOptions, "clientPort")
+	}
+
+	//Check if query port
+	if queryPort, ok := creationOptions["queryPort"]; ok {
+		p := queryPort.(string)
+		pI, err := strconv.Atoi(p)
+		if err != nil {
+			errors = append(errors, "Query port must be a number between 1-65353")
+		} else {
+			port := verifyPort(pI)
+			if err != nil || port == 0 {
+				errors = append(errors, "Query port must be a number between 1-65353")
+			} else {
+				output.QueryPort = port
+			}
+		}
+		delete(creationOptions, "queryPort")
+	}
+
+	log.Printf("Private: %v", output.Private)
+
 	tmp := make(map[string]string)
 	for key, value := range creationOptions {
 		tmp[key] = value.(string)
@@ -133,6 +174,14 @@ func verifyCreationOptions(creationOptions map[string]interface{}) (output Creat
 
 func verifyName(name string) (string, error) {
 	return name, nil
+}
+
+func verifyPort(port int) int {
+	if port != 0 && port < 65535 {
+		return port
+	} else {
+		return 0
+	}
 }
 
 func verifyRegion(region string, service string) (err error) {
@@ -298,6 +347,8 @@ func createServer(command *dt.Interaction) (response *dt.InteractionCallbackData
 			InteractionToken: command.Token,
 			ApplicationID:    command.ApplicationID,
 			GuildID:          command.GuildID,
+			ClientPort:       verifiedParams.ClientPort,
+			QueryPort:        verifiedParams.QueryPort,
 			Url:              gu.GetEnvVar("API_URL"),
 			CreationOptions:  verifiedParams.OptionalCommands,
 			Service:          verifiedParams.Service,

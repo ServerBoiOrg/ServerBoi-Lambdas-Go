@@ -16,7 +16,6 @@ import (
 
 func queryTable(userID string, table string) *dynamodb.GetItemOutput {
 	dynamo := gu.GetDynamo()
-
 	response, err := dynamo.GetItem(context.Background(), &dynamodb.GetItemInput{
 		TableName: aws.String(table),
 		Key: map[string]dynamotypes.AttributeValue{
@@ -25,9 +24,7 @@ func queryTable(userID string, table string) *dynamodb.GetItemOutput {
 	})
 	if err != nil {
 		log.Fatalf("Error retrieving item from dynamo: %v", err)
-		panic(err)
 	}
-
 	return response
 }
 
@@ -38,10 +35,13 @@ func formBaseServerItem(
 	serverName string,
 	service string,
 	port int,
+	queryPort int,
+	queryType string,
 	serverID string,
 	authorized *gu.Authorized,
 ) map[string]dynamotypes.AttributeValue {
 	portString := strconv.Itoa(port)
+	queryPortString := strconv.Itoa(queryPort)
 
 	auth := map[string]dynamotypes.AttributeValue{}
 	if len(authorized.Roles) != 0 {
@@ -74,6 +74,8 @@ func formBaseServerItem(
 		"Service":     &dynamotypes.AttributeValueMemberS{Value: service},
 		"ServerID":    &dynamotypes.AttributeValueMemberS{Value: serverID},
 		"Port":        &dynamotypes.AttributeValueMemberN{Value: portString},
+		"QueryPort":   &dynamotypes.AttributeValueMemberN{Value: queryPortString},
+		"QueryType":   &dynamotypes.AttributeValueMemberS{Value: queryType},
 		"Authorized":  &dynamotypes.AttributeValueMemberM{Value: auth},
 	}
 

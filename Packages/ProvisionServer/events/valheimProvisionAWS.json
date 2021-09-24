@@ -1,0 +1,18 @@
+{
+  "ExecutionName": "Provision-TestAWS",
+  "Application": "valheim",
+  "OwnerID": "885046409554980884",
+  "Owner": "Server-Profile",
+  "InteractionID": "886116042005418005",
+  "InteractionToken": "aW50ZXJhY3Rpb246ODg2MTE2MDQyMDA1NDE4MDA1OjVZWnp3YXFOS2c0NVIybkpWamVtY1JkMjNTaWt6YWlDd0YyOW1Ncm9VQWtmd1VRUmlVRmU0MEJmdlRVZGdFdU5oSjlncDNTMHdzN2dCUW9zbFJ1RjFzOE5ZYnlBMU9EYU9CVG12RDBMeU9Cdno3NzkwanRuRmc1M3dsc0xUNFdY",
+  "ApplicationID": "713857439220367432",
+  "GuildID": "653100420687855616",
+  "Url": "https://api.serverboi.io",
+  "Service": "aws",
+  "Name": "ServerBoi-Valheim",
+  "Region": "us-west-2",
+  "Private": false,
+  "ClientPort": "0",
+  "QueryPort": "0",
+  "IsRole": true
+}

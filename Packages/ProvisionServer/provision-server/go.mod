@@ -10,6 +10,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.16.0
 	github.com/google/uuid v1.3.0
 	github.com/linode/linodego v1.0.0
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	gopkg.in/yaml.v2 v2.2.8
 	responseutils v0.0.0
 )
 

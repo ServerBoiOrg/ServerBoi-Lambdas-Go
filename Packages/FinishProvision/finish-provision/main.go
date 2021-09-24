@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -12,12 +13,15 @@ import (
 	dt "github.com/awlsring/discordtypes"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 var (
 	TOKEN         = gu.GetEnvVar("DISCORD_TOKEN")
 	SERVER_TABLE  = gu.GetEnvVar("SERVER_TABLE")
 	CHANNEL_TABLE = gu.GetEnvVar("CHANNEL_TABLE")
+	KEY_BUCKET    = gu.GetEnvVar("KEY_BUCKET")
 )
 
 type FinishProvisonParameters struct {
@@ -26,6 +30,7 @@ type FinishProvisonParameters struct {
 	InteractionToken string `json:"InteractionToken"`
 	ApplicationID    string `json:"ApplicationID"`
 	ExecutionName    string `json:"ExecutionName"`
+	PrivateKeyObject string `json:"PrivateKeyObject"`
 	Private          bool   `json:"Private"`
 }
 
@@ -60,6 +65,25 @@ func handler(event map[string]interface{}) (bool, error) {
 		})
 		if err != nil {
 			log.Fatalf("Error getting creating message in Channel: %v", err)
+		}
+		done := dc.StatusCodeHandler(*headers)
+		if done {
+			log.Printf("%v", resp)
+			break
+		}
+	}
+
+	keyUrl := createSignedKeyUrl(params.PrivateKeyObject)
+	for {
+		resp, headers, err := client.PostInteractionFollowUp(&dc.InteractionFollowupInput{
+			ApplicationID:    params.ApplicationID,
+			InteractionToken: params.InteractionToken,
+			Data: &dt.InteractionCallbackData{
+				Content: fmt.Sprintf("Private key for Server %v: %v", params.ServerID, keyUrl),
+			},
+		})
+		if err != nil {
+			log.Fatalf("Error posting follow up: %v", err)
 		}
 		done := dc.StatusCodeHandler(*headers)
 		if done {
@@ -140,4 +164,16 @@ func convertEvent(event map[string]interface{}) (params FinishProvisonParameters
 		panic(marshalErr)
 	}
 	return params
+}
+
+func createSignedKeyUrl(object string) string {
+	client := gu.GetPresignedS3Client()
+	request, err := client.PresignGetObject(context.Background(), &s3.GetObjectInput{
+		Key:    aws.String(object),
+		Bucket: aws.String(KEY_BUCKET),
+	})
+	if err != nil {
+		log.Fatalf("Error getting object: %v", err)
+	}
+	return request.URL
 }

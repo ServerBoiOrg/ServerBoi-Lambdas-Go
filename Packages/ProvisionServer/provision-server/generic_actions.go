@@ -97,8 +97,7 @@ func getArchitecture(creationOptions map[string]string) (architecture string) {
 	return architecture
 }
 
-func formBootscript(input FormDockerCommandInput, dockerCommands []string) string {
-	dockerCommand := formDockerCommand(input, dockerCommands)
+func formBootscript(composeUrl string) string {
 	bootscript := fmt.Sprintf(`#!/bin/bash
     sudo apt-get update && sudo apt-get upgrade -y
     sudo apt-get install \
@@ -113,7 +112,11 @@ func formBootscript(input FormDockerCommandInput, dockerCommands []string) strin
       $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
     sudo apt-get update
     sudo apt-get install docker-ce docker-ce-cli containerd.io -y
-    %v`, dockerCommand)
+	sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+	sudo chown $(whoami):$(whoami) /var/run/docker.sock
+	sudo chmod +x /usr/local/bin/docker-compose
+	sudo curl %v --output docker-compose.yml
+	docker-compose up -d`, composeUrl)
 	log.Printf("Bootscript: %v", bootscript)
 	return bootscript
 }

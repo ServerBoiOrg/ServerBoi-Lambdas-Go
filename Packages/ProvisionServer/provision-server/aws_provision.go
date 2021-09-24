@@ -6,6 +6,7 @@ import (
 	"fmt"
 	gu "generalutils"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,7 +15,7 @@ import (
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 )
 
-func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotypes.AttributeValue) {
+func provisionAWS(params *ProvisonServerParameters) *ProvisionOutput {
 	log.Printf("Querying aws account for %v item from Dynamo", params.Owner)
 	ownerItem, err := gu.GetOwnerItem(params.OwnerID)
 	if err != nil {
@@ -23,63 +24,45 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 	accountID := ownerItem.AWSAccountID
 	log.Printf("Account to provision server in: %v", accountID)
 
-	architecture := getArchitecture(params.CreationOptions)
+	output := genericProvision(params)
 
+	log.Printf("Converting bootscript to base64 encoding")
+	bootscript := b64.StdEncoding.EncodeToString([]byte(output.Bootscript))
+
+	log.Printf("Creating EC2 Client")
 	ec2Client := gu.CreateEC2Client(params.Region, accountID)
 
-	log.Printf("Getting build info")
-	buildInfo := getBuildInfo(params.Application)
-
-	container := getContainer(buildInfo, architecture)
-
-	serverID := formServerID()
-	log.Printf("ServerID: %v", serverID)
-
-	log.Printf("Generating bootscript")
-	bootscript := formBootscript(
-		FormDockerCommandInput{
-			Application:      params.Application,
-			Url:              params.Url,
-			InteractionToken: params.InteractionToken,
-			InteractionID:    params.InteractionID,
-			ApplicationID:    params.ApplicationID,
-			ExecutionName:    params.ExecutionName,
-			ServerName:       params.Name,
-			ServerID:         serverID,
-			GuildID:          params.GuildID,
-			Container:        container,
-			EnvVar:           params.CreationOptions,
-		},
-		buildInfo.DockerCommands,
-	)
-	log.Printf("Converting bootscript to base64 encoding")
-	bootscript = b64.StdEncoding.EncodeToString([]byte(bootscript))
-
 	log.Printf("Getting/Creating Security Group")
-	groupID := getSecurityGroup(ec2Client, params.Application, buildInfo.Ports)
+	groupID := getSecurityGroup(
+		ec2Client,
+		params.Application,
+		output.Configuration.ClientPort,
+		output.Configuration.QueryPort,
+		output.Configuration.ExtraPorts,
+	)
 
-	log.Printf("Seraching for Debian Image for %v", architecture)
-	imageID := getImage(ec2Client, architecture)
-
-	log.Printf("Generating EBS Mapping")
-	ebsMapping := getEbsMapping(buildInfo.DriveSize)
+	log.Printf("Seraching for Debian Image for %v", output.Architecture)
+	imageID := getImage(ec2Client, output.Architecture)
 
 	log.Printf("Getting instance type")
-	instanceType := getAWSInstanceType(params.HardwareType, buildInfo, architecture)
-	oneInstance := int32(1)
+	instanceType := getAWSInstanceType(output.HardwareType)
+
+	log.Printf("Creating AWS Key Pair")
+	key := importKey(ec2Client, output.PublicKey, params.ExecutionName)
 
 	log.Printf("Creating instance")
 	response, creationErr := ec2Client.RunInstances(
 		context.Background(),
 		&ec2.RunInstancesInput{
-			MaxCount:            &oneInstance,
-			MinCount:            &oneInstance,
+			MaxCount:            aws.Int32(1),
+			MinCount:            aws.Int32(1),
 			UserData:            &bootscript,
 			SecurityGroupIds:    []string{groupID},
 			ImageId:             &imageID,
-			BlockDeviceMappings: ebsMapping,
+			BlockDeviceMappings: getEbsMapping(output.Configuration.DriveSize),
 			InstanceType:        instanceType,
-			TagSpecifications:   formServerTagSpec(serverID),
+			TagSpecifications:   formServerTagSpec(output.ServerID),
+			KeyName:             key,
 		},
 	)
 	if creationErr != nil {
@@ -88,15 +71,14 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 
 	instanceID := *response.Instances[0].InstanceId
 	log.Printf("Instance created. ID: %v", instanceID)
-	log.Printf(fmt.Sprintf("Ports: %v", buildInfo.Ports))
 
-	var authorized gu.Authorized
+	var authorized *gu.Authorized
 	if params.IsRole {
-		authorized = gu.Authorized{
+		authorized = &gu.Authorized{
 			Roles: []string{params.OwnerID},
 		}
 	} else {
-		authorized = gu.Authorized{
+		authorized = &gu.Authorized{
 			Users: []string{params.OwnerID},
 		}
 	}
@@ -106,17 +88,23 @@ func provisionAWS(params ProvisonServerParameters) (string, map[string]dynamotyp
 		Owner:        params.Owner,
 		Application:  params.Application,
 		ServerName:   params.Name,
-		Port:         buildInfo.Ports[0],
+		Port:         output.Configuration.ClientPort,
+		QueryPort:    output.Configuration.QueryPort,
+		QueryType:    output.Configuration.QueryType,
 		Service:      "aws",
 		Region:       params.Region,
-		ServerID:     serverID,
+		ServerID:     output.ServerID,
 		AWSAccountID: accountID,
 		InstanceID:   instanceID,
 		InstanceType: string(instanceType),
-		Authorized:   &authorized,
+		Authorized:   authorized,
 	}
 
-	return serverID, formAWSServerItem(server)
+	return &ProvisionOutput{
+		ServerID:         output.ServerID,
+		PrivateKeyObject: output.PrivateKeyObject,
+		ServerItem:       formAWSServerItem(server),
+	}
 
 }
 
@@ -128,16 +116,27 @@ func formAWSServerItem(server gu.AWSServer) map[string]dynamotypes.AttributeValu
 		server.ServerName,
 		server.Service,
 		server.Port,
+		server.QueryPort,
+		server.QueryType,
 		server.ServerID,
 		server.Authorized,
 	)
-
 	serverItem["Region"] = &dynamotypes.AttributeValueMemberS{Value: server.Region}
 	serverItem["AWSAccountID"] = &dynamotypes.AttributeValueMemberS{Value: server.AWSAccountID}
 	serverItem["InstanceID"] = &dynamotypes.AttributeValueMemberS{Value: server.InstanceID}
 	serverItem["InstanceType"] = &dynamotypes.AttributeValueMemberS{Value: server.InstanceType}
-
 	return serverItem
+}
+
+func importKey(ec2Client *ec2.Client, publicKey string, executionName string) *string {
+	key, err := ec2Client.ImportKeyPair(context.Background(), &ec2.ImportKeyPairInput{
+		KeyName:           aws.String(fmt.Sprintf("%v-private", executionName)),
+		PublicKeyMaterial: []byte(publicKey),
+	})
+	if err != nil {
+		log.Fatalf("Could not create key: %v", err)
+	}
+	return key.KeyName
 }
 
 func formServerTagSpec(serverID string) []ec2types.TagSpecification {
@@ -145,9 +144,7 @@ func formServerTagSpec(serverID string) []ec2types.TagSpecification {
 		Key:   aws.String("Name"),
 		Value: aws.String(serverID),
 	}
-
 	tag := formManagementTag()
-
 	return []ec2types.TagSpecification{{
 		ResourceType: ec2types.ResourceTypeInstance,
 		Tags:         []ec2types.Tag{nameTag, tag},
@@ -161,62 +158,35 @@ func formManagementTag() ec2types.Tag {
 	}
 }
 
-func getAWSInstanceType(override string, buildInfo BuildInfo, architecture string) ec2types.InstanceType {
-	var archInfo ArchitectureInfo
-	var defaultType ec2types.InstanceType
-	switch architecture {
-	case "x86":
-		archInfo = buildInfo.X86
-		defaultType = ec2types.InstanceTypeC5Large
-	case "arm":
-		archInfo = buildInfo.Arm
-		defaultType = ec2types.InstanceTypeC6gLarge
-	default:
-		panic("Unknown architecture")
-	}
-
-	if override != "" {
-		instTypes := ec2types.InstanceType.Values("")
-		for _, inst := range instTypes {
-			if string(inst) == override {
-				log.Printf("Instance Type: %v", inst)
-				return inst
-			}
+func getAWSInstanceType(hardwareType string) ec2types.InstanceType {
+	instTypes := ec2types.InstanceType.Values("")
+	for _, inst := range instTypes {
+		if string(inst) == hardwareType {
+			log.Printf("Instance Type: %v", inst)
+			return inst
 		}
 	}
-
-	if instanceType, ok := archInfo.InstanceType["aws"]; ok {
-		instTypes := ec2types.InstanceType.Values("")
-		for _, inst := range instTypes {
-			if string(inst) == instanceType {
-				log.Printf("Instance Type: %v", inst)
-				return inst
-			}
-		}
-		panic("Unable to find instance type")
-	} else {
-		log.Printf("Instance Type: %v", defaultType)
-		return defaultType
-	}
+	panic("Unable to find instance item")
 }
 
 func getEbsMapping(driveSize int) []ec2types.BlockDeviceMapping {
-	dev := "/dev/xvda"
-	vName := "ephemeral"
-	delete := true
-	vType := "standard"
-	size := int32(driveSize)
-
-	ebs := ec2types.EbsBlockDevice{
-		DeleteOnTermination: &delete,
-		VolumeSize:          &size,
-		VolumeType:          ec2types.VolumeType(vType),
+	log.Println("Generating EBS Configuration")
+	var size int32
+	if driveSize != 0 {
+		size = int32(driveSize)
+	} else {
+		size = 8
 	}
+
 	return []ec2types.BlockDeviceMapping{
 		{
-			DeviceName:  &dev,
-			VirtualName: &vName,
-			Ebs:         &ebs,
+			DeviceName:  aws.String("/dev/xvda"),
+			VirtualName: aws.String("ephemeral"),
+			Ebs: &ec2types.EbsBlockDevice{
+				DeleteOnTermination: aws.Bool(true),
+				VolumeSize:          &size,
+				VolumeType:          ec2types.VolumeType("standard"),
+			},
 		},
 	}
 }
@@ -272,7 +242,13 @@ func getImage(ec2Client *ec2.Client, architecture string) string {
 	return imageID
 }
 
-func getSecurityGroup(ec2Client *ec2.Client, application string, ports []int) string {
+func getSecurityGroup(
+	ec2Client *ec2.Client,
+	application string,
+	clientPort int,
+	queryPort int,
+	extraPorts []string,
+) string {
 	secGroupName := fmt.Sprintf("ServerBoi-Security-Group-%v", strings.ToUpper(application))
 	secGroupDescription := fmt.Sprintf("Default Security Group for %v", strings.ToUpper(application))
 
@@ -304,6 +280,19 @@ func getSecurityGroup(ec2Client *ec2.Client, application string, ports []int) st
 		groupID = *describeResponse.SecurityGroups[0].GroupId
 	} else {
 		groupID = *createResponse.GroupId
+
+		ports := []int{
+			clientPort,
+			queryPort,
+		}
+
+		for _, port := range extraPorts {
+			splitString := strings.Split(port, ":")
+			portString, err := strconv.Atoi(splitString[0])
+			if err == nil {
+				ports = append(ports, portString)
+			}
+		}
 
 		setEgress(ec2Client, groupID, ports)
 		setIngress(ec2Client, groupID, ports)
@@ -368,6 +357,12 @@ func setIngress(ec2Client *ec2.Client, securityGroupID string, ports []int) {
 			IpProtocol: aws.String("tcp"),
 			FromPort:   aws.Int32(443),
 			ToPort:     aws.Int32(443),
+			IpRanges:   ipRange,
+		},
+		{
+			IpProtocol: aws.String("tcp"),
+			FromPort:   aws.Int32(7032),
+			ToPort:     aws.Int32(7032),
 			IpRanges:   ipRange,
 		},
 	}
