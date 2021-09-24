@@ -26,6 +26,7 @@ type Service struct {
 	Environment     map[string]string `yaml:"environment,omitempty"`
 	Restart         string            `yaml:"restart,omitempty"`
 	Volumes         []string          `yaml:"volumes,omitempty"`
+	DependsOn       []string          `yaml:"depends_on,omitempty"`
 	CapAdd          []string          `yaml:"cap_add,omitempty"`
 	StopGracePeriod string            `yaml:"stop_grace_period,omitempty"`
 	Build           string            `yaml:"build,omitempty"`
@@ -62,7 +63,7 @@ func formApplicationTemplate(input *FormApplicationTemplate) *Service {
 		Environment:     input.Environment,
 		Volumes:         input.Configuration.Volumes,
 		CapAdd:          input.Configuration.CapAdd,
-		Restart:         "always",
+		Restart:         "unless-stopped",
 		StopGracePeriod: "2m",
 	}
 }
@@ -74,15 +75,16 @@ type CreateDockerComposeInput struct {
 	QueryPort          int
 	StatusService      *Service
 	ApplicationService *Service
+	WorkflowMonitor    *Service
 }
 
 func createDockerCompose(input *CreateDockerComposeInput) string {
 	compose := DockerCompose{
 		Version: "3.9",
 		Services: map[string]*Service{
-			// "workflow-tracking": getWorkflowMonitor(input.Architecture),
-			"service-monitor": input.StatusService,
-			"application":     input.ApplicationService,
+			"workflow-tracking": input.WorkflowMonitor,
+			"service-monitor":   input.StatusService,
+			"application":       input.ApplicationService,
 		},
 	}
 
@@ -125,9 +127,9 @@ func getStatusMonitor(env *StatusMonitorEnv) *Service {
 	var image string
 	switch env.Architecture {
 	case "x86":
-		image = "serverboi/status-monitor:amd64-latest"
+		image = "serverboi/status-monitor:latest"
 	case "arm":
-		image = "serverboi/status-monitor:arm64-latest"
+		image = "serverboi/status-monitor:latest"
 	default:
 		log.Fatalln("Unknown architecture")
 	}
@@ -154,17 +156,30 @@ func getStatusMonitor(env *StatusMonitorEnv) *Service {
 	}
 }
 
-func getWorkflowMonitor(architecture string) *Service {
+type WorkflowMonitorInput struct {
+	Architecture     string
+	ApplicationID    string
+	InteractionToken string
+	ExecutionName    string
+}
+
+func getWorkflowMonitor(input *WorkflowMonitorInput) *Service {
 	var image string
-	switch architecture {
+	switch input.Architecture {
 	case "x86":
-		image = "serverboi/workflow-tracking:amd64-latest"
+		image = "serverboi/workflow-tracking:latest"
 	case "arm":
-		image = "serverboi/workflow-tracking:arm64-latest"
+		image = "serverboi/workflow-tracking:latest"
 	default:
 		log.Fatalln("Unknown architecture")
 	}
 	return &Service{
-		Image: image,
+		Image:     image,
+		DependsOn: []string{"service-monitor"},
+		Environment: map[string]string{
+			"APPLICATION_ID":    input.ApplicationID,
+			"INTERACTION_TOKEN": input.InteractionToken,
+			"EXECUTION_NAME":    input.ExecutionName,
+		},
 	}
 }

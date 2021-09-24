@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 
 	gu "generalutils"
 
@@ -42,8 +41,8 @@ func genericProvision(params *ProvisonServerParameters) *GenericProvisionOutput 
 	configuration := getConfiguration(params.Application)
 
 	log.Println("Setting client and query port")
-	clientPort := setClientPort(params.ClientPort, configuration.ClientPort)
-	queryPort := setQueryPort(params.QueryPort, configuration.QueryPort)
+	clientPort := setPort(params.ClientPort, configuration.ClientPort)
+	queryPort := setPort(params.QueryPort, configuration.QueryPort)
 
 	log.Printf("Forming Application Service")
 	appService := formApplicationTemplate(&FormApplicationTemplate{
@@ -73,6 +72,13 @@ func genericProvision(params *ProvisonServerParameters) *GenericProvisionOutput 
 		Region:       params.Region,
 	})
 
+	workflowMonitor := getWorkflowMonitor(&WorkflowMonitorInput{
+		Architecture:     architecture,
+		ApplicationID:    params.ApplicationID,
+		InteractionToken: params.InteractionToken,
+		ExecutionName:    params.ExecutionName,
+	})
+
 	log.Printf("Generating bootscript")
 	bootscript := formBootscript(createDockerCompose(&CreateDockerComposeInput{
 		Application:        params.Application,
@@ -81,6 +87,7 @@ func genericProvision(params *ProvisonServerParameters) *GenericProvisionOutput 
 		QueryPort:          configuration.QueryPort,
 		ApplicationService: appService,
 		StatusService:      statusService,
+		WorkflowMonitor:    workflowMonitor,
 	}))
 
 	log.Printf("Generating SSH Keys")
@@ -154,25 +161,9 @@ func getHardwareType(architecture string, hardwareType string, config *Applicati
 	return htype
 }
 
-func setClientPort(userPort string, configPort int) int {
-	p, e := strconv.Atoi(userPort)
-	if e != nil {
-		log.Fatalf("Port must be int")
-	}
-	if p != 0 {
-		return p
-	} else {
-		return configPort
-	}
-}
-
-func setQueryPort(userPort string, configPort int) int {
-	p, e := strconv.Atoi(userPort)
-	if e != nil {
-		log.Fatalf("Port must be int")
-	}
-	if p != 0 {
-		return p
+func setPort(userPort int, configPort int) int {
+	if userPort != 0 {
+		return userPort
 	} else {
 		return configPort
 	}

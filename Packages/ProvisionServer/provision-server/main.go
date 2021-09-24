@@ -28,8 +28,8 @@ type ProvisonServerParameters struct {
 	InteractionToken string            `json:"InteractionToken"`
 	ApplicationID    string            `json:"ApplicationID"`
 	GuildID          string            `json:"GuildID"`
-	ClientPort       string            `json:"ClientPort"`
-	QueryPort        string            `json:"QueryPort"`
+	ClientPort       int               `json:"ClientPort"`
+	QueryPort        int               `json:"QueryPort"`
 	Url              string            `json:"Url"`
 	CreationOptions  map[string]string `json:"CreationOptions,omitempty"`
 	Service          string            `json:"Service"`

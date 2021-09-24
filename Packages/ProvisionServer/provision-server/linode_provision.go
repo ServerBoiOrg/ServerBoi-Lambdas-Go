@@ -125,6 +125,7 @@ func getLinodeType(override string, configuration *ApplicationConfiguration, arc
 }
 
 func generateUselessPassword() string {
+	//Generate and forget since Linode insists on a root password
 	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	rand.Seed(time.Now().UnixNano())
 	b := make([]rune, 20)
