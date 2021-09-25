@@ -1,6 +1,7 @@
 package responseutils
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -49,57 +50,79 @@ func FormFooter(owner string, service string, region string) string {
 	)
 }
 
-func TranslateState(service string, status string) (state string, stateEmoji string, err error) {
-	switch service {
-	case "aws":
-		switch status {
-		case "running":
-			state = "Running"
-			stateEmoji = "🟢"
-		case "pending":
-			state = "Starting"
-			stateEmoji = "🟡"
-		case "shutting-down":
-			state = "Shutting down"
-			stateEmoji = "🔴"
-		case "stopping":
-			state = "Shutting down"
-			stateEmoji = "🔴"
-		case "terminated":
-			state = "Terminated"
-			stateEmoji = "🔴"
-		case "stopped":
-			state = "Offline"
-			stateEmoji = "🔴"
-		}
-	case "linode":
-		switch status {
-		case "running":
-			state = "Running"
-			stateEmoji = "🟢"
-		case "offline":
-			state = "Offline"
-			stateEmoji = "🔴"
-		case "booting":
-			state = "Starting"
-			stateEmoji = "🟡"
-		case "rebooting":
-			state = "Rebooting"
-			stateEmoji = "🟡"
-		case "shutting_down":
-			state = "Shutting down"
-			stateEmoji = "🔴"
-		case "provisioning":
-			state = "Starting"
-			stateEmoji = "🟡"
-		case "deleting":
-			state = "Terminated"
-			stateEmoji = "🔴"
-		case "stopped":
-			state = "Offline"
-			stateEmoji = "🔴"
+type GetStatusInput struct {
+	Service string
+	Status  string
+	Running bool
+}
+
+func GetStatus(input *GetStatusInput) (state string, emoji string, err error) {
+	if input.Running {
+		state = "Running"
+		emoji = "🟢"
+	} else {
+		switch input.Service {
+		case "aws":
+			state, emoji = TranslateAwsState(input.Status)
+		case "linode":
+			state, emoji = TranslateLinodeState(input.Status)
+		default:
+			return "", "", errors.New("Unsupported service")
 		}
 	}
+	return state, emoji, nil
+}
 
-	return state, stateEmoji, err
+func TranslateAwsState(status string) (state string, stateEmoji string) {
+	switch status {
+	case "running":
+		state = "Running"
+		stateEmoji = "🟢"
+	case "pending":
+		state = "Starting"
+		stateEmoji = "🟡"
+	case "shutting-down":
+		state = "Shutting down"
+		stateEmoji = "🔴"
+	case "stopping":
+		state = "Shutting down"
+		stateEmoji = "🔴"
+	case "terminated":
+		state = "Terminated"
+		stateEmoji = "🔴"
+	case "stopped":
+		state = "Offline"
+		stateEmoji = "🔴"
+	}
+	return state, stateEmoji
+}
+
+func TranslateLinodeState(status string) (state string, stateEmoji string) {
+	switch status {
+	case "running":
+		state = "Running"
+		stateEmoji = "🟢"
+	case "offline":
+		state = "Offline"
+		stateEmoji = "🔴"
+	case "booting":
+		state = "Starting"
+		stateEmoji = "🟡"
+	case "rebooting":
+		state = "Rebooting"
+		stateEmoji = "🟡"
+	case "shutting_down":
+		state = "Shutting down"
+		stateEmoji = "🔴"
+	case "provisioning":
+		state = "Starting"
+		stateEmoji = "🟡"
+	case "deleting":
+		state = "Terminated"
+		stateEmoji = "🔴"
+	case "stopped":
+		state = "Offline"
+		stateEmoji = "🔴"
+	}
+	return state, stateEmoji
 }

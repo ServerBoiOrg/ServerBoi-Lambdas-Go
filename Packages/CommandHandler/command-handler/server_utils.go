@@ -4,6 +4,7 @@ import (
 	dc "discordhttpclient"
 	gu "generalutils"
 	ru "responseutils"
+	sq "serverquery"
 	"strings"
 
 	dt "github.com/awlsring/discordtypes"
@@ -32,10 +33,10 @@ func updateEmbed(server gu.Server) (embed *dt.Embed, components []*dt.Component,
 	if err != nil {
 		return embed, components, err
 	}
-	state, _, err := ru.TranslateState(
-		server.GetBaseService().Service,
-		status,
-	)
+	state, emoji, err := ru.GetStatus(&ru.GetStatusInput{
+		Service: server.GetBaseService().Service,
+		Status:  status,
+	})
 	if err != nil {
 		return embed, components, err
 	}
@@ -45,22 +46,26 @@ func updateEmbed(server gu.Server) (embed *dt.Embed, components []*dt.Component,
 	} else {
 		running = false
 	}
-	serverInfo := server.GetBaseService()
 	ip, err := server.GetIPv4()
 	if err != nil {
 		return embed, components, err
 	}
+	info, err := sq.ServerDataQuery(ip)
+	if err != nil {
+		return embed, components, err
+	}
 
-	embed = ru.CreateServerEmbed(ru.GetServerData(&ru.GetServerDataInput{
-		Name:        serverInfo.ServerName,
-		ID:          serverInfo.ServerID,
+	embed = ru.CreateServerEmbed(ru.FormEmbedData(&ru.FormEmbedDataInput{
+		Name:        info.General.Name,
+		ID:          info.General.ID,
 		IP:          ip,
+		Port:        info.General.ClientPort,
 		Status:      status,
-		Region:      serverInfo.Region,
-		Port:        serverInfo.Port,
-		Application: serverInfo.Application,
-		Owner:       serverInfo.Owner,
-		Service:     serverInfo.Service,
+		StatusEmoji: emoji,
+		Region:      info.ServiceInfo.Region,
+		Application: info.General.Application,
+		Owner:       info.General.OwnerName,
+		Service:     info.ServiceInfo.Provider,
 	}))
 	components = ru.ServerEmbedComponents(running)
 

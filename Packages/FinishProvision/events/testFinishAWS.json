@@ -1,7 +1,9 @@
 {
-    "ExecutionName": "Provision-fab02e15",
-    "InteractionToken": "aW50ZXJhY3Rpb246ODgzNTgxMTM3Nzg2NjY3MDA4OldQRzlxOVRZZlZ4aDJPbXFjSms3YkR5Nk9xeVlMT0E4Z3o4YXcwZVFhcmIzZGM1RmtPdUhqVlYxQ2xKTGg0eTV3TkZXOXFEQ2FZN2Y0YkoxcG5UZzlPMDJBbVpUd3c4bzVITGVacURERmg0OTdXUEhxdWxzWXRONzBaNnZPY0lZ",
-    "ServerID": "TEST",
-    "GuildID": "653100420687855616",
-    "ApplicationID": "713857439220367432"
-  }
+  "ExecutionName": "Provision-8D0ABCE2",
+  "InteractionToken": "aW50ZXJhY3Rpb246ODkxMTI3MjkxNzAxMjM5ODE5OjF0bVVXZzVBdGZJaFdwWmdlRG5nM3pTaDdFS0NHQlVmYkVOeVc4Y0ZqcGpzYkRtTXN5YWlCQkVrTDVWUXo3d2lkQ3lXTmdmVXRyOVppaWhnSVhvcHllYUFMVHNlUWo5bzRBS1FZT2xIQ3RBVFhlSDFIY0c1djBZaWtTNEdBUE1G",
+  "ServerID": "006E",
+  "GuildID": "653100420687855616",
+  "PrivateKeyObject": "Provision-8D0ABCE2-private.pem",
+  "Private": false,
+  "ApplicationID": "713857439220367432"
+}

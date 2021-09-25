@@ -9,6 +9,7 @@ import (
 	dc "discordhttpclient"
 	gu "generalutils"
 	ru "responseutils"
+	sq "serverquery"
 
 	dt "github.com/awlsring/discordtypes"
 
@@ -43,43 +44,15 @@ func handler(event map[string]interface{}) (bool, error) {
 		ApiVersion: "v9",
 	})
 
-	workflowEmbed := ru.CreateWorkflowEmbed(&ru.CreateWorkflowEmbedInput{
-		Name:        "Provision-Server",
-		Description: fmt.Sprintf("WorkflowID: %s", params.ExecutionName),
-		Status:      "✔️ finished",
-		Stage:       "Complete",
-		Color:       ru.DiscordGreen,
-	})
-	workflowEmbed.Fields = append(workflowEmbed.Fields, &dt.EmbedField{
-		Name:  "ServerID",
-		Value: params.ServerID,
-	})
-
-	for {
-		resp, headers, err := client.EditInteractionResponse(&dc.InteractionFollowupInput{
-			ApplicationID:    params.ApplicationID,
-			InteractionToken: params.InteractionToken,
-			Data: &dt.InteractionCallbackData{
-				Embeds: []*dt.Embed{workflowEmbed},
-			},
-		})
-		if err != nil {
-			log.Fatalf("Error getting creating message in Channel: %v", err)
-		}
-		done := dc.StatusCodeHandler(*headers)
-		if done {
-			log.Printf("%v", resp)
-			break
-		}
-	}
-
 	keyUrl := createSignedKeyUrl(params.PrivateKeyObject)
 	for {
 		resp, headers, err := client.PostInteractionFollowUp(&dc.InteractionFollowupInput{
 			ApplicationID:    params.ApplicationID,
 			InteractionToken: params.InteractionToken,
 			Data: &dt.InteractionCallbackData{
-				Content: fmt.Sprintf("Private key for Server %v: %v", params.ServerID, keyUrl),
+				Content:    fmt.Sprintf("SSH key for Server %v", params.ServerID),
+				Components: createLinkButton(keyUrl),
+				Flags:      1 << 6,
 			},
 		})
 		if err != nil {
@@ -88,6 +61,7 @@ func handler(event map[string]interface{}) (bool, error) {
 		done := dc.StatusCodeHandler(*headers)
 		if done {
 			log.Printf("%v", resp)
+			log.Printf("%v", headers)
 			break
 		}
 	}
@@ -102,25 +76,34 @@ func handler(event map[string]interface{}) (bool, error) {
 		if err != nil {
 			log.Fatalf("Error getting ipv4: %v", err)
 		}
-		status, err := server.GetStatus()
+		log.Printf("Ip %v", ip)
+		info, err := sq.ServerDataQuery(ip)
 		if err != nil {
-			log.Fatalf("Error getting status: %v", err)
+			log.Fatalf("Error getting server info: %v", err)
 		}
-		serverInfo := server.GetBaseService()
 
-		serverData := ru.GetServerData(&ru.GetServerDataInput{
-			Name:        serverInfo.ServerName,
-			ID:          serverInfo.ServerID,
-			IP:          ip,
-			Status:      status,
-			Region:      serverInfo.Region,
-			Port:        serverInfo.Port,
-			Application: serverInfo.Application,
-			Owner:       serverInfo.Owner,
-			Service:     serverInfo.Service,
+		status, emoji, err := ru.GetStatus(&ru.GetStatusInput{
+			Service: info.ServiceInfo.Provider,
+			Running: true,
 		})
+		if err != nil {
+			log.Fatalf("Error getting status info: %v", err)
+		}
 
-		embed := ru.CreateServerEmbed(serverData)
+		data := ru.FormEmbedData(&ru.FormEmbedDataInput{
+			Name:        info.General.Name,
+			ID:          info.General.ID,
+			IP:          info.General.IP,
+			Port:        info.General.ClientPort,
+			Status:      status,
+			StatusEmoji: emoji,
+			Region:      info.ServiceInfo.Region,
+			Application: info.General.Application,
+			Owner:       info.General.OwnerName,
+			Service:     info.ServiceInfo.Provider,
+			Players:     fmt.Sprintf("%v/%v", info.AppInfo.CurrentPlayers, info.AppInfo.MaxPlayers),
+		})
+		embed := ru.CreateServerEmbed(data)
 
 		log.Printf("Getting Channel for Guild")
 		channelID, err := gu.GetChannelIDFromGuildID(params.GuildID)
@@ -148,12 +131,63 @@ func handler(event map[string]interface{}) (bool, error) {
 			}
 		}
 	}
+	updateWorkflowEmbed(client, &params, keyUrl)
 
 	return true, nil
 }
 
 func main() {
 	lambda.Start(handler)
+}
+
+func createLinkButton(url string) []*dt.Component {
+	button := &dt.Component{
+		Type:  2,
+		Style: 5,
+		Label: "Download SSH Key",
+		Url:   url,
+	}
+
+	componentData := &dt.Component{
+		Type: 1,
+		Components: []*dt.Component{
+			button,
+		},
+	}
+	return []*dt.Component{componentData}
+}
+
+func updateWorkflowEmbed(client *dc.Client, params *FinishProvisonParameters, url string) {
+	workflowEmbed := ru.CreateWorkflowEmbed(&ru.CreateWorkflowEmbedInput{
+		Name:        "Provision-Server",
+		Description: fmt.Sprintf("WorkflowID: %s", params.ExecutionName),
+		Status:      "✔️ finished",
+		Stage:       "Complete",
+		Color:       ru.DarkGreen,
+	})
+	workflowEmbed.Fields = append(workflowEmbed.Fields, &dt.EmbedField{
+		Name:  "ServerID",
+		Value: params.ServerID,
+	})
+
+	for {
+		resp, headers, err := client.EditInteractionResponse(&dc.InteractionFollowupInput{
+			ApplicationID:    params.ApplicationID,
+			InteractionToken: params.InteractionToken,
+			Data: &dt.InteractionCallbackData{
+				Embeds:     []*dt.Embed{workflowEmbed},
+				Components: createLinkButton(url),
+			},
+		})
+		if err != nil {
+			log.Fatalf("Error getting creating message in Channel: %v", err)
+		}
+		done := dc.StatusCodeHandler(*headers)
+		if done {
+			log.Printf("%v", resp)
+			break
+		}
+	}
 }
 
 func convertEvent(event map[string]interface{}) (params FinishProvisonParameters) {

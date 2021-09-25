@@ -19,3 +19,4 @@ Resources:
         Variables:
           SERVER_TABLE: ServerBoi-Server-List
           CHANNEL_TABLE: ServerBoi-Channel-Table
+          KEY_BUCKET: serverboi-ssh-bucket

@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 	"time"
 
 	dc "discordhttpclient"
 	gu "generalutils"
 	ru "responseutils"
+	sq "serverquery"
 
 	dt "github.com/awlsring/discordtypes"
 
@@ -164,104 +164,84 @@ type UpdateServerEmbedOutput struct {
 }
 
 func updateServerEmbed(embed *dt.Embed) (output *dt.EditMessageData, err error) {
-	var (
-		ip          string
-		port        int
-		status      string
-		running     bool
-		address     string
-		location    string
-		application string
-		players     string
-	)
+	data := &ru.ServerData{}
 	log.Printf("Updating server embed.")
 	for _, field := range embed.Fields {
 		switch field.Name {
 		case "Status":
-			status = field.Value
+			data.Status = field.Value
 		case "Address":
-			address = strings.Trim(field.Value, "`")
-			if strings.Contains(address, ":") {
-				listString := strings.Split(address, ":")
-				ip = listString[0]
-				port, _ = strconv.Atoi(listString[1])
-			}
+			data.Address = strings.Trim(field.Value, "`")
 		case "Location":
-			location = field.Value
+			data.Location = field.Value
 		case "Application":
-			application = field.Value
+			data.Application = field.Value
 		}
 	}
 
+	var ip string
+	if strings.Contains(data.Address, ":") {
+		listString := strings.Split(data.Address, ":")
+		ip = listString[0]
+	}
 	serverID := strings.Trim(embed.Title[len(embed.Title)-6:], "()")
-	log.Printf("ServerID: %v", serverID)
-	log.Printf("Status: %v", status)
-	log.Printf("Ip: %v", ip)
-	log.Printf("Port: %v", port)
 
-	if strings.Contains(status, "Running") {
+	if strings.Contains(data.Status, "Running") {
 		log.Printf("Getting server info")
-		a2sInfo, err := ru.CallServer(ip, port)
+		info, err := sq.ServerDataQuery(ip)
 		if err != nil {
-			log.Printf("Error getting server info, getting server item")
+			log.Printf("Unable to get server info, getting server object")
 			server, err := gu.GetServerFromID(serverID)
 			if err != nil {
 				return &dt.EditMessageData{}, err
 			}
-			status, err = getStatus(server)
+			data.Status, err = getStatus(server, false)
 			if err != nil {
 				return &dt.EditMessageData{}, err
 			}
-			players = "Error contacting server"
+			data.Players = "Error contacting server"
 		} else {
-			players = fmt.Sprintf("%v/%v", a2sInfo.Players, a2sInfo.MaxPlayers)
+			data.Players = fmt.Sprintf("%v/%v", info.AppInfo.CurrentPlayers, info.AppInfo.MaxPlayers)
 		}
 	} else {
 		server, err := gu.GetServerFromID(serverID)
 		if err != nil {
 			return &dt.EditMessageData{}, err
 		}
-		status, err = getStatus(server)
+		data.Status, err = getStatus(server, false)
 		if err != nil {
 			return &dt.EditMessageData{}, err
 		}
-		log.Printf("Status: %v", status)
-		if strings.Contains(status, "Running") {
+		log.Printf("Status: %v", data.Status)
+		if strings.Contains(data.Status, "Running") {
 			ip, err := server.GetIPv4()
 			port := server.GetBaseService().Port
 			if err != nil {
 				log.Printf("Error getting IP: %v", err)
-				address = "`unknown`"
+				data.Address = "`unknown`"
 			}
-			a2sInfo, err := ru.CallServer(ip, port)
+			info, err := sq.ServerDataQuery(ip)
 			if err != nil {
-				address = fmt.Sprintf("%v:%v", ip, port)
-				players = "Error contacting server"
+				data.Address = fmt.Sprintf("%v:%v", ip, port)
+				data.Players = "Error contacting server"
 			} else {
-				players = fmt.Sprintf("%v/%v", a2sInfo.Players, a2sInfo.MaxPlayers)
-				address = fmt.Sprintf("%s:%v", ip, server.GetBaseService().Port)
+				data.Players = fmt.Sprintf("%v/%v", info.AppInfo.CurrentPlayers, info.AppInfo.MaxPlayers)
+				data.Address = fmt.Sprintf("%s:%v", ip, server.GetBaseService().Port)
 			}
 		}
 	}
-	color := setColorFromStatus(status)
 	footerParts := strings.Split(embed.Footer.Text, "|")
-	footer := fmt.Sprintf("%v|%v| %v", footerParts[0], footerParts[1], ru.MakeTimestamp())
-	if strings.Contains(status, "Running") {
+	data.Color = setColorFromStatus(data.Status)
+	data.Footer = fmt.Sprintf("%v|%v| %v", footerParts[0], footerParts[1], ru.MakeTimestamp())
+	data.Name = embed.Title
+	data.Description = embed.Description
+	data.Thumbnail = embed.Thumbnail.URL
+	var running bool
+	if strings.Contains(data.Status, "Running") {
 		running = true
 	}
 
-	serverEmbed := ru.CreateServerEmbed(&ru.ServerData{
-		Name:        embed.Title,
-		Description: embed.Description,
-		Status:      status,
-		Address:     address,
-		Location:    location,
-		Application: application,
-		Players:     players,
-		Color:       color,
-		Footer:      footer,
-		Thumbnail:   embed.Thumbnail.URL,
-	})
+	serverEmbed := ru.CreateServerEmbed(data)
 
 	return &dt.EditMessageData{
 		Embeds:     []*dt.Embed{serverEmbed},
@@ -291,15 +271,16 @@ func setColorFromStatus(status string) int {
 	}
 }
 
-func getStatus(server gu.Server) (string, error) {
+func getStatus(server gu.Server, running bool) (string, error) {
 	status, err := server.GetStatus()
 	if err != nil {
 		return "", err
 	}
-	state, stateEmoji, err := ru.TranslateState(
-		server.GetBaseService().Service,
-		status,
-	)
+	state, stateEmoji, err := ru.GetStatus(&ru.GetStatusInput{
+		Service: server.GetBaseService().Service,
+		Status:  status,
+		Running: running,
+	})
 	if err != nil {
 		log.Println(err)
 		status = "Unknown"

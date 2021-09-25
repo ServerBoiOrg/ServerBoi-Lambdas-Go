@@ -1,8 +1,9 @@
 {
-  "ExecutionName": "Provision-b1c400bf",
-  "InteractionToken": "aW50ZXJhY3Rpb246ODg4NjM4MzM5ODM2NjgyMzQwOm1rYjZlWmF1ekVDMGtaUjduVFk2eDlQZ01kV0c0cWFrR3Y1YVM3WFhKSnFuUWMwcWd5dXI0a3FRTTg0OHJGNjNycDNkYmltU05QUW1QTVc2b21CckpuVjZ6dHhPcEQyZzhlVVN0cW91c2xxRW4zSnN5YzU1NDQ4MWF4MDB2d3VC",
-  "ServerID": "B234",
+  "ExecutionName": "Provision-A611186F",
+  "InteractionToken": "aW50ZXJhY3Rpb246ODkxMTMwNzg3MTc1NDk3Nzg4OnVDcEtJdkR4VzRldjY2ZjdEbjBib21SZG84Q092WThXenFwSkt6UW9zd1pISjJSOWJ1VXBITzNhcXlaTWpIY1VZV0tEbWlyNzZkamVkR1R0OHpmamVhWXpYU3lhdXBkUWc2MXpaTE5PSlBxNmFIbjFqSFp4TXp1Y2N2bHRsSjVn",
+  "ServerID": "7C54",
   "GuildID": "653100420687855616",
+  "PrivateKeyObject": "Provision-A611186F-private.pem",
   "Private": false,
   "ApplicationID": "713857439220367432"
 }
