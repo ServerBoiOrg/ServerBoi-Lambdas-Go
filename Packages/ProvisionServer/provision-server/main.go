@@ -45,7 +45,7 @@ type ProvisionServerResponse struct {
 	PrivateKeyObject string `json:"PrivateKeyObject"`
 }
 
-func handler(event map[string]interface{}) (string, error) {
+func handler(event map[string]interface{}) (map[string]string, error) {
 	log.Printf("Event: %v", event)
 	params := convertEvent(event)
 	// logMetric(params.Service)
@@ -91,12 +91,13 @@ func handler(event map[string]interface{}) (string, error) {
 	}
 
 	writeServerInfo(output.ServerItem)
-	response := &ProvisionServerResponse{
+	var response map[string]string
+	b, _ := json.Marshal(&ProvisionServerResponse{
 		ServerID:         output.ServerID,
 		PrivateKeyObject: output.PrivateKeyObject,
-	}
-	b, _ := json.Marshal(response)
-	return string(b), nil
+	})
+	json.Unmarshal(b, &response)
+	return response, nil
 }
 
 func writeServerInfo(serverItem map[string]dynamotypes.AttributeValue) {
