@@ -130,12 +130,15 @@ func deleteServerItem(serverID string) {
 }
 
 func deleteServerMessage(server gu.Server, guildID string) {
+	log.Printf("Getting channelID")
 	channelID, err := gu.GetChannelIDFromGuildID(guildID)
+	log.Printf("Channel id is %v", channelID)
 	info := server.GetBaseService()
 	var (
 		messages []*dt.Message
 		headers  *dc.DiscordHeaders
 	)
+	log.Printf("Getting messages from channel %v", channelID)
 	for {
 		messages, headers, err = CLIENT.GetChannelMessages(channelID)
 		if err != nil {
@@ -147,10 +150,13 @@ func deleteServerMessage(server gu.Server, guildID string) {
 		}
 	}
 
+	log.Printf("Searching through messages")
 top:
 	for _, message := range messages {
 		for _, embed := range message.Embeds {
+			log.Printf("Current embed title is %v", embed.Title)
 			if embed.Title == fmt.Sprintf("%v (%v)", info.ServerName, info.ServerID) {
+				log.Printf("Found match. Deleting")
 				for {
 					headers, err = CLIENT.DeleteMessage(&dc.DeleteMessageInput{
 						ChannelID: channelID,

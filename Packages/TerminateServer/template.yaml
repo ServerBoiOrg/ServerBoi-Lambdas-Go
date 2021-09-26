@@ -19,3 +19,4 @@ Resources:
         Variables:
           OWNER_TABLE: ServerBoi-Owner-List
           SERVER_TABLE: ServerBoi-Server-List
+          CHANNEL_TABLE: ServerBoi-Channel-Table

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	dc "discordhttpclient"
@@ -22,7 +23,7 @@ func routeServerCommand(command *dt.Interaction) (response *dt.InteractionCallba
 	serverCommand := command.Data.Options[0].Name
 	log.Printf("Server Commmad Option: %v", serverCommand)
 
-	serverID := command.Data.Options[0].Options[0].Value
+	serverID := strings.ToUpper(command.Data.Options[0].Options[0].Value)
 	log.Printf("Target Server: %v", serverID)
 	server, err := gu.GetServerFromID(serverID)
 	if err != nil {
