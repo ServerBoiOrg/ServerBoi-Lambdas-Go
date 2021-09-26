@@ -2,6 +2,7 @@ package generalutils
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -16,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 )
@@ -117,6 +119,32 @@ func GetPresignedS3Client() *s3.PresignClient {
 	return pre
 }
 
+type IAMUser struct {
+	Access string `json:"access"`
+	Secret string `json:"secret"`
+}
+
+func GetPresignedS3ClientFromCreds() *s3.PresignClient {
+	secretClient := secretsmanager.NewFromConfig(getConfig())
+	value, err := secretClient.GetSecretValue(context.Background(), &secretsmanager.GetSecretValueInput{
+		SecretId: aws.String("Presigned-URL-User"),
+	})
+	if err != nil {
+		log.Fatalf("Unable to get secret: %v", err)
+	}
+
+	secret := IAMUser{}
+	json.Unmarshal(value.SecretBinary, &secret)
+
+	cred := credentials.NewStaticCredentialsProvider(secret.Access, secret.Secret, "")
+	s3client := s3.NewFromConfig(aws.Config{
+		Region:      GetEnvVar("AWS_REGION"),
+		Credentials: cred,
+	})
+	pre := s3.NewPresignClient(s3client)
+	return pre
+}
+
 func CreateSignedKeyUrl(object string, bucket string) string {
 	client := GetPresignedS3Client()
 	request, err := client.PresignGetObject(context.Background(), &s3.GetObjectInput{
@@ -126,6 +154,20 @@ func CreateSignedKeyUrl(object string, bucket string) string {
 	if err != nil {
 		log.Fatalf("Error getting object: %v", err)
 	}
+	log.Printf("Request: %v", request)
+	return request.URL
+}
+
+func CreateJankSignedKeyUrl(object string, bucket string) string {
+	client := GetPresignedS3ClientFromCreds()
+	request, err := client.PresignGetObject(context.Background(), &s3.GetObjectInput{
+		Key:    aws.String(object),
+		Bucket: aws.String(bucket),
+	})
+	if err != nil {
+		log.Fatalf("Error getting object: %v", err)
+	}
+	log.Printf("Request: %v", request)
 	return request.URL
 }
 

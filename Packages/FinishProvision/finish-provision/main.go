@@ -41,7 +41,7 @@ func handler(event map[string]interface{}) (bool, error) {
 		ApiVersion: "v9",
 	})
 
-	keyUrl := gu.CreateSignedKeyUrl(params.PrivateKeyObject, KEY_BUCKET)
+	keyUrl := gu.CreateJankSignedKeyUrl(params.PrivateKeyObject, KEY_BUCKET)
 	for {
 		_, headers, err := client.PostInteractionFollowUp(&dc.InteractionFollowupInput{
 			ApplicationID:    params.ApplicationID,

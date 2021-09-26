@@ -26,5 +26,6 @@ Resources:
           PUBLIC_KEY: 381ab524ef752faf891f76bde76a5cbef77a0d126d132f1a4de72e51fe6d70e2
           OWNER_TABLE: ServerBoi-Owner-List
           AWS_REGION: us-west-2
+          KEY_BUCKET: serverboi-ssh-bucket
           STAGE: Test
           URL: https://api.serverboi.io

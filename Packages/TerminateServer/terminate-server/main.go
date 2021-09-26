@@ -16,10 +16,18 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go/aws"
 )
 
-var TOKEN = gu.GetEnvVar("DISCORD_TOKEN")
+var (
+	TOKEN      = gu.GetEnvVar("DISCORD_TOKEN")
+	KEY_BUCKET = gu.GetEnvVar("KEY_BUCKET")
+	CLIENT     = dc.CreateClient(&dc.CreateClientInput{
+		BotToken:   TOKEN,
+		ApiVersion: "v9",
+	})
+)
 
 type TerminateServerPayload struct {
 	ServerID      string `json:"ServerID"`
@@ -27,16 +35,12 @@ type TerminateServerPayload struct {
 	ApplicationID string `json:"ApplicationID"`
 	ExecutionName string `json:"ExecutionName"`
 	Fallback      bool   `json:"Fallback"`
+	GuildID       string `json:"GuildID"`
 }
 
 func handler(event map[string]interface{}) (bool, error) {
 	log.Printf("Event: %v", event)
 	params := convertEvent(event)
-
-	client := dc.CreateClient(&dc.CreateClientInput{
-		BotToken:   TOKEN,
-		ApiVersion: "v9",
-	})
 
 	updateEmbed(&UpdateEmbedInput{
 		params.ExecutionName,
@@ -45,7 +49,6 @@ func handler(event map[string]interface{}) (bool, error) {
 		"🟢 Running",
 		"Terminating",
 		ru.DiscordGreen,
-		client,
 	})
 
 	server, err := gu.GetServerFromID(params.ServerID)
@@ -79,9 +82,9 @@ func handler(event map[string]interface{}) (bool, error) {
 		}
 	}
 
-	// Delete server item
 	deleteServerItem(server.GetBaseService().ServerID)
-
+	deleteSSHKey(server.GetPrivateKey())
+	deleteServerMessage(server, params.GuildID)
 	var (
 		status string
 		color  int
@@ -101,7 +104,6 @@ func handler(event map[string]interface{}) (bool, error) {
 		status,
 		"Complete",
 		color,
-		client,
 	})
 
 	return true, nil
@@ -127,6 +129,52 @@ func deleteServerItem(serverID string) {
 	}
 }
 
+func deleteServerMessage(server gu.Server, guildID string) {
+	channelID, err := gu.GetChannelIDFromGuildID(guildID)
+	info := server.GetBaseService()
+	var (
+		messages []*dt.Message
+		headers  *dc.DiscordHeaders
+	)
+	for {
+		messages, headers, err = CLIENT.GetChannelMessages(channelID)
+		if err != nil {
+			log.Fatalf("Error getting messages for channel %v", channelID)
+		}
+		done := dc.StatusCodeHandler(*headers)
+		if done {
+			break
+		}
+	}
+
+top:
+	for _, message := range messages {
+		for _, embed := range message.Embeds {
+			if embed.Title == fmt.Sprintf("%v (%v)", info.ServerName, info.ServerID) {
+				for {
+					headers, err = CLIENT.DeleteMessage(&dc.DeleteMessageInput{
+						ChannelID: channelID,
+						MessageID: message.ID,
+					})
+					done := dc.StatusCodeHandler(*headers)
+					if done {
+						break top
+					}
+				}
+			}
+
+		}
+	}
+}
+
+func deleteSSHKey(key string) {
+	client := gu.GetS3Client()
+	client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
+		Key:    aws.String(key),
+		Bucket: aws.String(KEY_BUCKET),
+	})
+}
+
 type UpdateEmbedInput struct {
 	ExecutionName    string
 	ApplicationID    string
@@ -134,7 +182,6 @@ type UpdateEmbedInput struct {
 	Status           string
 	Stage            string
 	Color            int
-	Client           *dc.Client
 }
 
 func updateEmbed(input *UpdateEmbedInput) {
@@ -147,7 +194,7 @@ func updateEmbed(input *UpdateEmbedInput) {
 	})
 
 	for {
-		_, headers, err := input.Client.EditInteractionResponse(&dc.InteractionFollowupInput{
+		_, headers, err := CLIENT.EditInteractionResponse(&dc.InteractionFollowupInput{
 			ApplicationID:    input.ApplicationID,
 			InteractionToken: input.InteractionToken,
 			Data: &dt.InteractionCallbackData{

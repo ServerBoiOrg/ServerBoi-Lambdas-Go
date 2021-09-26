@@ -68,7 +68,7 @@ func routeServerCommand(command *dt.Interaction) (response *dt.InteractionCallba
 			err = server.Restart()
 			message = "Restarting server"
 		case "ssh-key":
-			url := gu.CreateSignedKeyUrl(server.GetPrivateKey(), gu.GetEnvVar("KEY_BUCKET"))
+			url := gu.CreateJankSignedKeyUrl(server.GetPrivateKey(), gu.GetEnvVar("KEY_BUCKET"))
 			return &dt.InteractionCallbackData{
 				Content:    "Use the button below to download the SSH key.",
 				Components: ru.CreateLinkButton(url),
@@ -81,6 +81,7 @@ func routeServerCommand(command *dt.Interaction) (response *dt.InteractionCallba
 				InteractionID: command.ID,
 				ApplicationID: command.ApplicationID,
 				ServerID:      serverID,
+				GuildID:       command.GuildID,
 			}
 			data, err := serverTerminate(input)
 			if err == nil {
@@ -105,6 +106,7 @@ type ServerTerminateInput struct {
 	InteractionID string
 	ApplicationID string
 	ServerID      string
+	GuildID       string
 }
 
 type TerminateWorkflow struct {
