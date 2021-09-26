@@ -115,6 +115,7 @@ type TerminateWorkflow struct {
 	ApplicationID string
 	ServerID      string
 	ExecutionName string
+	GuildID       string
 }
 
 func serverRelist(server gu.Server, guildID string) (message string) {
@@ -166,6 +167,7 @@ func serverTerminate(input ServerTerminateInput) (data *dt.InteractionCallbackDa
 		Token:         input.Token,
 		ApplicationID: input.ApplicationID,
 		ExecutionName: executionName,
+		GuildID:       input.GuildID,
 	}
 	inputJson, err := json.Marshal(terminationWorkflowInput)
 	if err != nil {
