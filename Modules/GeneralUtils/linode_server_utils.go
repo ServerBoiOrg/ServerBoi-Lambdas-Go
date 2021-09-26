@@ -79,6 +79,10 @@ func (server LinodeServer) GetService() string {
 	return server.Service
 }
 
+func (server LinodeServer) GetPrivateKey() string {
+	return server.PrivateKey
+}
+
 func (server LinodeServer) GetIPv4() (string, error) {
 	client := CreateLinodeClient(server.ApiKey)
 	linode, err := client.GetInstance(context.Background(), server.LinodeID)

@@ -117,6 +117,10 @@ func (server AWSServer) AuthorizedUsers() []string {
 	return server.Authorized.Users
 }
 
+func (server AWSServer) GetPrivateKey() string {
+	return server.PrivateKey
+}
+
 func (server AWSServer) AuthorizedRoles() []string {
 	return server.Authorized.Roles
 }

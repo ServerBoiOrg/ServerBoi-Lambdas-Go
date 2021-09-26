@@ -3,8 +3,10 @@ package responseutils
 import (
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
+	dt "github.com/awlsring/discordtypes"
 	"github.com/rumblefrog/go-a2s"
 )
 
@@ -36,6 +38,25 @@ func A2SQuery(ip string, port int) (info *a2s.ServerInfo, err error) {
 	}
 	client.Close()
 	return info, err
+}
+
+func CreateLinkButton(url string) []*dt.Component {
+	button := &dt.Component{
+		Type:  2,
+		Style: 5,
+		Label: "Download SSH Key",
+		Url:   url,
+	}
+
+	componentData := &dt.Component{
+		Type: 1,
+		Components: []*dt.Component{
+			button,
+		},
+	}
+
+	log.Printf("Component Data: %v", componentData)
+	return []*dt.Component{componentData}
 }
 
 func FormFooter(owner string, service string, region string) string {

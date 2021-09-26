@@ -67,8 +67,14 @@ func routeServerCommand(command *dt.Interaction) (response *dt.InteractionCallba
 		case "reboot":
 			err = server.Restart()
 			message = "Restarting server"
+		case "ssh-key":
+			url := gu.CreateSignedKeyUrl(server.GetPrivateKey(), gu.GetEnvVar("KEY_BUCKET"))
+			return &dt.InteractionCallbackData{
+				Content:    "Use the button below to download the SSH key.",
+				Components: ru.CreateLinkButton(url),
+			}
 		case "relist":
-
+			message = serverRelist(server, command.GuildID)
 		case "terminate":
 			input := ServerTerminateInput{
 				Token:         command.Token,

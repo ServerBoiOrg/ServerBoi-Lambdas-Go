@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -14,8 +13,6 @@ import (
 	dt "github.com/awlsring/discordtypes"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 var (
@@ -44,14 +41,14 @@ func handler(event map[string]interface{}) (bool, error) {
 		ApiVersion: "v9",
 	})
 
-	keyUrl := createSignedKeyUrl(params.PrivateKeyObject)
+	keyUrl := gu.CreateSignedKeyUrl(params.PrivateKeyObject, KEY_BUCKET)
 	for {
-		resp, headers, err := client.PostInteractionFollowUp(&dc.InteractionFollowupInput{
+		_, headers, err := client.PostInteractionFollowUp(&dc.InteractionFollowupInput{
 			ApplicationID:    params.ApplicationID,
 			InteractionToken: params.InteractionToken,
 			Data: &dt.InteractionCallbackData{
 				Content:    fmt.Sprintf("SSH key for Server %v", params.ServerID),
-				Components: createLinkButton(keyUrl),
+				Components: ru.CreateLinkButton(keyUrl),
 				Flags:      1 << 6,
 			},
 		})
@@ -60,8 +57,7 @@ func handler(event map[string]interface{}) (bool, error) {
 		}
 		done := dc.StatusCodeHandler(*headers)
 		if done {
-			log.Printf("%v", resp)
-			log.Printf("%v", headers)
+			log.Printf("Status Code of Response: %v", headers.StatusCode)
 			break
 		}
 	}
@@ -126,7 +122,7 @@ func handler(event map[string]interface{}) (bool, error) {
 			done := dc.StatusCodeHandler(*headers)
 			if done {
 				log.Printf("Status Code of Response: %v", headers.StatusCode)
-				log.Printf("%v", resp)
+				log.Printf("Response from post %v", resp)
 				break
 			}
 		}
@@ -138,23 +134,6 @@ func handler(event map[string]interface{}) (bool, error) {
 
 func main() {
 	lambda.Start(handler)
-}
-
-func createLinkButton(url string) []*dt.Component {
-	button := &dt.Component{
-		Type:  2,
-		Style: 5,
-		Label: "Download SSH Key",
-		Url:   url,
-	}
-
-	componentData := &dt.Component{
-		Type: 1,
-		Components: []*dt.Component{
-			button,
-		},
-	}
-	return []*dt.Component{componentData}
 }
 
 func updateWorkflowEmbed(client *dc.Client, params *FinishProvisonParameters, url string) {
@@ -176,7 +155,7 @@ func updateWorkflowEmbed(client *dc.Client, params *FinishProvisonParameters, ur
 			InteractionToken: params.InteractionToken,
 			Data: &dt.InteractionCallbackData{
 				Embeds:     []*dt.Embed{workflowEmbed},
-				Components: createLinkButton(url),
+				Components: ru.CreateLinkButton(url),
 			},
 		})
 		if err != nil {
@@ -184,7 +163,8 @@ func updateWorkflowEmbed(client *dc.Client, params *FinishProvisonParameters, ur
 		}
 		done := dc.StatusCodeHandler(*headers)
 		if done {
-			log.Printf("%v", resp)
+			log.Printf("Status Code of Response: %v", headers.StatusCode)
+			log.Printf("Response from post %v", resp)
 			break
 		}
 	}
@@ -198,16 +178,4 @@ func convertEvent(event map[string]interface{}) (params FinishProvisonParameters
 		panic(marshalErr)
 	}
 	return params
-}
-
-func createSignedKeyUrl(object string) string {
-	client := gu.GetPresignedS3Client()
-	request, err := client.PresignGetObject(context.Background(), &s3.GetObjectInput{
-		Key:    aws.String(object),
-		Bucket: aws.String(KEY_BUCKET),
-	})
-	if err != nil {
-		log.Fatalf("Error getting object: %v", err)
-	}
-	return request.URL
 }

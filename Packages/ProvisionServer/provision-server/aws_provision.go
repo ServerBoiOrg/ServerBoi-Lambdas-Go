@@ -97,6 +97,7 @@ func provisionAWS(params *ProvisonServerParameters) *ProvisionOutput {
 		AWSAccountID: accountID,
 		InstanceID:   instanceID,
 		InstanceType: string(instanceType),
+		PrivateKey:   output.PrivateKeyObject,
 		Authorized:   authorized,
 	}
 
@@ -119,6 +120,7 @@ func formAWSServerItem(server gu.AWSServer) map[string]dynamotypes.AttributeValu
 		server.QueryPort,
 		server.QueryType,
 		server.ServerID,
+		server.PrivateKey,
 		server.Authorized,
 	)
 	serverItem["Region"] = &dynamotypes.AttributeValueMemberS{Value: server.Region}

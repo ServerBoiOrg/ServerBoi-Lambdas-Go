@@ -10,14 +10,14 @@ type BaseServer struct {
 	Port        int    `json:"Port"`
 	QueryPort   int    `json:"QueryPort"`
 	QueryType   string `json:"QueryType"`
+	PrivateKey  string `json:"PrivateKey"`
 	Region      string `json:"Region"`
 }
 
 type ServerBoiRegion struct {
-	Emoji   string
-	Name    string
-	Service string
-	// Name of region in cloud provider
+	Emoji       string
+	Name        string
+	Service     string
 	ServiceName string
 	Geolocation string
 }
@@ -47,6 +47,7 @@ type AWSServer struct {
 	Port         int         `json:"Port"`
 	QueryPort    int         `json:"QueryPort"`
 	QueryType    string      `json:"QueryType"`
+	PrivateKey   string      `json:"PrivateKey"`
 	Authorized   *Authorized `json:"Authorized"`
 }
 
@@ -64,6 +65,7 @@ type LinodeServer struct {
 	ApiKey      string      `json:"ApiKey"`
 	LinodeType  string      `json:"LinodeType"`
 	Location    string      `json:"Location"`
+	PrivateKey  string      `json:"PrivateKey"`
 	Authorized  *Authorized `json:"Authorized"`
 }
 

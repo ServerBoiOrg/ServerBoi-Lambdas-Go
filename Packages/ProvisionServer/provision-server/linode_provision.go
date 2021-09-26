@@ -77,6 +77,7 @@ func provisionLinode(params *ProvisonServerParameters) *ProvisionOutput {
 		ApiKey:      apiKey,
 		LinodeType:  output.HardwareType,
 		Location:    params.Region,
+		PrivateKey:  output.PrivateKeyObject,
 		Authorized:  authorized,
 	}
 
@@ -146,6 +147,7 @@ func formLinodeServerItem(server gu.LinodeServer) map[string]dynamotypes.Attribu
 		server.QueryPort,
 		server.QueryType,
 		server.ServerID,
+		server.PrivateKey,
 		server.Authorized,
 	)
 	serverItem["Location"] = &dynamotypes.AttributeValueMemberS{Value: server.Location}

@@ -49,6 +49,7 @@ type Server interface {
 	AuthorizedRoles() []string
 	GetIPv4() (string, error)
 	GetService() string
+	GetPrivateKey() string
 	GetStatus() (string, error)
 	GetBaseService() *BaseServer
 }

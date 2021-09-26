@@ -117,6 +117,18 @@ func GetPresignedS3Client() *s3.PresignClient {
 	return pre
 }
 
+func CreateSignedKeyUrl(object string, bucket string) string {
+	client := GetPresignedS3Client()
+	request, err := client.PresignGetObject(context.Background(), &s3.GetObjectInput{
+		Key:    aws.String(object),
+		Bucket: aws.String(bucket),
+	})
+	if err != nil {
+		log.Fatalf("Error getting object: %v", err)
+	}
+	return request.URL
+}
+
 func getRemoteCreds(region string, accountID string) *aws.CredentialsCache {
 	log.Printf("Getting credentials for account: %s", accountID)
 	cfg := getConfig()

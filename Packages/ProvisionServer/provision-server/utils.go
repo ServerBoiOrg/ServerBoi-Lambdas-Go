@@ -38,6 +38,7 @@ func formBaseServerItem(
 	queryPort int,
 	queryType string,
 	serverID string,
+	privateKey string,
 	authorized *gu.Authorized,
 ) map[string]dynamotypes.AttributeValue {
 	portString := strconv.Itoa(port)
@@ -76,6 +77,7 @@ func formBaseServerItem(
 		"Port":        &dynamotypes.AttributeValueMemberN{Value: portString},
 		"QueryPort":   &dynamotypes.AttributeValueMemberN{Value: queryPortString},
 		"QueryType":   &dynamotypes.AttributeValueMemberS{Value: queryType},
+		"PrivateKey":  &dynamotypes.AttributeValueMemberS{Value: privateKey},
 		"Authorized":  &dynamotypes.AttributeValueMemberM{Value: auth},
 	}
 
