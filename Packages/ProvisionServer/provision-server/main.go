@@ -19,6 +19,8 @@ import (
 	dynamotypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
 )
 
+var client *dc.Client
+
 type ProvisonServerParameters struct {
 	ExecutionName    string            `json:"ExecutionName"`
 	Application      string            `json:"Application"`
@@ -48,38 +50,12 @@ type ProvisionServerResponse struct {
 func handler(event map[string]interface{}) (map[string]string, error) {
 	log.Printf("Event: %v", event)
 	params := convertEvent(event)
-	// logMetric(params.Service)
-	// logMetric(params.Application)
 
-	embed := ru.CreateWorkflowEmbed(&ru.CreateWorkflowEmbedInput{
-		Name:        "Provision-Server",
-		Description: fmt.Sprintf("WorkflowID: %s", params.ExecutionName),
-		Status:      "🟢 Running",
-		Stage:       "Provisioning Server",
-		Color:       ru.DiscordGreen,
-	})
-
-	client := dc.CreateClient(&dc.CreateClientInput{
+	client = dc.CreateClient(&dc.CreateClientInput{
 		ApiVersion: "v9",
 	})
 
-	for {
-		resp, headers, err := client.EditInteractionResponse(&dc.InteractionFollowupInput{
-			ApplicationID:    params.ApplicationID,
-			InteractionToken: params.InteractionToken,
-			Data: &dt.InteractionCallbackData{
-				Embeds: []*dt.Embed{embed},
-			},
-		})
-		if err != nil {
-			log.Fatalf("Error getting creating message in Channel: %v", err)
-		}
-		done := dc.StatusCodeHandler(*headers)
-		if done {
-			log.Printf("%v", resp)
-			break
-		}
-	}
+	updateServerEmbed("Provisioning Server", params.ExecutionName, params.ApplicationID, params.InteractionToken)
 
 	var output *ProvisionOutput
 	log.Printf("Cloud Provider for server: %v", params.Service)
@@ -97,7 +73,38 @@ func handler(event map[string]interface{}) (map[string]string, error) {
 		PrivateKeyObject: output.PrivateKeyObject,
 	})
 	json.Unmarshal(b, &response)
+
+	updateServerEmbed("Waiting for server boot", params.ExecutionName, params.ApplicationID, params.InteractionToken)
+
 	return response, nil
+}
+
+func updateServerEmbed(status string, executionName string, applicationID string, interactionToken string) {
+	embed := ru.CreateWorkflowEmbed(&ru.CreateWorkflowEmbedInput{
+		Name:        "Provision-Server",
+		Description: fmt.Sprintf("WorkflowID: %s", executionName),
+		Status:      "🟢 Running",
+		Stage:       status,
+		Color:       ru.DiscordGreen,
+	})
+
+	for {
+		resp, headers, err := client.EditInteractionResponse(&dc.InteractionFollowupInput{
+			ApplicationID:    applicationID,
+			InteractionToken: interactionToken,
+			Data: &dt.InteractionCallbackData{
+				Embeds: []*dt.Embed{embed},
+			},
+		})
+		if err != nil {
+			log.Fatalf("Error getting creating message in Channel: %v", err)
+		}
+		done := dc.StatusCodeHandler(*headers)
+		if done {
+			log.Printf("%v", resp)
+			break
+		}
+	}
 }
 
 func writeServerInfo(serverItem map[string]dynamotypes.AttributeValue) {
