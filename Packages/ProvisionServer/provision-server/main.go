@@ -36,7 +36,7 @@ type ProvisonServerParameters struct {
 	Name             string            `json:"Name"`
 	Region           string            `json:"Region"`
 	HardwareType     string            `json:"HardwareType"`
-	Private          bool              `json:"Private"`
+	Visible          bool              `json:"Visible"`
 	IsRole           bool              `json:"IsRole"`
 }
 

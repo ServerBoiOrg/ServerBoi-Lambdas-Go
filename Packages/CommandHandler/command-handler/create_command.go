@@ -33,17 +33,8 @@ type CreateServerWorkflowInput struct {
 	Name             string
 	Region           string
 	HardwareType     string `json:"HardwareType,omitempty"`
-	Private          bool
+	Visible          bool
 	IsRole           bool
-}
-
-type GenericCreationOptions struct {
-	Service          string `json:"service"`
-	Region           string `json:"region"`
-	Name             string `json:"name,omitempty"`
-	RegionOverride   string `json:"override-region,omitempty"`
-	HardwareOverride string `json:"override-hardware,omitempty"`
-	Private          bool   `json:"private,omitempty"`
 }
 
 type CreateOptions struct {
@@ -53,7 +44,7 @@ type CreateOptions struct {
 	ProfileID        string
 	ProfileName      string
 	HardwareType     string
-	Private          bool
+	Visible          bool
 	OptionalCommands map[string]string
 	ClientPort       int
 	QueryPort        int
@@ -120,11 +111,13 @@ func verifyCreationOptions(creationOptions map[string]interface{}) (output Creat
 	}
 
 	//Check if private
-	if private, ok := creationOptions["private"]; ok {
-		output.Private = private.(bool)
-		delete(creationOptions, "private")
+	if visible, ok := creationOptions["visible"]; ok {
+		output.Visible = visible.(bool)
+		delete(creationOptions, "visible")
+	} else {
+		output.Visible = true
 	}
-	log.Printf("Private: %v", output.Private)
+	log.Printf("Visible: %v", output.Visible)
 
 	//Check if client port
 	if clientPort, ok := creationOptions["clientPort"]; ok {
@@ -160,7 +153,7 @@ func verifyCreationOptions(creationOptions map[string]interface{}) (output Creat
 		delete(creationOptions, "queryPort")
 	}
 
-	log.Printf("Private: %v", output.Private)
+	log.Printf("Visible: %v", output.Visible)
 
 	tmp := make(map[string]string)
 	for key, value := range creationOptions {
@@ -355,7 +348,7 @@ func createServer(command *dt.Interaction) (response *dt.InteractionCallbackData
 			Name:             verifiedParams.Name,
 			Region:           verifiedParams.Region,
 			HardwareType:     verifiedParams.HardwareType,
-			Private:          verifiedParams.Private,
+			Visible:          verifiedParams.Visible,
 			IsRole:           isRole,
 		}
 

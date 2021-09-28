@@ -35,6 +35,7 @@ type Service struct {
 type FormApplicationTemplate struct {
 	Architecture  string
 	Environment   map[string]string
+	Name          string
 	ClientPort    int
 	QueryPort     int
 	Configuration *ApplicationConfiguration
@@ -57,15 +58,43 @@ func formApplicationTemplate(input *FormApplicationTemplate) *Service {
 	if len(input.Configuration.ExtraPorts) != 0 {
 		ports = append(ports, input.Configuration.ExtraPorts...)
 	}
+
+	environment := formApplicationEnvironment(&FormApplicationEnvironmentInput{
+		Name:          input.Name,
+		EnvParameters: input.Environment,
+		EnvMap:        input.Configuration.EnvMapping,
+	})
 	return &Service{
 		Image:           container,
 		Ports:           ports,
-		Environment:     input.Environment,
+		Environment:     environment,
 		Volumes:         input.Configuration.Volumes,
 		CapAdd:          input.Configuration.CapAdd,
 		Restart:         "unless-stopped",
 		StopGracePeriod: "2m",
 	}
+}
+
+type FormApplicationEnvironmentInput struct {
+	Name          string
+	EnvParameters map[string]string
+	EnvMap        map[string]string
+}
+
+func formApplicationEnvironment(input *FormApplicationEnvironmentInput) map[string]string {
+	env := make(map[string]string)
+	if value, ok := input.EnvMap["name"]; ok {
+		env[value] = input.Name
+		delete(input.EnvMap, "name")
+	}
+
+	for name, mapping := range input.EnvMap {
+		if val, ok := input.EnvParameters[name]; ok {
+			env[mapping] = val
+		}
+	}
+
+	return env
 }
 
 type CreateDockerComposeInput struct {

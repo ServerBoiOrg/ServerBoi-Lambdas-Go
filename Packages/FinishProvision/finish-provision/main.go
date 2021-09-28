@@ -29,7 +29,7 @@ type FinishProvisonParameters struct {
 	ApplicationID    string `json:"ApplicationID"`
 	ExecutionName    string `json:"ExecutionName"`
 	PrivateKeyObject string `json:"PrivateKeyObject"`
-	Private          bool   `json:"Private"`
+	Visible          bool   `json:"Visible,omitempty"`
 }
 
 func handler(event map[string]interface{}) (bool, error) {
@@ -62,7 +62,7 @@ func handler(event map[string]interface{}) (bool, error) {
 		}
 	}
 
-	if !params.Private {
+	if params.Visible {
 		server, err := gu.GetServerFromID(params.ServerID)
 		if err != nil {
 			log.Fatalf("Error getting service object: %v", err)

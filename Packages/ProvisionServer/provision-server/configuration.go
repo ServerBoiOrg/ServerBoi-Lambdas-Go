@@ -23,6 +23,7 @@ type ApplicationConfiguration struct {
 	QueryType   string                     `yaml:"queryType"`
 	ExtraPorts  []string                   `yaml:"extraPorts,omitempty"`
 	DriveSize   int                        `yaml:"driveSize"`
+	EnvMapping  map[string]string          `yaml:"env-map,omitempty"`
 }
 
 type ArchitectureConfiguration struct {
@@ -35,7 +36,7 @@ func getConfiguration(app string) *ApplicationConfiguration {
 	client := gu.GetS3Client()
 	requestInput := &s3.GetObjectInput{
 		Bucket: aws.String(gu.GetEnvVar("CONFIGURATION_BUCKET")),
-		Key:    aws.String(fmt.Sprintf("%v-build.yml", app)),
+		Key:    aws.String(fmt.Sprintf("%v.yml", app)),
 	}
 	var configuration *ApplicationConfiguration
 	result, err := client.GetObject(context.TODO(), requestInput)
