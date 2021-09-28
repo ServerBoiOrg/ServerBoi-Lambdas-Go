@@ -46,6 +46,7 @@ func genericProvision(params *ProvisonServerParameters) *GenericProvisionOutput 
 
 	log.Printf("Forming Application Service")
 	appService := formApplicationTemplate(&FormApplicationTemplate{
+		Name:          params.Name,
 		Architecture:  architecture,
 		Configuration: configuration,
 		Environment:   params.CreationOptions,
